@@ -1,12 +1,18 @@
-#include <cstddef>
-#include <ttnn/core.hpp>
+#include "ttnn/device.hpp"
+#include "ttnn/types.hpp"
+#include "tests/tt_metal/test_utils/env_vars.hpp"
+#include "tt_metal/host_api.hpp"
+#include "tt_metal/hostdevcommon/common_values.hpp"
+#include "tt_metal/impl/device/device_mesh.hpp"
+
 #include <ttnn/operations/eltwise/binary/binary.hpp>
+#include <ttnn/operations/eltwise/unary/unary.hpp>
+#include <ttnn/core.hpp>
 #include <ttnn/device.hpp>
 #include <ttnn/operations/data_movement/tilize_with_val_padding/tilize_with_val_padding.hpp>
 
 #include "common/bfloat16.hpp"
 
-#include <vector>
 #include <iostream>
 
 ttnn::device::Device* device = nullptr;
@@ -52,7 +58,16 @@ int main()
     const size_t tensor_height = 32;
 
     // tell TTNN that we want to use the first device available
-    device = &ttnn::device::open_device(0);
+    tt::ARCH arch_;
+    size_t num_devices_;
+
+    std::srand(0);
+    arch_ = tt::get_arch_from_string(tt::test_utils::get_env_arch_name());
+    num_devices_ = tt::tt_metal::GetNumAvailableDevices();
+    std::cout << "Arch:" << tt::test_utils::get_env_arch_name() << std::endl;
+    std::cout << "num_devices:" << num_devices_ << std::endl;
+    auto device_ = tt::tt_metal::CreateDevice(0);
+    std::cout << "Device created" << std::endl;
     AutoFormat::SetDefaultDevice(device); // set the default device to the one we just opened
 
     std::cout << "Creating a tensor with bfloat16 data type" << std::endl;
@@ -93,5 +108,26 @@ int main()
 
     // Remember to close the device when you are done
     std::cout << "Done. Shutting down" << std::endl;
-    device->close();
+    tt::tt_metal::CloseDevice(device);
 }
+//*/
+/*
+#include <iostream>
+
+#if __cplusplus >= 202002L
+    #define CPP_VERSION "C++20 or later"
+#elif __cplusplus >= 201703L
+    #define CPP_VERSION "C++17"
+#elif __cplusplus >= 201402L
+    #define CPP_VERSION "C++14"
+#elif __cplusplus >= 201103L
+    #define CPP_VERSION "C++11"
+#else
+    #define CPP_VERSION "Pre-C++11"
+#endif
+
+#include <source_location>
+int main() {
+    std::cout << "C++ version: " << CPP_VERSION << std::endl;
+}
+//*/

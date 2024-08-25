@@ -1,1 +1,0 @@
-/usr/bin/c++     CMakeFiles/ml-framework-cpp.dir/framework/main.cpp.o  -o ml-framework-cpp   -L/home/ubuntu/scripts/tt-metal/build/lib  -Wl,-rpath,/home/ubuntu/scripts/tt-metal/build/lib -ltt_metal _deps/yaml-cpp-build/libyaml-cpp.a -lpthread /usr/lib/x86_64-linux-gnu/libpython3.8.so /home/ubuntu/scripts/tt-metal/build/lib/_ttnn.so -lstdlib 
