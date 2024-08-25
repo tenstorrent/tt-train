@@ -33,3 +33,6 @@
 
 # cpm
 .cpmcache/
+
+# vscode
+.vscode/
