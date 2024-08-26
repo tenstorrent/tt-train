@@ -1,16 +1,15 @@
 #include <iostream>
-#include <ttnn/core.hpp>
-#include <ttnn/device.hpp>
-#include <ttnn/operations/data_movement/tilize_with_val_padding/tilize_with_val_padding.hpp>
-#include <ttnn/operations/eltwise/binary/binary.hpp>
-#include <ttnn/operations/eltwise/unary/unary.hpp>
 
 #include "common/bfloat16.hpp"
 #include "tests/tt_metal/test_utils/env_vars.hpp"
 #include "tt_metal/host_api.hpp"
 #include "tt_metal/hostdevcommon/common_values.hpp"
 #include "tt_metal/impl/device/device_mesh.hpp"
+#include "ttnn/core.hpp"
 #include "ttnn/device.hpp"
+#include "ttnn/operations/data_movement/tilize_with_val_padding/tilize_with_val_padding.hpp"
+#include "ttnn/operations/eltwise/binary/binary.hpp"
+#include "ttnn/operations/eltwise/unary/unary.hpp"
 #include "ttnn/types.hpp"
 
 ttnn::device::Device* device = nullptr;
@@ -50,15 +49,15 @@ int main() {
     const size_t tensor_height = 32;
 
     // tell TTNN that we want to use the first device available
-    tt::ARCH arch_;
-    size_t num_devices_;
+    tt::ARCH arch_{};
+    size_t num_devices_ = 0;
 
     std::srand(0);
     arch_ = tt::get_arch_from_string(tt::test_utils::get_env_arch_name());
     num_devices_ = tt::tt_metal::GetNumAvailableDevices();
     std::cout << "Arch:" << tt::test_utils::get_env_arch_name() << std::endl;
     std::cout << "num_devices:" << num_devices_ << std::endl;
-    auto device_ = tt::tt_metal::CreateDevice(0);
+    device = tt::tt_metal::CreateDevice(0);
     std::cout << "Device created" << std::endl;
     AutoFormat::SetDefaultDevice(device);  // set the default device to the one we just opened
 

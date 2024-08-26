@@ -30,6 +30,8 @@
 *.exe
 *.out
 *.app
+debug/
+build/
 
 # cpm
 .cpmcache/

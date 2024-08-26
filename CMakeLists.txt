@@ -46,9 +46,6 @@ message($ENV{TT_METAL_HOME}/tt_metal/third_party/src/firmware/riscv/$ENV{ARCH_NA
 
 add_executable(ml-framework-cpp framework/main.cpp)
 
-target_link_libraries(ml-framework-cpp PRIVATE
-    dl z pthread atomic # system libraries, hwloc has no cmake support, find_package won't find it
-)
 add_library(stdlib INTERFACE)
 
 if(CMAKE_CXX_COMPILER_ID MATCHES "Clang" )
@@ -58,11 +55,11 @@ if(CMAKE_CXX_COMPILER_ID MATCHES "Clang" )
         message(FATAL_ERROR "libc++ or libc++abi not found. Make sure you have libc++ and libc++abi installed and in your PATH")
     endif()
 
-    target_link_libraries(ml-framework-cpp PRIVATE ${LIBC++} ${LIBC++ABI})
-    target_compile_options(ml-framework-cpp PRIVATE -stdlib=libc++)
+    target_link_libraries(ml-framework-cpp PUBLIC ${LIBC++} ${LIBC++ABI})
+    target_compile_options(ml-framework-cpp PUBLIC -stdlib=libc++)
 else()
-    target_link_libraries(ml-framework-cpp PRIVATE stdc++)
-    target_compile_options(ml-framework-cpp PRIVATE -fsized-deallocation)
+    target_link_libraries(ml-framework-cpp PUBLIC stdc++)
+    target_compile_options(ml-framework-cpp PUBLIC -fsized-deallocation)
 endif()
 
 target_include_directories(ml-framework-cpp PRIVATE
@@ -96,20 +93,23 @@ foreach(lib ${BoostPackages})
     target_include_directories(ml-framework-cpp PRIVATE ${Boost${lib}_SOURCE_DIR}/include)
 endforeach()
 
-target_link_libraries(ml-framework-cpp PRIVATE yaml-cpp::yaml-cpp)
 target_link_libraries(ml-framework-cpp PRIVATE
-    # Metalium
-    tt_metal
-    yaml-cpp
-    pthread
+    dl z pthread atomic
+)
 
-    # TTNN
+target_link_libraries(ml-framework-cpp PRIVATE
+    tt_metal
+    pthread
     Python::Python
     $ENV{TT_METAL_HOME}/build/lib/_ttnn.so
 )
+
+target_link_libraries(ml-framework-cpp PUBLIC yaml-cpp::yaml-cpp)
 
 target_compile_definitions(ml-framework-cpp PRIVATE
     FMT_HEADER_ONLY
 )
 
 #target_precompile_headers(ml-framework-cpp PRIVATE pch.hpp)
+get_target_property(OUT ml-framework-cpp LINK_LIBRARIES)
+message(STATUS ${OUT})

@@ -24,8 +24,8 @@ CPMAddPackage(
 )
 
 if (yaml-cpp_ADDED)
-    target_link_libraries(yaml-cpp PRIVATE stdlib)
-    set_target_properties(yaml-cpp PROPERTIES DEBUG_POSTFIX "")
+  target_link_libraries(yaml-cpp PUBLIC ${LIBC++} ${LIBC++ABI})
+  target_compile_options(yaml-cpp PUBLIC -stdlib=libc++)
 endif()
 
 ############################################################################################################################
