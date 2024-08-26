@@ -1,3 +1,4 @@
+
 #include <iostream>
 
 #include "common/bfloat16.hpp"
@@ -13,6 +14,7 @@
 #include "ttnn/types.hpp"
 
 ttnn::device::Device* device = nullptr;
+
 void print_tensor(const tt::tt_metal::Tensor& tensor) {
     // IMPORTANT. This function prints the tensor data assuming the tensor is in ROW_MAJOR layout
     // but we are using TILE layout. The printed format WILL NOT be correct. But good enough for a demo
@@ -49,7 +51,7 @@ int main() {
     const size_t tensor_height = 32;
 
     // tell TTNN that we want to use the first device available
-    tt::ARCH arch_{};
+    tt::ARCH arch_ = {};
     size_t num_devices_ = 0;
 
     std::srand(0);
@@ -105,24 +107,3 @@ int main() {
     std::cout << "Done. Shutting down" << std::endl;
     tt::tt_metal::CloseDevice(device);
 }
-//*/
-/*
-#include <iostream>
-
-#if __cplusplus >= 202002L
-    #define CPP_VERSION "C++20 or later"
-#elif __cplusplus >= 201703L
-    #define CPP_VERSION "C++17"
-#elif __cplusplus >= 201402L
-    #define CPP_VERSION "C++14"
-#elif __cplusplus >= 201103L
-    #define CPP_VERSION "C++11"
-#else
-    #define CPP_VERSION "Pre-C++11"
-#endif
-
-#include <source_location>
-int main() {
-    std::cout << "C++ version: " << CPP_VERSION << std::endl;
-}
-//*/
