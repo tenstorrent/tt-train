@@ -1,9 +1,8 @@
 #include <gtest/gtest.h>
-
+#include "warp_drive.hpp"
 // Demonstrate some basic assertions.
-TEST(HelloTest, BasicAssertions) {
+TEST(HelloTest, AddTest) {
     // Expect two strings not to be equal.
-    EXPECT_STRNE("hello", "world");
     // Expect equality.
-    EXPECT_EQ(7 * 6, 42);
+    EXPECT_EQ(wd::sum(7, 6), 13);
 }

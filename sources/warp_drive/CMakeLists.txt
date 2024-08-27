@@ -43,6 +43,7 @@ target_include_directories(warp_drive PUBLIC
     ${nng_include_dir}
 
 )
+target_include_directories(warp_drive PUBLIC ${PROJECT_SOURCE_DIR})
 target_link_directories(warp_drive PUBLIC
     $ENV{TT_METAL_HOME}/build/lib
 )

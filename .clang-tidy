@@ -1,4 +1,3 @@
----
 Checks: "*,
         -abseil-*,
         -altera-*,
@@ -13,9 +12,10 @@ Checks: "*,
         -readability-avoid-const-params-in-decls,
         -cppcoreguidelines-non-private-member-variables-in-classes,
         -misc-non-private-member-variables-in-classes,
+        -include-what-you-use,
 "
 WarningsAsErrors: ''
-HeaderFilterRegex: ''
+HeaderFilterRegex: '' 
 FormatStyle:     none
 
 CheckOptions:
