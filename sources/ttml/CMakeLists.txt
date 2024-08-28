@@ -1,11 +1,11 @@
-project (warp_drive)
+project (ttml)
 
 file(GLOB_RECURSE SOURCES LIST_DIRECTORIES true *.hpp *.cpp)
 
 #set(SOURCES)
 
 
-add_library(warp_drive STATIC ${SOURCES})
+add_library(ttml STATIC ${SOURCES})
 
 add_library(stdlib INTERFACE)
 
@@ -16,14 +16,14 @@ if(CMAKE_CXX_COMPILER_ID MATCHES "Clang" )
         message(FATAL_ERROR "libc++ or libc++abi not found. Make sure you have libc++ and libc++abi installed and in your PATH")
     endif()
 
-    target_link_libraries(warp_drive PUBLIC ${LIBC++} ${LIBC++ABI})
-    target_compile_options(warp_drive PUBLIC -stdlib=libc++)
+    target_link_libraries(ttml PUBLIC ${LIBC++} ${LIBC++ABI})
+    target_compile_options(ttml PUBLIC -stdlib=libc++)
 else()
-    target_link_libraries(warp_drive PUBLIC stdc++)
-    target_compile_options(warp_drive PUBLIC -fsized-deallocation)
+    target_link_libraries(ttml PUBLIC stdc++)
+    target_compile_options(ttml PUBLIC -fsized-deallocation)
 endif()
 
-target_include_directories(warp_drive PUBLIC
+target_include_directories(ttml PUBLIC
     # Metalium
     $ENV{TT_METAL_HOME}
     $ENV{TT_METAL_HOME}/tt_metal
@@ -43,29 +43,29 @@ target_include_directories(warp_drive PUBLIC
     ${nng_include_dir}
 
 )
-target_include_directories(warp_drive PUBLIC ${PROJECT_SOURCE_DIR})
-target_link_directories(warp_drive PUBLIC
+target_include_directories(ttml PUBLIC ${PROJECT_SOURCE_DIR})
+target_link_directories(ttml PUBLIC
     $ENV{TT_METAL_HOME}/build/lib
 )
 find_package(Python REQUIRED Development)
 
 foreach(lib ${BoostPackages})
-    target_include_directories(warp_drive PUBLIC ${Boost${lib}_SOURCE_DIR}/include)
+    target_include_directories(ttml PUBLIC ${Boost${lib}_SOURCE_DIR}/include)
 endforeach()
 
-target_link_libraries(warp_drive PUBLIC
+target_link_libraries(ttml PUBLIC
     dl z pthread atomic
 )
 
-target_link_libraries(warp_drive PUBLIC
+target_link_libraries(ttml PUBLIC
     tt_metal
     pthread
     Python::Python
     $ENV{TT_METAL_HOME}/build/lib/_ttnn.so
 )
 
-target_link_libraries(warp_drive PUBLIC yaml-cpp::yaml-cpp)
+target_link_libraries(ttml PUBLIC yaml-cpp::yaml-cpp)
 
-target_compile_definitions(warp_drive PUBLIC
+target_compile_definitions(ttml PUBLIC
     FMT_HEADER_ONLY
 )

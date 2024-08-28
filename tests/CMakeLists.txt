@@ -2,13 +2,13 @@ include(CTest)
 enable_testing()
 
 add_executable(
-  warp_drive_tests
+  ttml_tests
   hello_test.cpp
 )
-target_link_libraries( warp_drive_tests
+target_link_libraries( ttml_tests
   GTest::gtest_main
-  warp_drive
+  ttml
 )
 
 include(GoogleTest)
-gtest_discover_tests(warp_drive_tests)
+gtest_discover_tests(ttml_tests)

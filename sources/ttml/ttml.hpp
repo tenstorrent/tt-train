@@ -1,4 +1,4 @@
-#pragma once 
+#pragma once
 
 namespace wd {
 int sum(int a, int b);
