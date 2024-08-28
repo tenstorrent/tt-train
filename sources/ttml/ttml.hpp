@@ -1,5 +1,5 @@
 #pragma once
 
-namespace wd {
+namespace ttml {
 int sum(int a, int b);
-}  // namespace wd
+}  // namespace ttml

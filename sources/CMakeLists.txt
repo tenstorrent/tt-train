@@ -1,2 +1,2 @@
-add_subdirectory(sample_app)
+add_subdirectory(examples)
 add_subdirectory(ttml)

@@ -62,7 +62,7 @@ int main() {
     std::cout << "num_devices:" << num_devices_ << std::endl;
     device = tt::tt_metal::CreateDevice(0);
     std::cout << "Device created" << std::endl;
-    AutoFormat::SetDefaultDevice(device);  // set the default device to the one we just opened
+    // AutoFormat::SetDefaultDevice(device);  // set the default device to the one we just opened
 
     std::cout << "Creating a tensor with bfloat16 data type" << std::endl;
     // TTNN wants us to explicitly specify if the tensor owns the buffer or not. if not, we need to make dman sure that
