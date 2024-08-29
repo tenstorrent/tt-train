@@ -1,5 +1,10 @@
 #pragma once
 
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wundefined-inline"
+#pragma GCC diagnostic ignored "-Wdeprecated-volatile"
+#pragma GCC diagnostic ignored "-Wdeprecated-this-capture"
+
 #include "common/bfloat16.hpp"                                                                // NOLINT
 #include "tests/tt_metal/test_utils/env_vars.hpp"                                             // NOLINT
 #include "tt_metal/host_api.hpp"                                                              // NOLINT
@@ -11,3 +16,4 @@
 #include "ttnn/operations/eltwise/binary/binary.hpp"                                          // NOLINT
 #include "ttnn/operations/eltwise/unary/unary.hpp"                                            // NOLINT
 #include "ttnn/types.hpp"
+#pragma GCC diagnostic pop

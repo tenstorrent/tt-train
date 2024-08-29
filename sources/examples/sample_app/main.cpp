@@ -1,7 +1,7 @@
 
 #include <iostream>
 
-#include "core/ttml_all_includes.hpp"
+#include "core/ttnn_all_includes.hpp"
 #include "ttml.hpp"
 
 ttnn::device::Device* device = nullptr;
@@ -97,4 +97,5 @@ int main() {
     // Remember to close the device when you are done
     std::cout << "Done. Shutting down" << std::endl;
     tt::tt_metal::CloseDevice(device);
+    return 0;
 }
