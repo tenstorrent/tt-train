@@ -2,10 +2,10 @@
 
 namespace ttml::datasets {
 template <class DataType, class TargetType>
-class InMemoryDataset : public DatasetBase<InMemoryDataset, DataType, TargetType> {
+class InMemoryDataset : public DatasetBase<InMemoryDataset<DataType, TargetType>, DataType, TargetType> {
    public:
     using Parent = DatasetBase<InMemoryDataset, DataType, TargetType>;
-    using Sample = Parent::Sample;
+    using Sample = typename Parent::Sample;
     InMemoryDataset(const std::vector<DataType>& data, const std::vector<TargetType>& targets) :
         m_data(data), m_targets(targets) {}
 

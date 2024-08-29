@@ -15,10 +15,10 @@ class DatasetBase {
     DatasetBase(DatasetBase&&) = default;
     ~DatasetBase() = default;
 
-    [[nodiscard]] size_t get_size() const { return static_cast<Derived*>(this)->get_size_impl(); }
+    [[nodiscard]] size_t get_size() const { return static_cast<const Derived*>(this)->get_size_impl(); }
 
     [[nodiscard]] virtual Sample get_item(size_t index) const {
-        return static_cast<Derived*>(this)->get_item_impl(index);
+        return static_cast<const Derived*>(this)->get_item_impl(index);
     }
 
     [[nodiscard]] std::vector<Sample> get_batch(std::span<size_t> indices) const {
