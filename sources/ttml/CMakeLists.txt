@@ -1,6 +1,6 @@
 project (ttml)
 
-file(GLOB_RECURSE SOURCES LIST_DIRECTORIES true *.hpp *.cpp)
+file(GLOB_RECURSE SOURCES LIST_DIRECTORIES true *.hpp *.cpp) # I am a bad person
 
 #set(SOURCES)
 
@@ -64,7 +64,9 @@ target_link_libraries(ttml PUBLIC
     $ENV{TT_METAL_HOME}/build/lib/_ttnn.so
 )
 
-target_link_libraries(ttml PUBLIC yaml-cpp::yaml-cpp)
+target_link_libraries(ttml PUBLIC 
+    yaml-cpp::yaml-cpp
+)
 
 target_compile_definitions(ttml PUBLIC
     FMT_HEADER_ONLY
