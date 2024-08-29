@@ -1,5 +1,7 @@
 #include "generators.hpp"
 
+#include <numeric>
+#include <ranges>
 namespace ttml::datasets {
 InMemoryFloatVecDataset make_regression(MakeRegressionParams params, unsigned int seed) {
     std::mt19937 gen(seed);
@@ -11,28 +13,33 @@ InMemoryFloatVecDataset make_regression(MakeRegressionParams params, unsigned in
 
     // Generate random coefficients for each target
     std::vector<std::vector<float>> coefficients(params.n_targets, std::vector<float>(params.n_features));
-    for (size_t t = 0; t < params.n_targets; ++t) {
-        for (size_t i = 0; i < params.n_features; ++i) {
-            coefficients[t][i] = dist(gen);
+
+    auto generate_sample = [&](auto& sample_data) { std::ranges::generate(sample_data, [&]() { return dist(gen); }); };
+
+    auto compute_target = [&](const auto& sample_data, const auto& coeff) {
+        return std::transform_reduce(
+            sample_data.begin(), sample_data.end(), coeff.begin(), 0.0f, std::plus<>(), std::multiplies<>());
+    };
+
+    auto add_bias_and_noise = [&](float target) {
+        if (params.bias) {
+            target += dist(gen);  // Add bias
         }
-    }
+        target += params.noise * dist(gen);  // Add noise
+        return target;
+    };
+
+    std::ranges::for_each(coefficients, [&](auto& target_coeffs) { generate_sample(target_coeffs); });
 
     for (size_t i = 0; i < params.n_samples; ++i) {
-        for (size_t t = 0; t < params.n_targets; ++t) {
-            float target = 0.0f;
-            for (size_t j = 0; j < params.n_features; ++j) {
-                data[i][j] = dist(gen);
-                target += data[i][j] * coefficients[t][j];
-            }
+        generate_sample(data[i]);
 
-            if (params.bias) {
-                target += dist(gen);  // Bias term
-            }
-
-            target += params.noise * dist(gen);  // Add noise
-            targets[i][t] = target;              // Store the target in the target vector
+        for (size_t j = 0; j < params.n_targets; ++j) {
+            float target = compute_target(data[i], coefficients[j]);
+            targets[i][j] = add_bias_and_noise(target);
         }
     }
+
     return {data, targets};
 }
 }  // namespace ttml::datasets
