@@ -1,6 +1,5 @@
 #pragma once
 #include <algorithm>
-#include <iterator>
 #include <random>
 #include <ranges>
 #include <vector>
@@ -21,8 +20,9 @@ class DataLoader {
     }
 
     void shuffle_indices() {
-        if (!m_shuffle)
+        if (!m_shuffle) {
             return;
+        }
         std::mt19937 g(m_seed);
         std::shuffle(m_indices.begin(), m_indices.end(), g);
     }
