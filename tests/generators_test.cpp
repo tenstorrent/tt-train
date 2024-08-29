@@ -25,9 +25,9 @@ TEST(MakeRegressionTest, FeatureAndTargetVectorSizes) {
 // Test case to check reproducibility with a seed
 TEST(MakeRegressionTest, ReproducibilityWithSeed) {
     MakeRegressionParams params = {100, 10, 3, 0.1f, true};  // 3 targets per sample
-
-    auto dataset1 = make_regression(params, 42);
-    auto dataset2 = make_regression(params, 42);
+    unsigned int seed = 42;
+    auto dataset1 = make_regression(params, seed);
+    auto dataset2 = make_regression(params, seed);
 
     for (size_t i = 0; i < params.n_samples; ++i) {
         auto sample1 = dataset1.get_item(i);
@@ -40,14 +40,14 @@ TEST(MakeRegressionTest, ReproducibilityWithSeed) {
 // Test case to check if noise affects the targets
 TEST(MakeRegressionTest, NoiseEffectOnTargets) {
     MakeRegressionParams params = {100, 10, 3, 0.5f, true};  // 3 targets per sample
-
-    auto dataset = make_regression(params, 322);
+    unsigned int seed = 322;
+    auto dataset = make_regression(params, seed);
 
     auto sample = dataset.get_item(0);
 
     // Generate a dataset with no noise for comparison
     params.noise = 0.0f;
-    auto dataset_no_noise = make_regression(params, 322);
+    auto dataset_no_noise = make_regression(params, seed);
     auto sample_no_noise = dataset_no_noise.get_item(0);
 
     for (size_t t = 0; t < params.n_targets; ++t) {
@@ -58,14 +58,14 @@ TEST(MakeRegressionTest, NoiseEffectOnTargets) {
 // Test case to check if bias term affects the targets
 TEST(MakeRegressionTest, BiasEffectOnTargets) {
     MakeRegressionParams params = {100, 10, 3, 0.0f, true};  // 3 targets per sample
-
+    unsigned int seed = 228;
     // Generate a dataset with bias
-    auto dataset_with_bias = make_regression(params, 228);
+    auto dataset_with_bias = make_regression(params, seed);
     auto sample_with_bias = dataset_with_bias.get_item(0);
 
     // Generate a dataset without bias
     params.bias = false;
-    auto dataset_without_bias = make_regression(params, 228);
+    auto dataset_without_bias = make_regression(params, seed);
     auto sample_without_bias = dataset_without_bias.get_item(0);
 
     for (size_t t = 0; t < params.n_targets; ++t) {

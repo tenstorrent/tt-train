@@ -6,9 +6,11 @@
 #include "in_memory_dataset.hpp"
 
 namespace ttml::datasets {
+
 using InMemoryFloatVecDataset = InMemoryDataset<std::vector<float>, std::vector<float>>;
+
 struct MakeRegressionParams {
-    size_t n_samples = 128;
+    size_t n_samples = 1;
     size_t n_features = 1;
     size_t n_targets = 1;
     float noise = 0.0;
