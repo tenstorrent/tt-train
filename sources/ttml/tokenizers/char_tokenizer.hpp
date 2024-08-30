@@ -1,3 +1,5 @@
+#pragma once
+
 #include <unordered_map>
 
 #include "tokenizer_base.hpp"
@@ -10,6 +12,8 @@ class CharTokenizer : public TokenizerBase {
     using IdtoChars = std::unordered_map<int, char>;
     // Constructor that initializes the tokenizer with a vocabulary
     CharTokenizer(const Vocabulary& vocabulary);
+    CharTokenizer(const CharTokenizer&) = default;
+    CharTokenizer(CharTokenizer&&) = default;
 
     std::vector<int> encode(const std::string& text) const override;
 

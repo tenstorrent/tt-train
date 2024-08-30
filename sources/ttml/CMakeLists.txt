@@ -23,7 +23,7 @@ else()
     target_compile_options(ttml PUBLIC -fsized-deallocation)
 endif()
 
-target_include_directories(ttml PUBLIC
+target_include_directories(ttml SYSTEM PUBLIC
     # Metalium
     $ENV{TT_METAL_HOME}
     $ENV{TT_METAL_HOME}/tt_metal
@@ -50,7 +50,7 @@ target_link_directories(ttml PUBLIC
 find_package(Python REQUIRED Development)
 
 foreach(lib ${BoostPackages})
-    target_include_directories(ttml PUBLIC ${Boost${lib}_SOURCE_DIR}/include)
+    target_include_directories(ttml SYSTEM PUBLIC ${Boost${lib}_SOURCE_DIR}/include)
 endforeach()
 
 target_link_libraries(ttml PUBLIC
