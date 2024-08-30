@@ -15,5 +15,6 @@
 #include "ttnn/operations/data_movement/tilize_with_val_padding/tilize_with_val_padding.hpp"  // NOLINT
 #include "ttnn/operations/eltwise/binary/binary.hpp"                                          // NOLINT
 #include "ttnn/operations/eltwise/unary/unary.hpp"                                            // NOLINT
-#include "ttnn/types.hpp"
+#include "ttnn/types.hpp"                                                                     // NOLINT
+
 #pragma GCC diagnostic pop

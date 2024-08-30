@@ -1,3 +1,5 @@
+
+
 #include "datasets/dataloader.hpp"
 
 #include <gtest/gtest.h>
@@ -7,8 +9,6 @@
 #include <vector>
 
 #include "datasets/in_memory_dataset.hpp"
-
-// A simple fixture for setting up test data
 
 using InMemoryDatasetFloatVecInt = ttml::datasets::InMemoryDataset<std::vector<float>, int>;
 class DataLoaderTest : public ::testing::Test {
@@ -103,4 +103,37 @@ TEST_F(DataLoaderTest, TestSingleElementBatch) {
     EXPECT_EQ(batch.size(), 1);
     EXPECT_EQ(batch[0].first, data[0]);
     EXPECT_EQ(batch[0].second, targets[0]);
+}
+
+// Test that the DataLoader correctly applies the collate_fn
+TEST_F(DataLoaderTest, TestCollateFn) {
+    // Custom collate function that sums all elements in the vectors and returns the sum as a new batch
+    auto custom_collate_fn = [](const std::vector<std::pair<std::vector<float>, int>>& batch) {
+        std::vector<std::pair<std::vector<float>, int>> collated_batch;
+        for (const auto& sample : batch) {
+            std::vector<float> summed_data(sample.first.size(), 0.0f);
+            for (size_t i = 0; i < sample.first.size(); ++i) {
+                summed_data[i] += sample.first[i];
+            }
+            collated_batch.emplace_back(summed_data, sample.second);
+        }
+        return collated_batch;
+    };
+
+    ttml::datasets::DataLoader<InMemoryDatasetFloatVecInt, decltype(custom_collate_fn)> dataloader(
+        *dataset, 2, false, std::random_device{}(), custom_collate_fn);
+
+    auto it = dataloader.begin();
+    auto batch = *it;
+
+    EXPECT_EQ(batch.size(), 2);
+    EXPECT_EQ(batch[0].first[0], data[0][0]);  // Ensure the collate function was applied
+    EXPECT_EQ(batch[0].first[1], data[0][1]);
+    EXPECT_EQ(batch[0].first[2], data[0][2]);
+    EXPECT_EQ(batch[0].second, targets[0]);
+
+    EXPECT_EQ(batch[1].first[0], data[1][0]);
+    EXPECT_EQ(batch[1].first[1], data[1][1]);
+    EXPECT_EQ(batch[1].first[2], data[1][2]);
+    EXPECT_EQ(batch[1].second, targets[1]);
 }

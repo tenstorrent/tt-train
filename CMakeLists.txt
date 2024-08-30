@@ -47,8 +47,6 @@ message($ENV{TT_METAL_HOME}/tt_metal/third_party/src/firmware/riscv/$ENV{ARCH_NA
 
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
-#target_precompile_headers(ml-framework-cpp PRIVATE pch.hpp)
-
 add_subdirectory(sources)
 include(CTest)
 enable_testing()
