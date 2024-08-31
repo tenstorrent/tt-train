@@ -1,10 +1,7 @@
 #pragma once
 #include <algorithm>
 #include <random>
-#include <ranges>
 #include <vector>
-
-#include "core/range_utils.hpp"
 
 namespace ttml::datasets {
 
@@ -35,8 +32,8 @@ class DataLoader {
         if (!m_shuffle) {
             return;
         }
-        std::mt19937 g(m_seed);
-        std::shuffle(m_indices.begin(), m_indices.end(), g);
+        std::mt19937 gen(m_seed);
+        std::shuffle(m_indices.begin(), m_indices.end(), gen);
     }
 
     class Iterator {
