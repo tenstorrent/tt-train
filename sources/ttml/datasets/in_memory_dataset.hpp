@@ -8,12 +8,15 @@ class InMemoryDataset : public DatasetBase<InMemoryDataset<DataType, TargetType>
    public:
     using Parent = DatasetBase<InMemoryDataset<DataType, TargetType>, DataType, TargetType>;
     using Sample = typename Parent::Sample;
-    friend class DatasetBase<InMemoryDataset<DataType, TargetType>, DataType, TargetType>;
+    friend Parent;
+
     InMemoryDataset(const std::vector<DataType>& data, const std::vector<TargetType>& targets) :
         m_data(data), m_targets(targets) {}
 
     InMemoryDataset(const InMemoryDataset&) = default;
     InMemoryDataset(InMemoryDataset&&) = default;
+    InMemoryDataset& operator=(const InMemoryDataset&) = default;
+    InMemoryDataset& operator=(InMemoryDataset&&) = default;
     ~InMemoryDataset() = default;
 
    private:

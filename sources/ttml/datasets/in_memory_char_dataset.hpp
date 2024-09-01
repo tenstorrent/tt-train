@@ -2,20 +2,21 @@
 
 #include <span>
 
-#include "in_memory_dataset.hpp"
+#include "dataset_base.hpp"
 
 namespace ttml::datasets {
 class InMemoryCharDataset : public DatasetBase<InMemoryCharDataset, std::span<const int>, std::span<const int>> {
    public:
     using Parent = DatasetBase<InMemoryCharDataset, std::span<const int>, std::span<const int>>;
     using Sample = typename Parent::Sample;
-    friend class DatasetBase<InMemoryCharDataset, std::span<const int>, std::span<const int>>;
-    ;
+    friend Parent;
 
     InMemoryCharDataset(const std::vector<int>& tokens, int seq_length);
 
     InMemoryCharDataset(const InMemoryCharDataset&) = default;
     InMemoryCharDataset(InMemoryCharDataset&&) = default;
+    InMemoryCharDataset& operator=(const InMemoryCharDataset&) = default;
+    InMemoryCharDataset& operator=(InMemoryCharDataset&&) = default;
     ~InMemoryCharDataset() = default;
 
    private:
