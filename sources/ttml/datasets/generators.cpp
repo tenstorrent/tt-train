@@ -1,7 +1,6 @@
 #include "generators.hpp"
 
 #include <numeric>
-#include <ranges>
 namespace ttml::datasets {
 InMemoryFloatVecDataset make_regression(MakeRegressionParams params, unsigned int seed) {
     std::mt19937 gen(seed);
@@ -18,7 +17,7 @@ InMemoryFloatVecDataset make_regression(MakeRegressionParams params, unsigned in
 
     auto compute_target = [&](const auto& sample_data, const auto& coeff) {
         return std::transform_reduce(
-            sample_data.begin(), sample_data.end(), coeff.begin(), 0.0f, std::plus<>(), std::multiplies<>());
+            sample_data.begin(), sample_data.end(), coeff.begin(), 0.0F, std::plus<>(), std::multiplies<>());
     };
 
     auto add_bias_and_noise = [&](float target) {

@@ -13,6 +13,7 @@ Checks: "*,
         -cppcoreguidelines-non-private-member-variables-in-classes,
         -misc-non-private-member-variables-in-classes,
         -include-what-you-use,
+        -cppcoreguidelines-avoid-magic-numbers,
 "
 WarningsAsErrors: ''
 HeaderFilterRegex: '' 
@@ -20,6 +21,6 @@ FormatStyle:     none
 
 CheckOptions:
   - key: readability-identifier-length.IgnoredVariableNames
-    value: 'x|y|z'
+    value: 'x|y|z|i|j|k|t|it'
   - key: readability-identifier-length.IgnoredParameterNames
-    value: 'x|y|z'
+    value: 'x|y|z|t'

@@ -3,7 +3,6 @@
 #include <algorithm>
 #include <vector>
 
-#include "datasets/dataloader.hpp"
 #include "datasets/dataset_subset.hpp"
 #include "datasets/in_memory_dataset.hpp"
 #include "datasets/utils.hpp"
@@ -47,7 +46,8 @@ TEST_F(RandomSplitTest, TestShuffling) {
     std::array<size_t, 4> batch_indices = {0, 1, 2, 3};
     auto original_data = dataset->get_batch(batch_indices);
     std::array<size_t, 2> split_indices = {2, 2};
-    auto subsets = random_split(*dataset, split_indices);
+    unsigned int seed = 322;
+    auto subsets = random_split(*dataset, split_indices, true, seed);
 
     // We expect that at least one of the first elements in the subsets is different from the original order
     bool shuffled =
@@ -58,7 +58,7 @@ TEST_F(RandomSplitTest, TestShuffling) {
 
 TEST_F(RandomSplitTest, TestSingleSubset) {
     std::array<size_t, 1> split_indices = {4};
-    auto subsets = random_split(*dataset, split_indices);
+    auto subsets = random_split(*dataset, split_indices, false);
 
     ASSERT_EQ(subsets.size(), 1);
     EXPECT_EQ(subsets[0].get_size(), 4);

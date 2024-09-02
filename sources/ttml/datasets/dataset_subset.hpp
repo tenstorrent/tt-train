@@ -1,5 +1,6 @@
 #pragma once
 
+#include "core/not_null.hpp"
 #include "dataset_base.hpp"
 
 namespace ttml::datasets {
@@ -11,7 +12,7 @@ class DatasetSubset : public DatasetBase<
                           typename DatasetType::TargetTypeT> {
    public:
     DatasetSubset(const DatasetType& dataset, const std::vector<size_t>& indices) :
-        m_dataset(dataset), m_indices(indices) {}
+        m_dataset(&dataset), m_indices(indices) {}
 
     [[nodiscard]] size_t get_size_impl() const { return m_indices.size(); }
 
@@ -19,11 +20,11 @@ class DatasetSubset : public DatasetBase<
         if (index >= m_indices.size()) {
             throw std::out_of_range("Index out of range.");
         }
-        return m_dataset.get_item(m_indices[index]);
+        return m_dataset->get_item(m_indices[index]);
     }
 
    private:
-    const DatasetType& m_dataset;
+    core::not_null<const DatasetType*> m_dataset;
     std::vector<size_t> m_indices;
 };
 

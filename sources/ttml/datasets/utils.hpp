@@ -14,7 +14,10 @@ std::tuple<InMemoryCharDataset, tokenizers::CharTokenizer> create_in_memory_char
 
 template <typename DatasetType>
 std::vector<DatasetSubset<DatasetType>> random_split(
-    const DatasetType& dataset, std::span<size_t> split_sizes, unsigned int seed = std::random_device{}()) {
+    const DatasetType& dataset,
+    std::span<size_t> split_sizes,
+    bool shuffle = true,
+    unsigned int seed = std::random_device{}()) {
     size_t total_size = std::accumulate(split_sizes.begin(), split_sizes.end(), 0ULL);
     if (total_size != dataset.get_size()) {
         throw std::invalid_argument("Total of split sizes must equal the size of the dataset.");
@@ -24,8 +27,10 @@ std::vector<DatasetSubset<DatasetType>> random_split(
     std::vector<size_t> indices(dataset.get_size());
     std::iota(indices.begin(), indices.end(), 0);
 
-    std::mt19937 gen(seed);
-    std::shuffle(indices.begin(), indices.end(), gen);
+    if (shuffle) {
+        std::mt19937 gen(seed);
+        std::shuffle(indices.begin(), indices.end(), gen);
+    }
 
     // Create the subsets
     std::vector<DatasetSubset<DatasetType>> subsets;
