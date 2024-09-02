@@ -3,8 +3,6 @@
 
 #include <gtest/gtest.h>
 
-#include <memory>
-#include <numeric>
 #include <vector>
 
 using namespace ttml::tokenizers;
@@ -12,9 +10,6 @@ using namespace ttml::tokenizers;
 // Test fixture for CharTokenizer
 class CharTokenizerTest : public ::testing::Test {
    protected:
-    // You can add any setup or teardown code for the tests here
-
-    // Example Vocabulary and CharTokenizer instance
     CharTokenizer::Vocabulary vocabulary = {
         {'h', 1}, {'e', 2}, {'l', 3}, {'o', 4}, {' ', 5}, {'w', 6}, {'r', 7}, {'d', 8}};
 

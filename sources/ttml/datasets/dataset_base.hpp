@@ -8,8 +8,11 @@ namespace ttml::datasets {
 template <class Derived, class DataType, class TargetType>
 class DatasetBase {
    public:
+    using DataTypeT = DataType;
+    using TargetTypeT = TargetType;
     using Sample = std::pair<DataType, TargetType>;
-
+    // using Samples = std::pair<std::vector<DataType>, std::vector<TargetType>>; TODO: consider return Samples instead
+    // of vector<Sample>
     DatasetBase() = default;
     DatasetBase(const DatasetBase&) = default;
     DatasetBase(DatasetBase&&) = default;
@@ -30,6 +33,7 @@ class DatasetBase {
             assert(index < size);
             batch.push_back(get_item(index));
         }
+        return batch;
     }
 };
 }  // namespace ttml::datasets

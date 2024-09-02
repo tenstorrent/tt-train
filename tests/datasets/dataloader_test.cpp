@@ -5,7 +5,6 @@
 #include <gtest/gtest.h>
 
 #include <memory>
-#include <numeric>
 #include <vector>
 
 #include "datasets/in_memory_dataset.hpp"
@@ -21,7 +20,7 @@ class DataLoaderTest : public ::testing::Test {
         dataset = std::make_unique<InMemoryDatasetFloatVecInt>(data, targets);
     }
 
-    void TearDown() override {}
+    void TearDown() override { dataset = nullptr; }
 
     std::vector<std::vector<float>> data;
     std::vector<int> targets;
