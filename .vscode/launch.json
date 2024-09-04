@@ -12,7 +12,7 @@
             "stopAtEntry": false,
             "externalConsole": false,
             "MIMode": "gdb",
-            "miDebuggerPath": "/home/ubuntu/scripts/gdb-14.2/gdb/gdb",
+            "miDebuggerPath": "gdb-14.2",
         }
     ]
 }
