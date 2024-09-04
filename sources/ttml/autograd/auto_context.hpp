@@ -1,6 +1,5 @@
 #pragma once
-#include <memory>
-#include <mutex>
+
 #include <random>
 
 #include "graph.hpp"
@@ -14,11 +13,7 @@ class AutoContext {
     AutoContext(AutoContext&&) = delete;
     AutoContext& operator=(AutoContext&&) = delete;
     // Static method to access the singleton instance
-    static inline AutoContext& get_instance() {
-        static std::once_flag init_flag;
-        std::call_once(init_flag, []() { instance = std::unique_ptr<AutoContext>(new AutoContext); });
-        return *instance;
-    }
+    static AutoContext& get_instance();
 
     std::mt19937& get_generator();
 
@@ -27,6 +22,7 @@ class AutoContext {
     [[nodiscard]] unsigned int get_seed() const;
 
     ~AutoContext() = default;  // to make it work with unique_ptr.
+
    private:
     AutoContext() = default;
 
@@ -34,8 +30,6 @@ class AutoContext {
     unsigned int m_seed = 5489U;
 
     Graph graph;
-
-    static inline std::unique_ptr<AutoContext> instance;
 };
 
 }  // namespace ttml::autograd

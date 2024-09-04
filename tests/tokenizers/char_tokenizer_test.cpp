@@ -29,8 +29,7 @@ TEST_F(CharTokenizerTest, Encode) {
 // Test encoding with a character not in vocabulary
 TEST_F(CharTokenizerTest, EncodeUnknownCharacter) {
     std::string text = "hello world!";
-
-    EXPECT_THROW({ tokenizer.encode(text); }, std::runtime_error);
+    EXPECT_THROW({ auto _ = tokenizer.encode(text); }, std::runtime_error);
 }
 
 // Test decoding functionality
@@ -47,7 +46,7 @@ TEST_F(CharTokenizerTest, Decode) {
 TEST_F(CharTokenizerTest, DecodeUnknownToken) {
     std::vector<int> tokens = {1, 2, 3, 3, 4, 9};  // Token 9 is not in the vocabulary
 
-    EXPECT_THROW({ tokenizer.decode(tokens); }, std::runtime_error);
+    EXPECT_THROW({ auto _ = tokenizer.decode(tokens); }, std::runtime_error);
 }
 
 // Test encoding and decoding consistency

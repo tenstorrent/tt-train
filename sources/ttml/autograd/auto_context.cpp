@@ -8,4 +8,8 @@ void AutoContext::set_seed(unsigned int seed) {
     m_generator = std::mt19937(m_seed);
 }
 
+AutoContext& AutoContext::get_instance() {
+    static AutoContext instance;
+    return instance;
+}
 }  // namespace ttml::autograd
