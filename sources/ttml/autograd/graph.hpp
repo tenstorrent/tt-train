@@ -16,14 +16,12 @@ struct GraphNode {
 
 class NodeId {
    public:
-    NodeId(size_t node_id, Graph* graph) : m_node_id(node_id), m_graph(graph) {}
+    NodeId(size_t node_id, Graph* graph);
+    [[nodiscard]] size_t get_id() const;
 
    private:
     size_t m_node_id = 0;
     core::not_null<Graph*> m_graph;
-
-   public:
-    [[nodiscard]] size_t get_id() const;
 };
 
 class Graph {

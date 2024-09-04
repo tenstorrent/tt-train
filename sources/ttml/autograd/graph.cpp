@@ -11,4 +11,7 @@ NodeId Graph::add_node(GradFunction&& grad_function, std::span<NodeId> links) {
     m_links.push_back(std::move(node_links));
     return {curr_id, this};
 }
+NodeId::NodeId(size_t node_id, Graph* graph) : m_node_id(node_id), m_graph(graph) {}
+
+size_t NodeId::get_id() const { return m_node_id; }
 }  // namespace ttml::autograd
