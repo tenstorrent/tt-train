@@ -17,8 +17,6 @@ Device::Device(int device_index) :
     tt::log_info("Device #{} successfully created", device_index);
 }
 
-Device::~Device() {}
-
 [[nodiscard]] tt::tt_metal::Device& Device::get_device() {
     assert(m_device);
     return *m_device;

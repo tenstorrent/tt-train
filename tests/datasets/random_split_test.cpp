@@ -43,11 +43,11 @@ TEST_F(RandomSplitTest, TestCorrectSplitting) {
 }
 
 TEST_F(RandomSplitTest, TestShuffling) {
+    ttml::autograd::AutoContext::get_instance().set_seed(322);
     std::array<size_t, 4> batch_indices = {0, 1, 2, 3};
     auto original_data = dataset->get_batch(batch_indices);
     std::array<size_t, 2> split_indices = {2, 2};
-    unsigned int seed = 322;
-    auto subsets = random_split(*dataset, split_indices, true, seed);
+    auto subsets = random_split(*dataset, split_indices, true);
 
     // We expect that at least one of the first elements in the subsets is different from the original order
     bool shuffled =

@@ -14,7 +14,7 @@ class Device {
 
     Device& operator=(const Device&) = delete;
     Device& operator=(Device&&) = default;
-    ~Device();
+    ~Device() = default;
 
     [[nodiscard]] tt::tt_metal::Device& get_device();
 

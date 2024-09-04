@@ -1,9 +1,10 @@
 #include "generators.hpp"
 
 #include <numeric>
+
+#include "autograd/auto_context.hpp"
 namespace ttml::datasets {
-InMemoryFloatVecDataset make_regression(MakeRegressionParams params, unsigned int seed) {
-    std::mt19937 gen(seed);
+InMemoryFloatVecDataset make_regression(MakeRegressionParams params) {
     std::normal_distribution<float> dist(0.0, 1.0);
 
     std::vector<std::vector<float>> data(params.n_samples, std::vector<float>(params.n_features));
@@ -13,7 +14,10 @@ InMemoryFloatVecDataset make_regression(MakeRegressionParams params, unsigned in
     // Generate random coefficients for each target
     std::vector<std::vector<float>> coefficients(params.n_targets, std::vector<float>(params.n_features));
 
-    auto generate_sample = [&](auto& sample_data) { std::ranges::generate(sample_data, [&]() { return dist(gen); }); };
+    auto generate_sample = [&](auto& sample_data) {
+        std::ranges::generate(
+            sample_data, [&]() { return dist(autograd::AutoContext::get_instance().get_generator()); });
+    };
 
     auto compute_target = [&](const auto& sample_data, const auto& coeff) {
         return std::transform_reduce(
@@ -22,9 +26,9 @@ InMemoryFloatVecDataset make_regression(MakeRegressionParams params, unsigned in
 
     auto add_bias_and_noise = [&](float target) {
         if (params.bias) {
-            target += dist(gen);  // Add bias
+            target += dist(autograd::AutoContext::get_instance().get_generator());  // Add bias
         }
-        target += params.noise * dist(gen);  // Add noise
+        target += params.noise * dist(autograd::AutoContext::get_instance().get_generator());  // Add noise
         return target;
     };
 

@@ -11,15 +11,15 @@ class CharTokenizer : public TokenizerBase {
     using Vocabulary = std::unordered_map<char, int>;
     using IdtoChars = std::unordered_map<int, char>;
     // Constructor that initializes the tokenizer with a vocabulary
-    CharTokenizer(const Vocabulary& vocabulary);
+    explicit CharTokenizer(const Vocabulary& vocabulary);
     CharTokenizer(const CharTokenizer&) = default;
     CharTokenizer(CharTokenizer&&) = default;
 
-    std::vector<int> encode(const std::string& text) const override;
+    [[nodiscard]] std::vector<int> encode(const std::string& text) const override;
 
-    std::string decode(const std::vector<int>& tokens) const override;
+    [[nodiscard]] std::string decode(const std::vector<int>& tokens) const override;
 
-    const CharTokenizer::Vocabulary& get_vocabulary();
+    [[nodiscard]] const CharTokenizer::Vocabulary& get_vocabulary() const;
 
     ~CharTokenizer() override = default;
 

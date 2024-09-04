@@ -16,5 +16,5 @@ struct MakeRegressionParams {
     float noise = 0.0;
     bool bias = true;
 };
-InMemoryFloatVecDataset make_regression(MakeRegressionParams params, unsigned int seed = std::random_device{}());
+InMemoryFloatVecDataset make_regression(MakeRegressionParams params);
 }  // namespace ttml::datasets

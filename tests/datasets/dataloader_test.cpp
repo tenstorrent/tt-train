@@ -52,7 +52,6 @@ TEST_F(DataLoaderTest, TestBatchLoading) {
 
 // Test that the DataLoader correctly handles dataset sizes not divisible by batch size
 TEST_F(DataLoaderTest, TestLastBatchHandling) {
-    unsigned int seed = 322;
     ttml::datasets::DataLoader<InMemoryDatasetFloatVecInt> dataloader(*dataset, 3, false);
 
     auto it = dataloader.begin();
@@ -67,8 +66,7 @@ TEST_F(DataLoaderTest, TestLastBatchHandling) {
 
 // Test that shuffling works correctly
 TEST_F(DataLoaderTest, TestShuffling) {
-    unsigned int seed = 322;
-    ttml::datasets::DataLoader<InMemoryDatasetFloatVecInt> dataloader(*dataset, 2, true, 322);
+    ttml::datasets::DataLoader<InMemoryDatasetFloatVecInt> dataloader(*dataset, 2, true);
 
     auto first_batch_before_shuffle = *dataloader.begin();
     auto it = dataloader.begin();
@@ -120,7 +118,7 @@ TEST_F(DataLoaderTest, TestCollateFn) {
     };
 
     ttml::datasets::DataLoader<InMemoryDatasetFloatVecInt, decltype(custom_collate_fn)> dataloader(
-        *dataset, 2, false, std::random_device{}(), custom_collate_fn);
+        *dataset, 2, false, custom_collate_fn);
 
     auto it = dataloader.begin();
     auto batch = *it;

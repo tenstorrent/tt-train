@@ -31,7 +31,7 @@ std::string CharTokenizer::decode(const std::vector<int>& tokens) const {
     }
     return oss.str();
 }
-const CharTokenizer::Vocabulary& CharTokenizer::get_vocabulary() { return m_vocabulary; }
+const CharTokenizer::Vocabulary& CharTokenizer::get_vocabulary() const { return m_vocabulary; }
 
 void CharTokenizer::build_reverse_mapping() {
     for (const auto& pair : m_vocabulary) {
