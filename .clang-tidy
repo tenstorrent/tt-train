@@ -24,4 +24,4 @@ CheckOptions:
   - key: readability-identifier-length.IgnoredVariableNames
     value: 'x|y|z|i|j|k|t|it|a|b'
   - key: readability-identifier-length.IgnoredParameterNames
-    value: 'x|y|z|t'
+    value: 'x|y|z|t|a|b'
