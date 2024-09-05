@@ -3,12 +3,13 @@
 #include <random>
 
 #include "graph.hpp"
+
 namespace ttml::autograd {
 
 enum class GradMode { ENABLED, DISABLED };
 
 class AutoContext {
-   public:
+public:
     // Delete copy constructor and assignment operator to prevent copying
     AutoContext(const AutoContext&) = delete;
     AutoContext& operator=(const AutoContext&) = delete;
@@ -30,7 +31,7 @@ class AutoContext {
 
     ~AutoContext() = default;  // to make it work with unique_ptr.
 
-   private:
+private:
     AutoContext() = default;
 
     std::mt19937 m_generator;

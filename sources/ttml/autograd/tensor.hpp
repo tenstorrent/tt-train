@@ -8,13 +8,13 @@
 
 namespace ttml::autograd {
 class Tensor : public std::enable_shared_from_this<Tensor> {
-   private:
+private:
     tt::tt_metal::Tensor m_value;
     tt::tt_metal::Tensor m_grad;
     bool m_require_grad = true;
     std::optional<NodeId> m_node_id;
 
-   public:
+public:
     Tensor(const Tensor &) = default;
     Tensor(Tensor &&) noexcept = default;
     Tensor &operator=(const Tensor &) = default;
