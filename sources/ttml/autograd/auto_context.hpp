@@ -20,9 +20,9 @@ public:
 
     std::mt19937& get_generator();
 
-    void set_seed(unsigned int seed);
+    void set_seed(uint32_t seed);
 
-    [[nodiscard]] unsigned int get_seed() const;
+    [[nodiscard]] uint32_t get_seed() const;
 
     std::optional<NodeId> add_backward_node(GradFunction&& grad_function, std::span<NodeId> links);
 
@@ -31,19 +31,19 @@ public:
 
     ~AutoContext() = default;  // to make it work with unique_ptr.
 
-    [[nodiscard]] unsigned int generate_module_id();
+    [[nodiscard]] uint32_t generate_module_id();
 
 private:
     AutoContext() = default;
 
     std::mt19937 m_generator;
-    unsigned int m_seed = 5489U;
+    uint32_t m_seed = 5489U;
 
     GradMode m_grads_mode = GradMode::ENABLED;
 
     Graph m_graph;
 
-    unsigned int module_counter = 0;
+    uint32_t module_counter = 0;
 };
 
 inline auto& ctx() { return ttml::autograd::AutoContext::get_instance(); }

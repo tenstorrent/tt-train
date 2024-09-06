@@ -19,7 +19,7 @@ class NodeId {
 public:
     NodeId(size_t node_id, Graph* graph);
     [[nodiscard]] size_t get_id() const;
-    [[nodiscard]] core::not_null<Graph*> get_graph() const;
+    [[nodiscard]] Graph& get_graph() const;
 
 private:
     size_t m_node_id = 0;

@@ -21,8 +21,8 @@ public:
     void step();
 
 private:
-    float m_lr;
-    float m_momentum;
+    float m_lr{1e-3F};
+    float m_momentum{0.0F};
     ttml::autograd::NamedParameters m_parameters;
     std::unordered_map<std::string, tt::tt_metal::Tensor> m_theta;
 };
