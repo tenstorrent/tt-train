@@ -34,6 +34,8 @@ public:
     tt::tt_metal::Tensor &get_grad() { return m_grad; }
     bool get_require_grad() const { return m_require_grad; }
     const std::optional<NodeId> &get_node() const { return m_node_id; }
+
+    void backward();
 };
 
 using TensorPtr = std::shared_ptr<Tensor>;
