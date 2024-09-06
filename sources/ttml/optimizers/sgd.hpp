@@ -8,8 +8,8 @@
 namespace ttml::optimizers {
 
 struct SGDConfig {
-    float lr;
-    float momentum;
+    float lr{1e-3F};
+    float momentum{0.0F};
 };
 
 class SGD {
