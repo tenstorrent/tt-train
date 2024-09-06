@@ -30,6 +30,7 @@ autograd::TensorPtr mean(const autograd::TensorPtr& tensor) {
     out->set_value(ttnn::mean(tensor->get_value()));
     autograd::GradFunction grad = [tensor, out]() {
         const auto inv_volume = 1.0F / static_cast<float>(tensor->get_value().get_shape().volume());
+        // TODO: remove multiply in favor of ttnn::repeat
         auto res = ttnn::multiply(ttnn::ones_like(tensor->get_value()), ttnn::multiply(out->get_grad(), inv_volume));
         tensor->add_grad(res);
     };
@@ -46,6 +47,7 @@ autograd::TensorPtr sum(const autograd::TensorPtr& tensor) {
     autograd::TensorPtr out;
     out->set_value(ttnn::sum(tensor->get_value()));
     autograd::GradFunction grad = [tensor, out]() {
+        // TODO: remove multiply in favor of ttnn::repeat
         auto res = ttnn::multiply(ttnn::ones_like(tensor->get_value()), out->get_grad());
         tensor->add_grad(res);
     };
