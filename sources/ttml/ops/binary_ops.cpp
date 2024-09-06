@@ -8,6 +8,7 @@
 #include "core/ttnn_all_includes.hpp"
 
 namespace ttml::ops {
+
 ttml::autograd::TensorPtr operator+(const autograd::TensorPtr& a, const autograd::TensorPtr& b) {
     autograd::TensorPtr out;
 
@@ -63,5 +64,13 @@ ttml::autograd::TensorPtr operator*(const autograd::TensorPtr& a, const autograd
 
     return out;
 }
+
+autograd::TensorPtr add(const autograd::TensorPtr& a, const autograd::TensorPtr& b) { return a + b; }
+
+autograd::TensorPtr sub(const autograd::TensorPtr& a, const autograd::TensorPtr& b) { return a - b; }
+
+autograd::TensorPtr mul(const autograd::TensorPtr& a, const autograd::TensorPtr& b) { return a * b; }
+
+autograd::TensorPtr div(const autograd::TensorPtr& a, const autograd::TensorPtr& b) { return a / b; }
 
 }  // namespace ttml::ops

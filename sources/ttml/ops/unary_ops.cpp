@@ -25,4 +25,37 @@ autograd::TensorPtr relu(const autograd::TensorPtr& tensor) {
     return out;
 }
 
+autograd::TensorPtr mean(const autograd::TensorPtr& tensor) {
+    autograd::TensorPtr out;
+    out->set_value(ttnn::mean(tensor->get_value()));
+    autograd::GradFunction grad = [tensor, out]() {
+        const auto inv_volume = 1.0F / static_cast<float>(tensor->get_value().get_shape().volume());
+        auto res = ttnn::multiply(ttnn::ones_like(tensor->get_value()), ttnn::multiply(out->get_grad(), inv_volume));
+        tensor->add_grad(res);
+    };
+    std::vector<autograd::NodeId> links;
+    if (tensor->get_node().has_value()) {
+        links.push_back(tensor->get_node().value());
+    }
+
+    out->set_node(autograd::ctx().add_backward_node(std::move(grad), links));
+    return out;
+}
+
+autograd::TensorPtr sum(const autograd::TensorPtr& tensor) {
+    autograd::TensorPtr out;
+    out->set_value(ttnn::sum(tensor->get_value()));
+    autograd::GradFunction grad = [tensor, out]() {
+        auto res = ttnn::multiply(ttnn::ones_like(tensor->get_value()), out->get_grad());
+        tensor->add_grad(res);
+    };
+    std::vector<autograd::NodeId> links;
+    if (tensor->get_node().has_value()) {
+        links.push_back(tensor->get_node().value());
+    }
+
+    out->set_node(autograd::ctx().add_backward_node(std::move(grad), links));
+    return out;
+}
+
 }  // namespace ttml::ops
