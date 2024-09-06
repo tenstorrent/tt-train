@@ -4,6 +4,7 @@
 #include <span>
 
 #include "core/not_null.hpp"
+
 namespace ttml::autograd {
 class Graph;
 class GraphNode;
@@ -15,21 +16,24 @@ struct GraphNode {
 };
 
 class NodeId {
-   public:
+public:
     NodeId(size_t node_id, Graph* graph);
     [[nodiscard]] size_t get_id() const;
+    [[nodiscard]] core::not_null<Graph*> get_graph() const;
 
-   private:
+private:
     size_t m_node_id = 0;
     core::not_null<Graph*> m_graph;
 };
 
 class Graph {
-   private:
+private:
     std::vector<GraphNode> m_graph_nodes;
     std::vector<std::vector<size_t>> m_links;
 
-   public:
+public:
+    [[nodiscard]] const std::vector<std::vector<size_t>>& get_edges();
+    [[nodiscard]] const std::vector<GraphNode>& get_graph_nodes();
     NodeId add_node(GradFunction&& grad_function, std::span<NodeId> links);
 };
 

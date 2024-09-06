@@ -1,6 +1,7 @@
 #include "auto_context.hpp"
 
 #include <optional>
+
 namespace ttml::autograd {
 
 std::mt19937& AutoContext::get_generator() { return m_generator; }
@@ -22,4 +23,7 @@ std::optional<NodeId> AutoContext::add_backward_node(GradFunction&& grad_functio
 }
 void AutoContext::set_gradient_mode(GradMode mode) { m_grads_mode = mode; }
 GradMode AutoContext::get_gradient_mode() const { return m_grads_mode; }
+
+unsigned int AutoContext::generate_module_id() { return module_counter++; }
+
 }  // namespace ttml::autograd
