@@ -8,7 +8,41 @@
 #include <ttnn/operations/creation.hpp>
 
 #include "core/ttnn_all_includes.hpp"
+#include "ttnn/cpp/ttnn/operations/core/core.hpp"
 #include "ttnn/tensor/host_buffer/functions.hpp"
+
+namespace {
+
+// copypaste from deprecated tensor pybinds ttnn
+tt::tt_metal::OwnedBuffer create_owned_buffer_from_vector_of_floats(
+
+    const std::vector<float>& data, DataType data_type) {
+    switch (data_type) {
+        case DataType::BFLOAT8_B: {
+            auto uint32_vector = pack_fp32_vec_as_bfp8_tiles(data, /*row_major_input=*/false, /*is_exp_a=*/false);
+            return tt::tt_metal::owned_buffer::create<uint32_t>(std::move(uint32_vector));
+        }
+        case DataType::BFLOAT4_B: {
+            auto uint32_vector = pack_fp32_vec_as_bfp4_tiles(data, /*row_major_input=*/false, /*is_exp_a=*/false);
+            return tt::tt_metal::owned_buffer::create<uint32_t>(std::move(uint32_vector));
+        }
+        case DataType::FLOAT32: {
+            auto data_copy = data;
+            return tt::tt_metal::owned_buffer::create<float>(std::move(data_copy));
+        }
+        case DataType::BFLOAT16: {
+            std::vector<bfloat16> bfloat16_data(data.size());
+            std::transform(std::begin(data), std::end(data), std::begin(bfloat16_data), [](float value) {
+                return bfloat16(value);
+            });
+            return tt::tt_metal::owned_buffer::create<bfloat16>(std::move(bfloat16_data));
+        }
+        default: {
+            throw std::runtime_error("Cannot create a host buffer!");
+        }
+    }
+}
+}  // namespace
 namespace ttml::core {
 
 tt::tt_metal::Tensor zeros_like(const tt::tt_metal::Tensor& tensor) { return ttnn::zeros_like(tensor); }
@@ -27,35 +61,29 @@ tt::tt_metal::Tensor ones(const tt::tt_metal::Shape& shape, tt::tt_metal::Device
 
 tt::tt_metal::Tensor from_vector(
     const std::vector<float>& buffer, const tt::tt_metal::Shape& shape, tt::tt_metal::Device* device) {
-    const Layout layout = Layout::ROW_MAJOR;
-    const DataType data_type = DataType::FLOAT32;
+    const Layout layout = Layout::TILE;
+    const DataType data_type = DataType::BFLOAT16;
     MemoryConfig output_mem_config{};
     size_t volume = tt::tt_metal::compute_volume(shape);
     if (buffer.size() != volume) {
         throw std::logic_error(
             fmt::format("Current buffer size is {} different from shape volume {}", buffer.size(), volume));
     }
-    auto owned_buffer = tt::tt_metal::owned_buffer::create<float>(buffer.size());
-
-    for (auto idx = 0; auto value : buffer) {
-        owned_buffer[idx++] = value;
-        idx++;
-    }
-    auto output = tt::tt_metal::Tensor(OwnedStorage{owned_buffer}, shape, data_type, layout);
+    auto owned_buffer = create_owned_buffer_from_vector_of_floats(buffer, data_type);
+    auto output = tt::tt_metal::Tensor(OwnedStorage{owned_buffer}, shape, data_type, Layout::ROW_MAJOR);
     if (device != nullptr) {
-        output = output.to(layout);
-        output = output.to(device, output_mem_config);
+        output = ttnn::to_layout(output, layout, std::nullopt, output_mem_config, device);
     }
     return output;
 }
 
 std::vector<float> to_vector(const tt::tt_metal::Tensor& tensor) {
     auto cpu_tensor = tensor.cpu();
-    auto buffer = tt::tt_metal::host_buffer::get_as<float>(cpu_tensor);
+    auto buffer = tt::tt_metal::host_buffer::get_as<bfloat16>(cpu_tensor);
     std::vector<float> out(buffer.size());
 
     for (size_t idx = 0; auto& it : buffer) {
-        out[idx] = it;
+        out[idx] = it.to_float();
         idx++;
     }
 
