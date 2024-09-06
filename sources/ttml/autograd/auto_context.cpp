@@ -6,7 +6,7 @@ namespace ttml::autograd {
 
 std::mt19937& AutoContext::get_generator() { return m_generator; }
 
-void AutoContext::set_seed(unsigned int seed) {
+void AutoContext::set_seed(uint32_t seed) {
     m_seed = seed;
     m_generator = std::mt19937(m_seed);
 }
@@ -24,6 +24,6 @@ std::optional<NodeId> AutoContext::add_backward_node(GradFunction&& grad_functio
 void AutoContext::set_gradient_mode(GradMode mode) { m_grads_mode = mode; }
 GradMode AutoContext::get_gradient_mode() const { return m_grads_mode; }
 
-unsigned int AutoContext::generate_module_id() { return module_counter++; }
+uint32_t AutoContext::generate_module_id() { return module_counter++; }
 
 }  // namespace ttml::autograd

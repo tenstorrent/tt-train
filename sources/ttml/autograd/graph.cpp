@@ -21,6 +21,6 @@ NodeId::NodeId(size_t node_id, Graph* graph) : m_node_id(node_id), m_graph(graph
 
 size_t NodeId::get_id() const { return m_node_id; }
 
-core::not_null<Graph*> NodeId::get_graph() const { return m_graph; }
+Graph& NodeId::get_graph() const { return *m_graph; }
 
 }  // namespace ttml::autograd
