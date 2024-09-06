@@ -14,15 +14,15 @@ namespace {
 // TODO: implement stack based topological sort
 void topological_sort(
     size_t node_id,
-    core::not_null<Graph*> graph,
+    const std::vector<std::vector<size_t>>& edges,
     std::unordered_set<size_t>& visited,
     std::vector<size_t>& sorted_nodes) {
     if (visited.contains(node_id)) {
         return;
     }
     visited.insert(node_id);
-    for (const auto& v : graph->get_links(node_id)) {
-        topological_sort(v, graph, visited, sorted_nodes);
+    for (const auto& v : edges[node_id]) {
+        topological_sort(v, edges, visited, sorted_nodes);
     }
     sorted_nodes.push_back(node_id);
 }
@@ -38,7 +38,7 @@ void Tensor::backward() {
     std::vector<size_t> sorted_nodes;
     std::unordered_set<std::size_t> visited_nodes;
     auto graph_ptr = m_node_id->get_graph();
-    topological_sort(m_node_id->get_id(), graph_ptr, visited_nodes, sorted_nodes);
+    topological_sort(m_node_id->get_id(), graph_ptr->get_edges(), visited_nodes, sorted_nodes);
 
     const auto& graph_nodes = graph_ptr->get_graph_nodes();
     std::ranges::reverse(sorted_nodes);

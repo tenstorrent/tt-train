@@ -2,7 +2,7 @@
 
 namespace ttml::autograd {
 
-const std::vector<size_t>& Graph::get_links(size_t node_id) { return m_links[node_id]; }
+const std::vector<std::vector<size_t>>& Graph::get_edges() { return m_links; }
 
 const std::vector<GraphNode>& Graph::get_graph_nodes() { return m_graph_nodes; }
 

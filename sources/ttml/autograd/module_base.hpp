@@ -15,16 +15,15 @@ private:
     std::string m_name;
     std::unordered_map<std::string, TensorPtr> m_named_tensors;
     std::unordered_map<std::string, ModuleBasePtr> m_named_modules;
-    static size_t generate_id();
 
 protected:
     void create_name(const std::string& prefix);
-    void register_tensor(const std::string& name, TensorPtr tensor_ptr);
-    void register_module(const std::string& name, ModuleBasePtr module_ptr);
+    void register_tensor(const TensorPtr& tensor_ptr, const std::string& name);
+    void register_module(const ModuleBasePtr& module_ptr, const std::string& name);
 
 public:
-    const std::string& get_name() const;
-    NamedParameters parameters();
+    [[nodiscard]] const std::string& get_name() const;
+    [[nodiscard]] NamedParameters parameters() const;
 };
 
 }  // namespace ttml::autograd

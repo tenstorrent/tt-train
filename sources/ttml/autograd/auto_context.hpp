@@ -31,6 +31,8 @@ public:
 
     ~AutoContext() = default;  // to make it work with unique_ptr.
 
+    [[nodiscard]] unsigned int generate_module_id();
+
 private:
     AutoContext() = default;
 
@@ -40,6 +42,8 @@ private:
     GradMode m_grads_mode = GradMode::ENABLED;
 
     Graph m_graph;
+
+    unsigned int module_counter = 0;
 };
 
 inline auto& ctx() { return ttml::autograd::AutoContext::get_instance(); }
