@@ -27,5 +27,7 @@ TEST_F(TensorUtilsTest, TestToFromTensor) {
     auto vec_back = ttml::core::to_vector(tensor);
 
     ASSERT_EQ(vec_back.size(), test_data.size());
-    EXPECT_EQ(vec_back, test_data);
+    for (size_t i = 0; i < test_data.size(); i++) {
+        EXPECT_EQ(vec_back[i], test_data[i]);
+    }
 }

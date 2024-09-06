@@ -80,11 +80,12 @@ tt::tt_metal::Tensor from_vector(
 std::vector<float> to_vector(const tt::tt_metal::Tensor& tensor) {
     auto cpu_tensor = tensor.cpu();
     auto buffer = tt::tt_metal::host_buffer::get_as<bfloat16>(cpu_tensor);
-    std::vector<float> out(buffer.size());
+    auto shape = tensor.get_shape();
+    size_t real_size = shape.volume();
+    std::vector<float> out(real_size);
 
-    for (size_t idx = 0; auto& it : buffer) {
-        out[idx] = it.to_float();
-        idx++;
+    for (size_t i = 0; i < out.size(); i++) {
+        out[i] = buffer[i].to_float();
     }
 
     return out;
