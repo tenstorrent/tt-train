@@ -21,8 +21,8 @@ void topological_sort(
         return;
     }
     visited.insert(node_id);
-    for (const auto& v : edges[node_id]) {
-        topological_sort(v, edges, visited, sorted_nodes);
+    for (const auto& next_node : edges[node_id]) {
+        topological_sort(next_node, edges, visited, sorted_nodes);
     }
     sorted_nodes.push_back(node_id);
 }
@@ -31,16 +31,15 @@ void topological_sort(
 
 void Tensor::backward() {
     if (!m_node_id.has_value()) {
-        // TODO: throw exception?
         return;
     }
 
     std::vector<size_t> sorted_nodes;
     std::unordered_set<std::size_t> visited_nodes;
-    auto graph_ptr = m_node_id->get_graph();
-    topological_sort(m_node_id->get_id(), graph_ptr->get_edges(), visited_nodes, sorted_nodes);
+    auto& graph = m_node_id->get_graph();
+    topological_sort(m_node_id->get_id(), graph.get_edges(), visited_nodes, sorted_nodes);
 
-    const auto& graph_nodes = graph_ptr->get_graph_nodes();
+    const auto& graph_nodes = graph.get_graph_nodes();
     std::ranges::reverse(sorted_nodes);
     for (const auto& node_id : sorted_nodes) {
         graph_nodes[node_id].grad_function();

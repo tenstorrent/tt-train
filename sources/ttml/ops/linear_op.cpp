@@ -1,6 +1,9 @@
 #include "linear_op.hpp"
 
+#include <ttnn/tensor/types.hpp>
+
 #include "autograd/auto_context.hpp"
+#include "core/ttnn_all_includes.hpp"
 
 namespace ttml::ops {
 
@@ -11,7 +14,9 @@ autograd::TensorPtr linear_op(
         tensor->get_value(), weight->get_value(), bias->get_value(), /* transpose_a */ false, /* tranpose_b */ true));
 
     autograd::GradFunction grad = [weight, bias, tensor, out]() {
-        /// TODO: implement backward
+        bias->add_grad(ttnn::mean(out->get_grad(), /* dim */ 0, /* keepdim */ true));
+        weight->add_grad(ttnn::matmul(out->get_grad(), tensor->get_value(), /* transpose_a*/ true));
+        tensor->add_grad(ttnn::matmul(out->get_grad(), weight->get_value()));
     };
 
     std::vector<autograd::NodeId> links;
