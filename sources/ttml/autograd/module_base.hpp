@@ -8,6 +8,7 @@
 namespace ttml::autograd {
 class ModuleBase;
 using ModuleBasePtr = std::shared_ptr<ModuleBase>;
+using NamedParameters = std::unordered_map<std::string, TensorPtr>;
 
 class ModuleBase : public std::enable_shared_from_this<ModuleBase> {
 private:
@@ -23,7 +24,7 @@ protected:
 
 public:
     const std::string& get_name() const;
-    std::unordered_map<std::string, TensorPtr> parameters();
+    NamedParameters parameters();
 };
 
 }  // namespace ttml::autograd

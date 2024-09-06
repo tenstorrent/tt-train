@@ -31,6 +31,7 @@ public:
 
     const tt::tt_metal::Tensor &get_value() const { return m_value; }
     const tt::tt_metal::Tensor &get_grad() const { return m_grad; }
+    tt::tt_metal::Tensor &get_grad() { return m_grad; }
     bool get_require_grad() const { return m_require_grad; }
     const std::optional<NodeId> &get_node() const { return m_node_id; }
 };

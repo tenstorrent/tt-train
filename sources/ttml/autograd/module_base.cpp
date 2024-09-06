@@ -25,8 +25,8 @@ void ModuleBase::create_name(const std::string& prefix) { m_name = prefix + std:
 
 const std::string& ModuleBase::get_name() const { return m_name; }
 
-std::unordered_map<std::string, TensorPtr> ModuleBase::parameters() {
-    std::unordered_map<std::string, TensorPtr> params;
+NamedParameters ModuleBase::parameters() {
+    NamedParameters params;
 
     std::queue<std::pair<ModuleBase*, std::string>> modules_to_process;
     modules_to_process.emplace(this, get_name() + ".");
