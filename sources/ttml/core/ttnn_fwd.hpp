@@ -6,8 +6,10 @@ class CommandQueue;
 struct MemoryConfig;
 class Device;
 class DeviceMesh;
+class Shape;
 }  // namespace tt::tt_metal
 
 namespace ttnn {
 using Tensor = tt::tt_metal::Tensor;  // not sure if it works but we can use original tensor namespace
+
 }

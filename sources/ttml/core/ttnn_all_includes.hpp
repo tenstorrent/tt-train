@@ -5,8 +5,9 @@
 #pragma GCC diagnostic ignored "-Wdeprecated-volatile"
 #pragma GCC diagnostic ignored "-Wdeprecated-this-capture"
 
-#include <common/bfloat16.hpp>                                                                // NOLINT
-#include <tests/tt_metal/test_utils/env_vars.hpp>                                             // NOLINT
+#include <common/bfloat16.hpp>                     // NOLINT
+#include <tests/tt_metal/test_utils/env_vars.hpp>  // NOLINT
+#include <tt_metal/common/math.hpp>
 #include <tt_metal/host_api.hpp>                                                              // NOLINT
 #include <tt_metal/hostdevcommon/common_values.hpp>                                           // NOLINT
 #include <tt_metal/impl/device/mesh_device.hpp>                                               // NOLINT
@@ -19,5 +20,4 @@
 #include <ttnn/operations/eltwise/unary_backward/unary_backward.hpp>                          // NOLINT
 #include <ttnn/operations/matmul/matmul.hpp>                                                  // NOLINT
 #include <ttnn/types.hpp>                                                                     // NOLINT
-
 #pragma GCC diagnostic pop
