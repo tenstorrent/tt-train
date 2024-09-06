@@ -16,6 +16,8 @@
 #include <ttnn/operations/eltwise/binary/binary.hpp>                                          // NOLINT
 #include <ttnn/operations/eltwise/binary_backward/binary_backward.hpp>                        // NOLINT
 #include <ttnn/operations/eltwise/unary/unary.hpp>                                            // NOLINT
+#include <ttnn/operations/eltwise/unary_backward/unary_backward.hpp>                          // NOLINT
+#include <ttnn/operations/matmul/matmul.hpp>                                                  // NOLINT
 #include <ttnn/types.hpp>                                                                     // NOLINT
 
 #pragma GCC diagnostic pop

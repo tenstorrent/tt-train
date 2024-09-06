@@ -4,6 +4,7 @@
 
 #include "autograd/module_base.hpp"
 #include "modules/linear_module.hpp"
+#include "ops/unary_ops.hpp"
 
 namespace ttml::modules {
 
@@ -37,8 +38,11 @@ public:
     }
 
     autograd::TensorPtr operator()(autograd::TensorPtr tensor) {
-        for (auto& layer : m_layers) {
-            tensor = layer(tensor);
+        for (size_t index = 0; index < m_layers.size(); ++index) {
+            tensor = m_layers[index](tensor);
+            if (index + 1 != m_layers.size()) {
+                tensor = ttml::ops::relu(tensor);
+            }
         }
 
         return tensor;
