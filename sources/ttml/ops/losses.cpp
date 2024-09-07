@@ -7,8 +7,8 @@ namespace ttml::ops {
 
 autograd::TensorPtr mse_loss(
     const autograd::TensorPtr& target, const autograd::TensorPtr& prediction, ReduceType reduce) {
-    auto diff = ops::add(target, prediction);
-    auto diff_2 = ops::mul(diff, diff);
+    auto diff = ops::sub(target, prediction);  // TODO: @rfurko-tt use "ttnn::squared_difference"
+    auto diff_2 = ops::mul(diff, diff);  // TODO: need to add backward "ttnn::squared_difference_bw" might be faster
     if (reduce == ReduceType::MEAN) {
         return ops::mean(diff_2);
     } else if (reduce == ReduceType::SUM) {

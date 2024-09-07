@@ -60,4 +60,10 @@ autograd::TensorPtr sum(const autograd::TensorPtr& tensor) {
     return out;
 }
 
+autograd::TensorPtr broadcast_batch(const autograd::TensorPtr& tensor) {
+    autograd::TensorPtr out = std::make_shared<autograd::Tensor>();
+
+    return out;
+}
+
 }  // namespace ttml::ops

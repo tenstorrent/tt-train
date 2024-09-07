@@ -1,4 +1,4 @@
-#include "tensor_initializers.hpp"
+#include "ttnn_tensor_initializers.hpp"
 
 #include <ttnn/operations/data_movement/copy/copy.hpp>
 #include <ttnn/tensor/tensor_utils.hpp>
