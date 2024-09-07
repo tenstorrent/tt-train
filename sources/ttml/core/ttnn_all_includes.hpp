@@ -14,6 +14,7 @@
 #include <ttnn/core.hpp>                                                                      // NOLINT
 #include <ttnn/device.hpp>                                                                    // NOLINT
 #include <ttnn/operations/creation.hpp>                                                       // NOLINT
+#include <ttnn/operations/data_movement/repeat/repeat.hpp>                                    // NOLINT
 #include <ttnn/operations/data_movement/tilize_with_val_padding/tilize_with_val_padding.hpp>  // NOLINT
 #include <ttnn/operations/eltwise/binary/binary.hpp>                                          // NOLINT
 #include <ttnn/operations/eltwise/binary_backward/binary_backward.hpp>                        // NOLINT
