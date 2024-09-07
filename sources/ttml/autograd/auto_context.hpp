@@ -26,12 +26,15 @@ public:
 
     std::optional<NodeId> add_backward_node(GradFunction&& grad_function, std::span<NodeId> links);
 
+    void reset_graph();
+
     void set_gradient_mode(GradMode mode);
+
     [[nodiscard]] GradMode get_gradient_mode() const;
 
-    ~AutoContext() = default;  // to make it work with unique_ptr.
-
     [[nodiscard]] uint32_t generate_module_id();
+
+    ~AutoContext() = default;  // to make it work with unique_ptr.
 
 private:
     AutoContext() = default;
@@ -46,5 +49,5 @@ private:
     uint32_t module_counter = 0;
 };
 
-inline auto& ctx() { return ttml::autograd::AutoContext::get_instance(); }
+inline auto& ctx() { return AutoContext::get_instance(); }
 }  // namespace ttml::autograd

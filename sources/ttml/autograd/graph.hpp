@@ -35,6 +35,8 @@ public:
     [[nodiscard]] const std::vector<std::vector<size_t>>& get_edges();
     [[nodiscard]] const std::vector<GraphNode>& get_graph_nodes();
     NodeId add_node(GradFunction&& grad_function, std::span<NodeId> links);
+
+    void reset();
 };
 
 }  // namespace ttml::autograd

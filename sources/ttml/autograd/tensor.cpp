@@ -1,13 +1,7 @@
 #include "tensor.hpp"
 
 #include "core/not_null.hpp"
-
-namespace ttml::autograd {
-
-Tensor::Tensor(tt::tt_metal::Tensor m_value, tt::tt_metal::Tensor m_grad) :
-    m_value(std::move(m_value)), m_grad(std::move(m_grad)) {}
-
-void Tensor::add_grad(const tt::tt_metal::Tensor& grad) { m_grad = ttnn::add_(m_grad, grad); }
+#include "core/tensor_utils.hpp"
 
 namespace {
 
@@ -29,11 +23,20 @@ void topological_sort(
 
 }  // namespace
 
+namespace ttml::autograd {
+
+Tensor::Tensor(tt::tt_metal::Tensor m_value, bool require_grad) :
+    m_value(std::move(m_value)), m_require_grad(require_grad) {}
+
+void Tensor::add_grad(const tt::tt_metal::Tensor& grad) {
+    try_init_grad();
+    m_grad = ttnn::add_(m_grad, grad);
+}
+
 void Tensor::backward() {
     if (!m_node_id.has_value()) {
         return;
     }
-
     std::vector<size_t> sorted_nodes;
     std::unordered_set<std::size_t> visited_nodes;
     auto& graph = m_node_id->get_graph();
@@ -41,9 +44,19 @@ void Tensor::backward() {
 
     const auto& graph_nodes = graph.get_graph_nodes();
     std::ranges::reverse(sorted_nodes);
+    try_init_grad(true);
     for (const auto& node_id : sorted_nodes) {
         graph_nodes[node_id].grad_function();
     }
 }
 
+void Tensor::try_init_grad(bool init_ones) {
+    if (this->get_grad().tensor_attributes == nullptr) {
+        if (init_ones) {
+            this->set_grad(ttml::core::ones_like(m_value));
+        } else {
+            this->set_grad(ttml::core::zeros_like(m_value));
+        }
+    }
+}
 }  // namespace ttml::autograd

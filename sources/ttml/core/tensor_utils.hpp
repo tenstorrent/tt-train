@@ -8,6 +8,7 @@ namespace ttml::core {
 void fill(tt::tt_metal::Tensor& tensor, const float value);
 
 tt::tt_metal::Tensor zeros_like(const tt::tt_metal::Tensor& tensor);
+tt::tt_metal::Tensor ones_like(const tt::tt_metal::Tensor& tensor);
 
 tt::tt_metal::Tensor zeros(const tt::tt_metal::Shape& shape, tt::tt_metal::Device* device);
 tt::tt_metal::Tensor ones(const tt::tt_metal::Shape& shape, tt::tt_metal::Device* device);

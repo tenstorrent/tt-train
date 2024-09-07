@@ -9,7 +9,7 @@ namespace ttml::ops {
 
 autograd::TensorPtr linear_op(
     const autograd::TensorPtr& tensor, const autograd::TensorPtr& weight, const autograd::TensorPtr& bias) {
-    autograd::TensorPtr out;
+    autograd::TensorPtr out = std::make_shared<autograd::Tensor>();
     out->set_value(ttnn::linear(
         tensor->get_value(), weight->get_value(), bias->get_value(), /* transpose_a */ false, /* tranpose_b */ true));
 

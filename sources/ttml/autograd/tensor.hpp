@@ -15,11 +15,12 @@ private:
     std::optional<NodeId> m_node_id;
 
 public:
+    Tensor() = default;
     Tensor(const Tensor &) = default;
     Tensor(Tensor &&) noexcept = default;
     Tensor &operator=(const Tensor &) = default;
     Tensor &operator=(Tensor &&) noexcept = default;
-    Tensor(tt::tt_metal::Tensor m_value, tt::tt_metal::Tensor m_grad);
+    explicit Tensor(tt::tt_metal::Tensor m_value, bool require_grad = true);
     ~Tensor() = default;
 
     void set_value(const tt::tt_metal::Tensor &value) { m_value = value; }
@@ -36,7 +37,12 @@ public:
     const std::optional<NodeId> &get_node() const { return m_node_id; }
 
     void backward();
+
+private:
+    void try_init_grad(bool init_ones = false);
 };
+
+// TensorPtr createAutoTensor();
 
 using TensorPtr = std::shared_ptr<Tensor>;
 }  // namespace ttml::autograd

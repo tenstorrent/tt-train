@@ -23,4 +23,8 @@ size_t NodeId::get_id() const { return m_node_id; }
 
 Graph& NodeId::get_graph() const { return *m_graph; }
 
+void Graph::reset() {
+    m_graph_nodes.clear();
+    m_links.clear();
+}
 }  // namespace ttml::autograd

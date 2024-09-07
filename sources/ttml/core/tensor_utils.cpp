@@ -47,6 +47,8 @@ namespace ttml::core {
 
 tt::tt_metal::Tensor zeros_like(const tt::tt_metal::Tensor& tensor) { return ttnn::zeros_like(tensor); }
 
+tt::tt_metal::Tensor ones_like(const tt::tt_metal::Tensor& tensor) { return ttnn::ones_like(tensor); }
+
 void fill(tt::tt_metal::Tensor& tensor, const float value) {
     // TODO: optimize to do it in one operation
     tensor = ttnn::multiply(ttnn::ones_like(tensor), value);
@@ -73,6 +75,7 @@ tt::tt_metal::Tensor from_vector(
     auto output = tt::tt_metal::Tensor(OwnedStorage{owned_buffer}, shape, data_type, Layout::ROW_MAJOR);
     if (device != nullptr) {
         output = ttnn::to_layout(output, layout, std::nullopt, output_mem_config, device);
+        output = ttnn::to_device(output, device, output_mem_config);
     }
     return output;
 }

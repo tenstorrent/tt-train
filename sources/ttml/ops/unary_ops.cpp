@@ -7,7 +7,7 @@
 namespace ttml::ops {
 
 autograd::TensorPtr relu(const autograd::TensorPtr& tensor) {
-    autograd::TensorPtr out;
+    autograd::TensorPtr out = std::make_shared<autograd::Tensor>();
     out->set_value(ttnn::relu(tensor->get_value()));
     autograd::GradFunction grad = [tensor, out]() {
         tt::tt_metal::MemoryConfig mem_config;
@@ -26,7 +26,7 @@ autograd::TensorPtr relu(const autograd::TensorPtr& tensor) {
 }
 
 autograd::TensorPtr mean(const autograd::TensorPtr& tensor) {
-    autograd::TensorPtr out;
+    autograd::TensorPtr out = std::make_shared<autograd::Tensor>();
     out->set_value(ttnn::mean(tensor->get_value()));
     autograd::GradFunction grad = [tensor, out]() {
         const auto inv_volume = 1.0F / static_cast<float>(tensor->get_value().get_shape().volume());
@@ -44,7 +44,7 @@ autograd::TensorPtr mean(const autograd::TensorPtr& tensor) {
 }
 
 autograd::TensorPtr sum(const autograd::TensorPtr& tensor) {
-    autograd::TensorPtr out;
+    autograd::TensorPtr out = std::make_shared<autograd::Tensor>();
     out->set_value(ttnn::sum(tensor->get_value()));
     autograd::GradFunction grad = [tensor, out]() {
         // TODO: remove multiply in favor of ttnn::repeat
