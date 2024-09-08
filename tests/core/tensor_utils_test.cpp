@@ -44,3 +44,15 @@ TEST_F(TensorUtilsTest, TestToFromTensorOdd) {
         EXPECT_EQ(vec_back[i], test_data[i]);
     }
 }
+
+TEST_F(TensorUtilsTest, TestToFromTensorVatch) {
+    std::vector<float> test_data = {1.F, 5.F, 10.F, 15.F};
+
+    auto tensor = ttml::core::from_vector(test_data, {2, 1, 1, 2}, &device->get_device());
+    auto vec_back = ttml::core::to_vector(tensor);
+
+    ASSERT_EQ(vec_back.size(), test_data.size());
+    for (size_t i = 0; i < test_data.size(); i++) {
+        EXPECT_EQ(vec_back[i], test_data[i]);
+    }
+}

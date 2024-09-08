@@ -3,6 +3,7 @@
 #include <fmt/color.h>
 
 #include <common/bfloat16.hpp>
+#include <cstddef>
 #include <optional>
 #include <stdexcept>
 #include <ttnn/operations/creation.hpp>
@@ -41,6 +42,31 @@ tt::tt_metal::OwnedBuffer create_owned_buffer_from_vector_of_floats(
             throw std::runtime_error("Cannot create a host buffer!");
         }
     }
+}
+
+std::vector<float> untile_tensor(
+    const std::vector<float>& tiled_data, const ttnn::Shape& untiled_shape, const ttnn::Shape& tiled_shape) {
+    std::vector<float> untiled_data(
+        static_cast<size_t>(untiled_shape[0] * untiled_shape[1] * untiled_shape[2] * untiled_shape[3]));
+
+    for (int a = 0; a < untiled_shape[0]; ++a) {
+        for (int b = 0; b < untiled_shape[1]; ++b) {
+            for (int c = 0; c < untiled_shape[2]; ++c) {
+                for (int d = 0; d < untiled_shape[3]; ++d) {
+                    // Compute the index for the untiled tensor
+                    int untiled_index = ((a * untiled_shape[1] + b) * untiled_shape[2] + c) * untiled_shape[3] + d;
+
+                    // Compute the index in the tiled data
+                    int tiled_index = ((a * tiled_shape[1] + b) * tiled_shape[2] + c) * tiled_shape[3] + d;
+
+                    // Extract the data from the tiled buffer
+                    untiled_data[untiled_index] = tiled_data[tiled_index];
+                }
+            }
+        }
+    }
+
+    return untiled_data;
 }
 }  // namespace
 namespace ttml::core {
@@ -82,16 +108,17 @@ tt::tt_metal::Tensor from_vector(
 
 std::vector<float> to_vector(const tt::tt_metal::Tensor& tensor) {
     auto cpu_tensor = tensor.cpu();
+    // cpu_tensor = cpu_tensor.to(Layout::ROW_MAJOR);
+
     auto buffer = tt::tt_metal::host_buffer::get_as<bfloat16>(cpu_tensor);
     auto shape = tensor.get_shape();
-    size_t real_size = shape.volume();
-    std::vector<float> out(real_size);
+    std::vector<float> out(buffer.size());
 
     for (size_t i = 0; i < out.size(); i++) {
         out[i] = buffer[i].to_float();
     }
-
-    return out;
+    auto final_res = untile_tensor(out, shape, shape.with_tile_padding());
+    return final_res;
 }
 
 }  // namespace ttml::core
