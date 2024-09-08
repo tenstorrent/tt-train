@@ -3,7 +3,7 @@
 #include <ttnn/tensor/tensor.hpp>
 
 #include "autograd/module_base.hpp"
-#include "core/tensor_utils.hpp"
+#include "core/tt_tensor_utils.hpp"
 
 namespace ttml::optimizers {
 

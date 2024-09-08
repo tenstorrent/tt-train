@@ -1,16 +1,15 @@
-#include "core/tensor_utils.hpp"
+#include "tt_tensor_utils.hpp"
 
 #include <fmt/color.h>
 
 #include <common/bfloat16.hpp>
 #include <cstddef>
+#include <cstdint>
 #include <optional>
 #include <stdexcept>
 #include <ttnn/operations/creation.hpp>
 
-#include "core/ttnn_all_includes.hpp"
-#include "ttnn/cpp/ttnn/operations/core/core.hpp"
-#include "ttnn/tensor/host_buffer/functions.hpp"
+#include "ttnn_all_includes.hpp"
 
 namespace {
 
@@ -44,30 +43,50 @@ tt::tt_metal::OwnedBuffer create_owned_buffer_from_vector_of_floats(
     }
 }
 
-std::vector<float> untile_tensor(
-    const std::vector<float>& tiled_data, const ttnn::Shape& untiled_shape, const ttnn::Shape& tiled_shape) {
-    std::vector<float> untiled_data(
-        static_cast<size_t>(untiled_shape[0] * untiled_shape[1] * untiled_shape[2] * untiled_shape[3]));
+// TODO: add support for other types of data
+// TODO: optimize precomputing multipliers
+std::vector<float> untile_tensor_to_vec(const tt::tt_metal::Tensor& cpu_tensor) {
+    auto tiled_buffer = tt::tt_metal::host_buffer::get_as<bfloat16>(cpu_tensor);
+    auto untiled_shape = cpu_tensor.get_shape();
+    auto tiled_shape = untiled_shape.with_tile_padding();
 
-    for (int a = 0; a < untiled_shape[0]; ++a) {
-        for (int b = 0; b < untiled_shape[1]; ++b) {
-            for (int c = 0; c < untiled_shape[2]; ++c) {
-                for (int d = 0; d < untiled_shape[3]; ++d) {
-                    // Compute the index for the untiled tensor
-                    int untiled_index = ((a * untiled_shape[1] + b) * untiled_shape[2] + c) * untiled_shape[3] + d;
+    // Calculate total size of the untiled tensor
+    size_t total_size = 1;
+    for (uint32_t i = 0; i < untiled_shape.rank(); ++i) {
+        total_size *= untiled_shape[i];
+    }
 
-                    // Compute the index in the tiled data
-                    int tiled_index = ((a * tiled_shape[1] + b) * tiled_shape[2] + c) * tiled_shape[3] + d;
+    std::vector<float> untiled_data(total_size);
 
-                    // Extract the data from the tiled buffer
-                    untiled_data[untiled_index] = tiled_data[tiled_index];
-                }
+    auto compute_flat_index = [](const std::vector<uint32_t>& indices, ttnn::Shape& shape) -> uint32_t {
+        uint32_t flat_index = 0;
+        uint32_t multiplier = 1;
+        for (int i = (int)indices.size() - 1; i >= 0; --i) {
+            flat_index += indices[i] * multiplier;
+            multiplier *= shape[i];
+        }
+        return flat_index;
+    };
+
+    std::vector<uint32_t> indices(tiled_shape.rank(), 0);
+
+    for (size_t idx = 0; idx < total_size; ++idx) {
+        uint32_t untiled_index = compute_flat_index(indices, untiled_shape);
+        uint32_t tiled_index = compute_flat_index(indices, tiled_shape);
+
+        untiled_data[untiled_index] = tiled_buffer[tiled_index].to_float();
+
+        for (int dim = (int)tiled_shape.rank() - 1; dim >= 0; --dim) {
+            if (++indices[dim] < untiled_shape[dim]) {
+                break;
             }
+            indices[dim] = 0;
         }
     }
 
     return untiled_data;
 }
+
 }  // namespace
 namespace ttml::core {
 
@@ -111,13 +130,7 @@ std::vector<float> to_vector(const tt::tt_metal::Tensor& tensor) {
     // cpu_tensor = cpu_tensor.to(Layout::ROW_MAJOR);
 
     auto buffer = tt::tt_metal::host_buffer::get_as<bfloat16>(cpu_tensor);
-    auto shape = tensor.get_shape();
-    std::vector<float> out(buffer.size());
-
-    for (size_t i = 0; i < out.size(); i++) {
-        out[i] = buffer[i].to_float();
-    }
-    auto final_res = untile_tensor(out, shape, shape.with_tile_padding());
+    auto final_res = untile_tensor_to_vec(cpu_tensor);
     return final_res;
 }
 

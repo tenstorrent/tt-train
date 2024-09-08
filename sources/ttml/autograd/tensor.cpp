@@ -1,7 +1,7 @@
 #include "tensor.hpp"
 
 #include "core/not_null.hpp"
-#include "core/tensor_utils.hpp"
+#include "core/tt_tensor_utils.hpp"
 
 namespace {
 

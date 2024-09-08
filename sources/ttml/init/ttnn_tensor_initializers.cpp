@@ -3,7 +3,7 @@
 #include <ttnn/operations/data_movement/copy/copy.hpp>
 #include <ttnn/tensor/tensor_utils.hpp>
 
-#include "core/tensor_utils.hpp"
+#include "core/tt_tensor_utils.hpp"
 #include "cpu_initializers.hpp"
 
 namespace ttml::init {
