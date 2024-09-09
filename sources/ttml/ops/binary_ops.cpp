@@ -18,7 +18,7 @@ autograd::TensorPtr operator+(const autograd::TensorPtr& a, const autograd::Tens
 
     out->set_value(ttnn::add(a->get_value(), b->get_value()));
     autograd::GradFunction grad = [a, b, out]() {
-        auto res = ttnn_fixed::add_bw(out->get_grad(), a->get_value(), b->get_value());
+        auto res = ttnn::add_bw(out->get_grad(), a->get_value(), b->get_value());
 
         a->add_grad(res[0]);
         b->add_grad(res[1]);
