@@ -10,7 +10,7 @@
 #include "autograd/graph.hpp"
 #include "autograd/tensor.hpp"
 #include "core/ttnn_all_includes.hpp"
-
+#include "ttnn_fixed/trivial_ttnn_ops.hpp"
 namespace ttml::ops {
 
 autograd::TensorPtr operator+(const autograd::TensorPtr& a, const autograd::TensorPtr& b) {
@@ -18,9 +18,7 @@ autograd::TensorPtr operator+(const autograd::TensorPtr& a, const autograd::Tens
 
     out->set_value(ttnn::add(a->get_value(), b->get_value()));
     autograd::GradFunction grad = [a, b, out]() {
-        tt::tt_metal::MemoryConfig mem_config;
-
-        auto res = ttnn::add_bw(out->get_grad(), a->get_value(), b->get_value(), mem_config);
+        auto res = ttnn_fixed::add_bw(out->get_grad(), a->get_value(), b->get_value());
 
         a->add_grad(res[0]);
         b->add_grad(res[1]);
