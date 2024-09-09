@@ -100,10 +100,10 @@ void fill(tt::tt_metal::Tensor& tensor, const float value) {
 }
 
 tt::tt_metal::Tensor zeros(const ttnn::Shape& shape, tt::tt_metal::Device* device) {
-    return ttnn::zeros(ttnn::Shape(shape), std::nullopt, std::nullopt, *device);
+    return ttnn::zeros(shape, std::nullopt, std::nullopt, *device);
 }
 tt::tt_metal::Tensor ones(const ttnn::Shape& shape, tt::tt_metal::Device* device) {
-    return ttnn::ones(ttnn::Shape(shape), std::nullopt, std::nullopt, *device);
+    return ttnn::ones(shape, std::nullopt, std::nullopt, *device);
 }
 
 tt::tt_metal::Tensor from_vector(
