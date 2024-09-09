@@ -21,7 +21,8 @@ protected:
 TEST_F(TensorUtilsTest, TestToFromTensorEven) {
     std::vector<float> test_data = {1.F, 5.F, 10.F, 15.F};
 
-    auto tensor = ttml::core::from_vector(test_data, {1, 1, 1, 4}, &device->get_device());
+    tt::tt_metal::Shape shape = {1, 1, 1, 4};
+    auto tensor = ttml::core::from_vector(test_data, ttnn::Shape(shape), &device->get_device());
 
     auto vec_back = ttml::core::to_vector(tensor);
 
@@ -34,7 +35,8 @@ TEST_F(TensorUtilsTest, TestToFromTensorEven) {
 TEST_F(TensorUtilsTest, TestToFromTensorOdd) {
     std::vector<float> test_data = {30.F, 20.F, 2.F};
 
-    auto tensor = ttml::core::from_vector(test_data, {1, 1, 1, 3}, &device->get_device());
+    tt::tt_metal::Shape shape = {1, 1, 1, 3};
+    auto tensor = ttml::core::from_vector(test_data, ttnn::Shape(shape), &device->get_device());
 
     auto vec_back = ttml::core::to_vector(tensor);
 
@@ -44,10 +46,45 @@ TEST_F(TensorUtilsTest, TestToFromTensorOdd) {
     }
 }
 
+TEST_F(TensorUtilsTest, TestToFromTensorLargeWithBatch) {
+    std::vector<float> test_data;
+    uint32_t batch_size = 16;
+    uint32_t vec_size = 256 * batch_size;
+    for (size_t i = 0; i < vec_size; i++) {
+        test_data.push_back((float)i / 100.0F);
+    }
+
+    tt::tt_metal::Shape shape{batch_size, 1, 1, vec_size / batch_size};
+    auto tensor = ttml::core::from_vector(test_data, ttnn::Shape(shape), &device->get_device());
+    auto vec_back = ttml::core::to_vector(tensor);
+    ASSERT_EQ(vec_back.size(), test_data.size());
+    for (size_t i = 0; i < test_data.size(); i++) {
+        EXPECT_NEAR(vec_back[i], test_data[i], 0.5F);
+    }
+}
+
+TEST_F(TensorUtilsTest, TestToFromTensorLarge) {
+    std::vector<float> test_data;
+    uint32_t vec_size = 1337;
+    for (size_t i = 0; i < vec_size; i++) {
+        test_data.push_back((float)i / 100.0F);
+    }
+
+    tt::tt_metal::Shape shape{1, 1, 1, vec_size};
+    auto tensor = ttml::core::from_vector(test_data, ttnn::Shape(shape), &device->get_device());
+    auto vec_back = ttml::core::to_vector(tensor);
+    ASSERT_EQ(vec_back.size(), test_data.size());
+    for (size_t i = 0; i < test_data.size(); i++) {
+        EXPECT_NEAR(vec_back[i], test_data[i], 0.1F);
+    }
+}
+
 TEST_F(TensorUtilsTest, TestToFromTensorVatch) {
     std::vector<float> test_data = {1.F, 5.F, 10.F, 15.F};
 
-    auto tensor = ttml::core::from_vector(test_data, {2, 1, 1, 2}, &device->get_device());
+    tt::tt_metal::Shape shape = {2, 1, 1, 2};
+    auto tensor = ttml::core::from_vector(test_data, ttnn::Shape(shape), &device->get_device());
+
     auto vec_back = ttml::core::to_vector(tensor);
 
     ASSERT_EQ(vec_back.size(), test_data.size());

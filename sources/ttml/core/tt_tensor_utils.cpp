@@ -99,15 +99,15 @@ void fill(tt::tt_metal::Tensor& tensor, const float value) {
     tensor = ttnn::multiply(ttnn::ones_like(tensor), value);
 }
 
-tt::tt_metal::Tensor zeros(const tt::tt_metal::Shape& shape, tt::tt_metal::Device* device) {
+tt::tt_metal::Tensor zeros(const ttnn::Shape& shape, tt::tt_metal::Device* device) {
     return ttnn::zeros(ttnn::Shape(shape), std::nullopt, std::nullopt, *device);
 }
-tt::tt_metal::Tensor ones(const tt::tt_metal::Shape& shape, tt::tt_metal::Device* device) {
+tt::tt_metal::Tensor ones(const ttnn::Shape& shape, tt::tt_metal::Device* device) {
     return ttnn::ones(ttnn::Shape(shape), std::nullopt, std::nullopt, *device);
 }
 
 tt::tt_metal::Tensor from_vector(
-    const std::vector<float>& buffer, const tt::tt_metal::Shape& shape, tt::tt_metal::Device* device) {
+    const std::vector<float>& buffer, const ttnn::Shape& shape, tt::tt_metal::Device* device) {
     const Layout layout = Layout::TILE;
     const DataType data_type = DataType::BFLOAT16;
     MemoryConfig output_mem_config{};
@@ -127,7 +127,7 @@ tt::tt_metal::Tensor from_vector(
 
 std::vector<float> to_vector(const tt::tt_metal::Tensor& tensor) {
     auto cpu_tensor = tensor.cpu();
-    // cpu_tensor = cpu_tensor.to(Layout::ROW_MAJOR);
+    cpu_tensor = cpu_tensor.to(Layout::ROW_MAJOR);
 
     auto buffer = tt::tt_metal::host_buffer::get_as<bfloat16>(cpu_tensor);
     auto final_res = untile_tensor_to_vec(cpu_tensor);

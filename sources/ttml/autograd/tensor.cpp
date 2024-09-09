@@ -1,7 +1,8 @@
 #include "tensor.hpp"
 
 #include "core/tt_tensor_utils.hpp"
-#include "ops/ttnn_fixed/trivial_ttnn_ops.hpp"
+#include "ttnn_fixed/trivial_ttnn_ops.hpp"
+
 namespace {
 
 // TODO: implement stack based topological sort
@@ -30,8 +31,8 @@ Tensor::Tensor(tt::tt_metal::Tensor m_value, bool require_grad) :
 void Tensor::add_grad(const tt::tt_metal::Tensor& grad) {
     try_init_grad();
     // current backward ops don't support broadcasting.
-    if (grad.get_legacy_shape()[0] > m_grad.get_legacy_shape()[0]) {
-        m_grad = ttnn::add_(m_grad, ops::ttnn_fixed::sum_over_batch(grad));
+    if (grad.get_shape()[0] > m_grad.get_shape()[0]) {
+        m_grad = ttnn::add_(m_grad, ttnn_fixed::sum_over_batch(grad));
     } else {
         m_grad = ttnn::add_(m_grad, grad);
     }
