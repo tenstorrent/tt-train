@@ -31,8 +31,9 @@ TEST_F(AutogradTest, TestSum) {
     using namespace ttml::ops;
     std::vector<float> test_data1 = {1.F, 2.F, 3.F, 4.F};
     std::vector<float> test_data2 = {4.F, 3.F, 2.F, 1.F};
-    auto tensor1 = ttml::core::from_vector(test_data1, {1, 1, 1, 4}, &device->get_device());
-    auto tensor2 = ttml::core::from_vector(test_data1, {1, 1, 1, 4}, &device->get_device());
+    tt::tt_metal::Shape shape = {1, 1, 1, 4};
+    auto tensor1 = ttml::core::from_vector(test_data1, ttnn::Shape(shape), &device->get_device());
+    auto tensor2 = ttml::core::from_vector(test_data2, ttnn::Shape(shape), &device->get_device());
 
     auto t1 = std::make_shared<ttml::autograd::Tensor>(tensor1);
     auto t2 = std::make_shared<ttml::autograd::Tensor>(tensor2);
@@ -58,8 +59,9 @@ TEST_F(AutogradTest, TestMul) {
     using namespace ttml::ops;
     std::vector<float> test_data1 = {1.F, 2.F, 3.F, 4.F};
     std::vector<float> test_data2 = {4.F, 3.F, 2.F, 1.F};
-    auto tensor1 = ttml::core::from_vector(test_data1, {1, 1, 1, 4}, &device->get_device());
-    auto tensor2 = ttml::core::from_vector(test_data2, {1, 1, 1, 4}, &device->get_device());
+    tt::tt_metal::Shape shape = {1, 1, 1, 4};
+    auto tensor1 = ttml::core::from_vector(test_data1, ttnn::Shape(shape), &device->get_device());
+    auto tensor2 = ttml::core::from_vector(test_data2, ttnn::Shape(shape), &device->get_device());
 
     auto t1 = std::make_shared<ttml::autograd::Tensor>(tensor1);
     auto t2 = std::make_shared<ttml::autograd::Tensor>(tensor2);
@@ -80,7 +82,7 @@ TEST_F(AutogradTest, TestMul) {
 TEST_F(AutogradTest, BroadCastBatchTest) {
     using namespace ttml::ops;
     std::vector<float> test_data1 = {1.F, 2.F, 3.F, 4.F};
-    tt::tt_metal::Shape shape = {1, 1, 1, 4};
+    ttnn::Shape shape(std::vector<uint32_t>{1, 1, 1, 4});
     auto tensor1 = ttml::core::from_vector(test_data1, shape, &device->get_device());
     auto t1 = std::make_shared<ttml::autograd::Tensor>(tensor1);
     uint32_t new_batch = 4;
@@ -98,6 +100,6 @@ TEST_F(AutogradTest, BroadCastBatchTest) {
         EXPECT_EQ(back_shape[i], shape[i]);
     }
     for (size_t i = 0; i < 4; i++) {
-        EXPECT_EQ(t1_back[i], test_data1[i] * new_batch);
+        EXPECT_EQ(t1_back[i], new_batch);
     }
 }

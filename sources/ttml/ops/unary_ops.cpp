@@ -7,6 +7,7 @@
 #include "autograd/auto_context.hpp"
 #include "autograd/graph.hpp"
 #include "core/ttnn_all_includes.hpp"
+#include "ttnn_fixed/trivial_ttnn_ops.hpp"
 
 namespace ttml::ops {
 
@@ -94,10 +95,7 @@ autograd::TensorPtr broadcast_batch(const autograd::TensorPtr& tensor, uint32_t 
     out->set_value(ttnn::repeat(tensor->get_value(), repeats));
 
     autograd::GradFunction grad = [tensor, out]() {
-        // TODO: remove multiply in favor of ttnn::repeat
-        auto res = ttnn::sum(out->get_value(), 0);
-        auto output_shape = tensor->get_value().get_legacy_shape();
-        res = res.reshape(output_shape);
+        auto res = ttnn_fixed::sum_over_batch(out->get_grad());
         tensor->add_grad(res);
     };
     std::vector<autograd::NodeId> links;

@@ -12,4 +12,4 @@ class Shape;
 namespace ttnn {
 using Tensor = tt::tt_metal::Tensor;  // not sure if it works but we can use original tensor namespace
 
-}
+}  // namespace ttnn
