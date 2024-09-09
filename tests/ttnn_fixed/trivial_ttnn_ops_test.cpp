@@ -75,9 +75,9 @@ TEST_F(TrivialTnnFixedTest, TestSumOverBatch_1) {
     for (int i = 0; i < resulting_vector.size(); ++i) {
         float expected_value = 0.F;
         for (int j = 0; j < batch_size; ++j) {
-            expected_value += static_cast<float>(i + j * features);
+            expected_value += static_cast<float>(i + j * features) * step;
         }
 
-        EXPECT_NEAR(expected_value / 10.F, resulting_vector[i], eps);
+        EXPECT_NEAR(expected_value, resulting_vector[i], eps);
     }
 }
