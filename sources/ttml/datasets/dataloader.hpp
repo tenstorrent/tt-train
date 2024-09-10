@@ -49,6 +49,7 @@ public:
 
         Iterator& operator++() {
             m_current_index += m_data_loader->m_batch_size;
+            m_current_index = std::min(m_current_index, m_data_loader->m_indices.size());
             return *this;
         }
 

@@ -13,6 +13,8 @@ InMemoryFloatVecDataset make_regression(MakeRegressionParams params) {
 
     // Generate random coefficients for each target
     std::vector<std::vector<float>> coefficients(params.n_targets, std::vector<float>(params.n_features));
+    // Generate biases for each target
+    std::vector<float> biases(params.n_targets, 0.0F);
 
     auto generate_sample = [&](auto& sample_data) {
         std::ranges::generate(
@@ -24,14 +26,15 @@ InMemoryFloatVecDataset make_regression(MakeRegressionParams params) {
             sample_data.begin(), sample_data.end(), coeff.begin(), 0.0F, std::plus<>(), std::multiplies<>());
     };
 
-    auto add_bias_and_noise = [&](float target) {
+    auto add_bias_and_noise = [&](float target, float bias) {
         if (params.bias) {
-            target += dist(autograd::AutoContext::get_instance().get_generator());  // Add bias
+            target += bias;  // Add bias
         }
         target += params.noise * dist(autograd::AutoContext::get_instance().get_generator());  // Add noise
         return target;
     };
 
+    generate_sample(biases);
     std::ranges::for_each(coefficients, [&](auto& target_coeffs) { generate_sample(target_coeffs); });
 
     for (size_t i = 0; i < params.n_samples; ++i) {
@@ -39,7 +42,7 @@ InMemoryFloatVecDataset make_regression(MakeRegressionParams params) {
 
         for (size_t j = 0; j < params.n_targets; ++j) {
             float target = compute_target(data[i], coefficients[j]);
-            targets[i][j] = add_bias_and_noise(target);
+            targets[i][j] = add_bias_and_noise(target, biases[j]);
         }
     }
 

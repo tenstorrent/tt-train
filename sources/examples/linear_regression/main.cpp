@@ -28,7 +28,7 @@ int main() {
     const size_t num_features = 8;
     const size_t num_targets = 2;
     const float noise = 0.0F;
-    const bool bias = false;
+    const bool bias = true;
 
     auto training_params = ttml::datasets::MakeRegressionParams{
         .n_samples = training_samples_count,

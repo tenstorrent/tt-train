@@ -12,7 +12,7 @@ autograd::TensorPtr mse_loss(
     if (reduce == ReduceType::MEAN) {
         return ops::mean(diff_2);
     } else {
-        throw std::logic_error("Unsupported MSE type reduction type");
+        throw std::logic_error("Unsupported MSE reduction type");
     }
 }
 
