@@ -1,8 +1,10 @@
 #include "linear_op.hpp"
 
+#include <tt_dnn/op_library/moreh_mean/moreh_mean_op.hpp>
 #include <ttnn/tensor/types.hpp>
 
 #include "autograd/auto_context.hpp"
+#include "core/tt_tensor_utils.hpp"
 #include "core/ttnn_all_includes.hpp"
 
 namespace ttml::ops {
@@ -14,7 +16,11 @@ autograd::TensorPtr linear_op(
         tensor->get_value(), weight->get_value(), bias->get_value(), /* transpose_a */ false, /* tranpose_b */ true));
 
     autograd::GradFunction grad = [weight, bias, tensor, out]() {
-        bias->add_grad(ttnn::mean(out->get_grad(), /* dim */ 0, /* keepdim */ true));
+        auto bias_shape = core::get_shape_without_padding(bias->get_value());
+        auto bias_grad_tensor = core::zeros(ttnn::Shape(bias_shape), bias->get_value().device());
+        tt::operations::primary::moreh_mean(
+            out->get_grad(), /* dim */ 0, /* keepdim */ true, /* divisor */ std::nullopt, /* out */ bias_grad_tensor);
+        bias->add_grad(bias_grad_tensor);
         weight->add_grad(ttnn::matmul(out->get_grad(), tensor->get_value(), /* transpose_a*/ true));
         tensor->add_grad(ttnn::matmul(out->get_grad(), weight->get_value()));
     };

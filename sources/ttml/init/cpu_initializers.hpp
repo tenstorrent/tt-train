@@ -14,8 +14,8 @@ struct NormalParams {
 };
 
 struct FanParams {
-    int fan_in = 1;
-    int fan_out = 1;
+    uint32_t fan_in = 1;
+    uint32_t fan_out = 1;
 };
 
 void uniform_init(std::vector<float>& vec, UniformRange range);

@@ -1,21 +1,83 @@
 
-#include <iostream>
+#include <fmt/format.h>
 
+#include <iostream>
+#include <ttnn/tensor/tensor.hpp>
+
+#include "autograd/auto_context.hpp"
+#include "autograd/tensor.hpp"
+#include "core/tt_tensor_utils.hpp"
 #include "core/ttnn_all_includes.hpp"
+#include "datasets/dataloader.hpp"
+#include "datasets/generators.hpp"
+#include "modules/linear_module.hpp"
+#include "ops/losses.hpp"
+#include "optimizers/sgd.hpp"
+
+using ttml::autograd::TensorPtr;
+
+using DatasetSample = std::pair<std::vector<float>, std::vector<float>>;
+using BatchType = std::pair<TensorPtr, TensorPtr>;
+using DataLoader = ttml::datasets::DataLoader<
+    ttml::datasets::InMemoryFloatVecDataset,
+    std::function<BatchType(std::vector<DatasetSample>&& samples)>,
+    BatchType>;
 
 int main() {
-    const size_t tensor_width = 32;
-    const size_t tensor_height = 32;
-    tt::ARCH arch_ = {};
-    size_t num_devices_ = 0;
+    const size_t training_samples_count = 100000;
+    const size_t num_features = 8;
+    const size_t num_targets = 2;
+    const float noise = 0.0F;
+    const bool bias = true;
 
-    std::srand(0);
-    arch_ = tt::get_arch_from_string(tt::test_utils::get_env_arch_name());
-    num_devices_ = tt::tt_metal::GetNumAvailableDevices();
-    std::cout << "Arch:" << tt::test_utils::get_env_arch_name() << std::endl;
-    std::cout << "num_devices:" << num_devices_ << std::endl;
-    auto device = tt::tt_metal::CreateDevice(0);
-    std::cout << "Device created" << std::endl;
-    tt::tt_metal::CloseDevice(device);
-    return 0;
+    auto training_params = ttml::datasets::MakeRegressionParams{
+        .n_samples = training_samples_count,
+        .n_features = num_features,
+        .n_targets = num_targets,
+        .noise = noise,
+        .bias = bias,
+    };
+
+    auto training_dataset = ttml::datasets::make_regression(training_params);
+
+    auto* device = &ttml::autograd::ctx().get_device();
+
+    std::function<BatchType(std::vector<DatasetSample> && samples)> collate_fn =
+        [&num_features, &num_targets, device](std::vector<DatasetSample>&& samples) {
+            const uint32_t batch_size = samples.size();
+            std::vector<float> data;
+            std::vector<float> targets;
+            data.reserve(batch_size * num_features);
+            targets.reserve(batch_size * num_targets);
+            for (auto& [features, target] : samples) {
+                std::move(features.begin(), features.end(), std::back_inserter(data));
+                std::move(target.begin(), target.end(), std::back_inserter(targets));
+            }
+
+            auto data_tensor = std::make_shared<ttml::autograd::Tensor>(ttml::core::from_vector(
+                data, ttnn::Shape(std::array<uint32_t, 4>{batch_size, 1, 1, num_features}), device));
+            auto targets_tensor = std::make_shared<ttml::autograd::Tensor>(ttml::core::from_vector(
+                targets, ttnn::Shape(std::array<uint32_t, 4>{batch_size, 1, 1, num_targets}), device));
+            return std::make_pair(data_tensor, targets_tensor);
+        };
+
+    const uint32_t batch_size = 128;
+    auto train_dataloader = DataLoader(training_dataset, batch_size, /* shuffle */ true, collate_fn);
+
+    auto model = ttml::modules::LinearLayer(num_features, num_targets);
+
+    auto sgd_config = ttml::optimizers::SGDConfig{.lr = 1.0F, .momentum = 0.0F};
+    auto optimizer = ttml::optimizers::SGD(model.parameters(), sgd_config);
+
+    int training_step = 0;
+    for (auto [data, targets] : train_dataloader) {
+        optimizer.zero_grad();
+        auto output = model(data);
+        auto loss = ttml::ops::mse_loss(targets, output);
+        auto loss_float = ttml::core::to_vector(loss->get_value())[0];
+        fmt::print("Step: {} Loss: {}\n", training_step++, loss_float);
+        loss->backward();
+        optimizer.step();
+        ttml::autograd::ctx().reset_graph();
+    }
 }

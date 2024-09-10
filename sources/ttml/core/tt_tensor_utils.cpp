@@ -8,6 +8,7 @@
 #include <optional>
 #include <stdexcept>
 #include <ttnn/operations/creation.hpp>
+#include <ttnn/tensor/types.hpp>
 
 #include "ttnn_all_includes.hpp"
 
@@ -99,11 +100,14 @@ void fill(tt::tt_metal::Tensor& tensor, const float value) {
     tensor = ttnn::multiply(ttnn::ones_like(tensor), value);
 }
 
+// TODO: optimize this functions to avoid unnecessary vector creation
 tt::tt_metal::Tensor zeros(const ttnn::Shape& shape, tt::tt_metal::Device* device) {
-    return ttnn::zeros(shape, std::nullopt, std::nullopt, *device);
+    std::vector<float> data(tt::tt_metal::compute_volume(shape), 0.0F);
+    return from_vector(data, shape, device);
 }
 tt::tt_metal::Tensor ones(const ttnn::Shape& shape, tt::tt_metal::Device* device) {
-    return ttnn::ones(shape, std::nullopt, std::nullopt, *device);
+    std::vector<float> data(tt::tt_metal::compute_volume(shape), 1.0F);
+    return from_vector(data, shape, device);
 }
 
 tt::tt_metal::Tensor from_vector(
@@ -132,6 +136,16 @@ std::vector<float> to_vector(const tt::tt_metal::Tensor& tensor) {
     auto buffer = tt::tt_metal::host_buffer::get_as<bfloat16>(cpu_tensor);
     auto final_res = untile_tensor_to_vec(cpu_tensor);
     return final_res;
+}
+
+tt::tt_metal::Shape get_shape_without_padding(const tt::tt_metal::Tensor& tensor) {
+    auto shape = tensor.get_legacy_shape();
+    auto padding = shape.padding();
+    return tt::tt_metal::Shape{
+        static_cast<uint32_t>(shape[0] - padding[0].back - padding[0].front),
+        static_cast<uint32_t>(shape[1] - padding[1].back - padding[1].front),
+        static_cast<uint32_t>(shape[2] - padding[2].back - padding[2].front),
+        static_cast<uint32_t>(shape[3] - padding[3].back - padding[3].front)};
 }
 
 }  // namespace ttml::core

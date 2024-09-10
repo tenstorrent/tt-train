@@ -16,7 +16,7 @@ class LinearLayer : public autograd::ModuleBase {
     autograd::TensorPtr m_bias;
     autograd::GradFunction backward;
 
-    void initialize_tensors([[maybe_unused]] uint32_t in_features, [[maybe_unused]] uint32_t out_features);
+    void initialize_tensors(uint32_t in_features, uint32_t out_features);
 
 public:
     [[nodiscard]] const std::string& get_name() const;

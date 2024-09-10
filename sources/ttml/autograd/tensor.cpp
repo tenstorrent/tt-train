@@ -32,9 +32,9 @@ void Tensor::add_grad(const tt::tt_metal::Tensor& grad) {
     try_init_grad();
     // current backward ops don't support broadcasting.
     if (grad.get_shape()[0] > m_grad.get_shape()[0]) {
-        m_grad = ttnn::add_(m_grad, ttnn_fixed::sum_over_batch(grad));
+        m_grad = ttnn::add(m_grad, ttnn_fixed::sum_over_batch(grad));
     } else {
-        m_grad = ttnn::add_(m_grad, grad);
+        m_grad = ttnn::add(m_grad, grad);
     }
 }
 
@@ -55,8 +55,10 @@ void Tensor::backward() {
     }
 }
 
+bool Tensor::is_grad_initialized() const { return this->get_grad().tensor_attributes != nullptr; }
+
 void Tensor::try_init_grad(bool init_ones) {
-    if (this->get_grad().tensor_attributes == nullptr) {
+    if (!is_grad_initialized()) {
         if (init_ones) {
             this->set_grad(ttml::core::ones_like(m_value));
         } else {

@@ -7,15 +7,25 @@
 #include "core/not_null.hpp"
 namespace ttml::datasets {
 
+template <typename SampleType>
+std::vector<SampleType> default_collate_fn(std::vector<SampleType>&& samples) {
+    return std::forward<std::vector<SampleType>>(samples);
+}
+
 template <
     typename DatasetType,
     typename CollateFn =
-        std::function<std::vector<typename DatasetType::Sample>(const std::vector<typename DatasetType::Sample>&)>>
+        std::function<std::vector<typename DatasetType::Sample>(std::vector<typename DatasetType::Sample>&&)>,
+    typename BatchType = std::vector<typename DatasetType::Sample>>
 class DataLoader {
-   public:
+public:
     using Sample = typename DatasetType::Sample;
 
-    DataLoader(DatasetType& dataset, size_t batch_size, bool shuffle = false, CollateFn collate_fn = {}) :
+    DataLoader(
+        DatasetType& dataset,
+        size_t batch_size,
+        bool shuffle = false,
+        CollateFn collate_fn = default_collate_fn<Sample>) :
         m_dataset(&dataset),
         m_batch_size(batch_size),
         m_shuffle(shuffle),
@@ -33,20 +43,21 @@ class DataLoader {
     }
 
     class Iterator {
-       public:
+    public:
         Iterator(DataLoader& data_loader, size_t start_index) :
             m_data_loader(&data_loader), m_current_index(start_index) {}
 
         Iterator& operator++() {
             m_current_index += m_data_loader->m_batch_size;
+            m_current_index = std::min(m_current_index, m_data_loader->m_indices.size());
             return *this;
         }
 
-        std::vector<Sample> operator*() const { return m_data_loader->fetch_batch(m_current_index); }
+        BatchType operator*() const { return m_data_loader->fetch_batch(m_current_index); }
 
         bool operator!=(const Iterator& other) const { return m_current_index != other.m_current_index; }
 
-       private:
+    private:
         core::not_null<DataLoader*> m_data_loader;
         size_t m_current_index = 0;
     };
@@ -58,24 +69,22 @@ class DataLoader {
 
     Iterator end() { return Iterator(*this, m_indices.size()); }
 
-   private:
+private:
     core::not_null<DatasetType*> m_dataset;
     size_t m_batch_size = 0;
     bool m_shuffle = false;
     std::vector<size_t> m_indices;
     CollateFn m_collate_fn;
 
-    std::vector<Sample> fetch_batch(size_t start_index) const {
+    BatchType fetch_batch(size_t start_index) const {
         size_t end_index = std::min(start_index + m_batch_size, m_indices.size());
         std::vector<Sample> batch;
+        batch.reserve(end_index - start_index);
         for (size_t i = start_index; i < end_index; ++i) {
             batch.push_back(m_dataset->get_item(m_indices[i]));
         }
 
-        if (m_collate_fn) {
-            return m_collate_fn(batch);  // Apply the collate function if provided
-        }
-        return batch;
+        return m_collate_fn(std::move(batch));
     }
 };
 }  // namespace ttml::datasets

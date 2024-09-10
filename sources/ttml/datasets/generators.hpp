@@ -13,7 +13,7 @@ struct MakeRegressionParams {
     size_t n_samples = 1;
     size_t n_features = 1;
     size_t n_targets = 1;
-    float noise = 0.0;
+    float noise = 0.0F;
     bool bias = true;
 };
 InMemoryFloatVecDataset make_regression(MakeRegressionParams params);

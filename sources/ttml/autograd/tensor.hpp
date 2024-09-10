@@ -38,6 +38,8 @@ public:
 
     void backward();
 
+    bool is_grad_initialized() const;
+
 private:
     void try_init_grad(bool init_ones = false);
 };

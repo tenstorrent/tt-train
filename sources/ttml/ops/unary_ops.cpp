@@ -1,11 +1,13 @@
 #include "ops/unary_ops.hpp"
 
+#include <array>
 #include <optional>
 #include <ttnn/operations/eltwise/unary_backward/unary_backward.hpp>
 #include <ttnn/operations/reduction/generic/generic_reductions.hpp>
 
 #include "autograd/auto_context.hpp"
 #include "autograd/graph.hpp"
+#include "core/tt_tensor_utils.hpp"
 #include "core/ttnn_all_includes.hpp"
 #include "ttnn_fixed/trivial_ttnn_ops.hpp"
 
@@ -51,29 +53,13 @@ autograd::TensorPtr gelu(const autograd::TensorPtr& tensor) {
 }
 
 autograd::TensorPtr mean(const autograd::TensorPtr& tensor) {
-    autograd::TensorPtr out = std::make_shared<autograd::Tensor>();
-    out->set_value(ttnn::mean(tensor->get_value()));
+    ttnn::Shape shape(std::array<uint32_t, 4>{1, 1, 1, 1});
+    autograd::TensorPtr out =
+        std::make_shared<autograd::Tensor>(core::from_vector({0.F}, shape, &autograd::ctx().get_device()));
+    tt::operations::primary::moreh_mean(tensor->get_value(), std::nullopt, true, std::nullopt, out->get_value());
     autograd::GradFunction grad = [tensor, out]() {
-        const auto inv_volume = 1.0F / static_cast<float>(tensor->get_value().get_shape().volume());
-        // TODO: remove multiply in favor of ttnn::repeat
-        auto res = ttnn::multiply(ttnn::ones_like(tensor->get_value()), ttnn::multiply(out->get_grad(), inv_volume));
-        tensor->add_grad(res);
-    };
-    std::vector<autograd::NodeId> links;
-    if (tensor->get_node().has_value()) {
-        links.push_back(tensor->get_node().value());
-    }
-
-    out->set_node(autograd::ctx().add_backward_node(std::move(grad), links));
-    return out;
-}
-
-autograd::TensorPtr sum(const autograd::TensorPtr& tensor) {
-    autograd::TensorPtr out = std::make_shared<autograd::Tensor>();
-    out->set_value(ttnn::sum(tensor->get_value()));
-    autograd::GradFunction grad = [tensor, out]() {
-        // TODO: remove multiply in favor of ttnn::repeat
-        auto res = ttnn::multiply(ttnn::ones_like(tensor->get_value()), out->get_grad());
+        auto resulting_shape = core::get_shape_without_padding(tensor->get_value());
+        auto res = tt::operations::primary::moreh_mean_backward(out->get_grad(), std::nullopt, false, resulting_shape);
         tensor->add_grad(res);
     };
     std::vector<autograd::NodeId> links;
