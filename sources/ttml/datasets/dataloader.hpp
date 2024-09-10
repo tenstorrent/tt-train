@@ -10,9 +10,10 @@ namespace ttml::datasets {
 template <
     typename DatasetType,
     typename CollateFn =
-        std::function<std::vector<typename DatasetType::Sample>(const std::vector<typename DatasetType::Sample>&)>>
+        std::function<std::vector<typename DatasetType::Sample>(const std::vector<typename DatasetType::Sample>&)>,
+    typename BatchType = std::vector<typename DatasetType::Sample>>
 class DataLoader {
-   public:
+public:
     using Sample = typename DatasetType::Sample;
 
     DataLoader(DatasetType& dataset, size_t batch_size, bool shuffle = false, CollateFn collate_fn = {}) :
@@ -33,7 +34,7 @@ class DataLoader {
     }
 
     class Iterator {
-       public:
+    public:
         Iterator(DataLoader& data_loader, size_t start_index) :
             m_data_loader(&data_loader), m_current_index(start_index) {}
 
@@ -42,11 +43,11 @@ class DataLoader {
             return *this;
         }
 
-        std::vector<Sample> operator*() const { return m_data_loader->fetch_batch(m_current_index); }
+        BatchType operator*() const { return m_data_loader->fetch_batch(m_current_index); }
 
         bool operator!=(const Iterator& other) const { return m_current_index != other.m_current_index; }
 
-       private:
+    private:
         core::not_null<DataLoader*> m_data_loader;
         size_t m_current_index = 0;
     };
@@ -58,14 +59,14 @@ class DataLoader {
 
     Iterator end() { return Iterator(*this, m_indices.size()); }
 
-   private:
+private:
     core::not_null<DatasetType*> m_dataset;
     size_t m_batch_size = 0;
     bool m_shuffle = false;
     std::vector<size_t> m_indices;
     CollateFn m_collate_fn;
 
-    std::vector<Sample> fetch_batch(size_t start_index) const {
+    BatchType fetch_batch(size_t start_index) const {
         size_t end_index = std::min(start_index + m_batch_size, m_indices.size());
         std::vector<Sample> batch;
         for (size_t i = start_index; i < end_index; ++i) {
@@ -75,7 +76,8 @@ class DataLoader {
         if (m_collate_fn) {
             return m_collate_fn(batch);  // Apply the collate function if provided
         }
-        return batch;
+        // return batch;
+        throw std::runtime_error("Not implemented");
     }
 };
 }  // namespace ttml::datasets
