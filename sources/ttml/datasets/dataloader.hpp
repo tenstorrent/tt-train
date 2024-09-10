@@ -69,12 +69,13 @@ private:
     BatchType fetch_batch(size_t start_index) const {
         size_t end_index = std::min(start_index + m_batch_size, m_indices.size());
         std::vector<Sample> batch;
+        batch.reserve(end_index - start_index);
         for (size_t i = start_index; i < end_index; ++i) {
             batch.push_back(m_dataset->get_item(m_indices[i]));
         }
 
         if (m_collate_fn) {
-            return m_collate_fn(batch);  // Apply the collate function if provided
+            return m_collate_fn(std::move(batch));  // Apply the collate function if provided
         }
         // return batch;
         throw std::runtime_error("Not implemented");
