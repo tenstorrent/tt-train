@@ -2,6 +2,7 @@
 #include <iostream>
 #include <ttnn/tensor/tensor.hpp>
 
+#include "autograd/auto_context.hpp"
 #include "autograd/tensor.hpp"
 #include "core/tt_tensor_utils.hpp"
 #include "core/ttnn_all_includes.hpp"
@@ -17,7 +18,7 @@ int main() {
     const size_t training_samples_count = 100000;
     const size_t test_samples_count = 1000;
     const size_t num_features = 8;
-    const size_t num_targets = 1;
+    const size_t num_targets = 2;
     const float noise = 0.F;
     const bool bias = true;
 
@@ -35,7 +36,7 @@ int main() {
     auto training_dataset = ttml::datasets::make_regression(training_params);
     auto test_dataset = ttml::datasets::make_regression(test_params);
 
-    auto* device = tt::tt_metal::CreateDevice(0);
+    auto* device = &ttml::autograd::ctx().get_device();
 
     using DatasetSample = std::pair<std::vector<float>, std::vector<float>>;
     std::function<std::pair<tt::tt_metal::Tensor, tt::tt_metal::Tensor>(const std::vector<DatasetSample>& samples)>
@@ -77,6 +78,4 @@ int main() {
         loss->backward();
         optimizer.step();
     }
-
-    tt::tt_metal::CloseDevice(device);
 }

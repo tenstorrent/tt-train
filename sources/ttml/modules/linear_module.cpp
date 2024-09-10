@@ -1,9 +1,19 @@
 #include "linear_module.hpp"
 
+#include "core/tt_tensor_utils.hpp"
+#include "core/ttnn_all_includes.hpp"
+
 namespace ttml::modules {
 
 // TODO: finish initialization
-void LinearLayer::initialize_tensors([[maybe_unused]] uint32_t in_features, [[maybe_unused]] uint32_t out_features) {}
+void LinearLayer::initialize_tensors([[maybe_unused]] uint32_t in_features, [[maybe_unused]] uint32_t out_features) {
+    // TODO: add layout to core::zeros (and ones) function
+    auto* device = &autograd::ctx().get_device();
+    tt::tt_metal::Shape weight_shape({1, 1, out_features, in_features});
+    m_weight = std::make_shared<autograd::Tensor>(core::zeros(ttnn::Shape(weight_shape), device));
+    tt::tt_metal::Shape bias_shape({1, 1, 1, out_features});
+    m_bias = std::make_shared<autograd::Tensor>(core::zeros(ttnn::Shape(bias_shape), device));
+}
 
 const std::string& LinearLayer::get_name() const { return m_name; }
 

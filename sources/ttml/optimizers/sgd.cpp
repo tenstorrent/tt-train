@@ -13,7 +13,7 @@ SGD::SGD(ttml::autograd::NamedParameters parameters, const SGDConfig& config) :
 
 void SGD::zero_grad() {
     for (auto& [name, tensor_ptr] : m_parameters) {
-        if (tensor_ptr->get_require_grad()) {
+        if (tensor_ptr->get_require_grad() && tensor_ptr->is_grad_initialized()) {
             auto& grad = tensor_ptr->get_grad();
             core::fill(grad, 0.0F);
         }

@@ -8,6 +8,7 @@
 #include <optional>
 #include <stdexcept>
 #include <ttnn/operations/creation.hpp>
+#include <ttnn/tensor/types.hpp>
 
 #include "ttnn_all_includes.hpp"
 
@@ -99,11 +100,14 @@ void fill(tt::tt_metal::Tensor& tensor, const float value) {
     tensor = ttnn::multiply(ttnn::ones_like(tensor), value);
 }
 
+// TODO: optimize this functions to avoid unnecessary vector creation
 tt::tt_metal::Tensor zeros(const ttnn::Shape& shape, tt::tt_metal::Device* device) {
-    return ttnn::zeros(shape, std::nullopt, std::nullopt, *device);
+    std::vector<float> data(tt::tt_metal::compute_volume(shape), 0.0F);
+    return from_vector(data, shape, device);
 }
 tt::tt_metal::Tensor ones(const ttnn::Shape& shape, tt::tt_metal::Device* device) {
-    return ttnn::ones(shape, std::nullopt, std::nullopt, *device);
+    std::vector<float> data(tt::tt_metal::compute_volume(shape), 1.0F);
+    return from_vector(data, shape, device);
 }
 
 tt::tt_metal::Tensor from_vector(
