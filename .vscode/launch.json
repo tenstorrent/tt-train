@@ -6,13 +6,22 @@
             "request": "launch",
             "name": "Debug Google Tests",
             "program": "${command:cmake.launchTargetPath}",
-            "args": [ "${cmake.testArgs}"],
+            "args": [
+                "${cmake.testArgs}"
+            ],
             "cwd": "${workspaceFolder}",
             "environment": [],
             "stopAtEntry": false,
             "externalConsole": false,
             "MIMode": "gdb",
             "miDebuggerPath": "gdb-14.2",
+            "setupCommands": [
+                {
+                    "description": "Enable pretty-printing for gdb",
+                    "text": "-enable-pretty-printing",
+                    "ignoreFailures": true
+                }
+            ]
         }
     ]
 }

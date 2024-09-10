@@ -15,7 +15,6 @@ void LinearLayer::initialize_tensors(uint32_t in_features, uint32_t out_features
 
     tt::tt_metal::Shape bias_shape({1, 1, 1, out_features});
     auto bias = core::zeros(ttnn::Shape(bias_shape), device);
-    init::xavier_normal_init(bias, init::FanParams{in_features, out_features});
     m_bias = std::make_shared<autograd::Tensor>(bias);
 }
 
