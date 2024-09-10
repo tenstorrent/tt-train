@@ -7,7 +7,7 @@
 #include "core/tt_tensor_utils.hpp"
 #include "core/ttnn_all_includes.hpp"
 
-TEST(UnaryOpsTest, Mean) {
+TEST(UnaryOpsTest, GlobalMean) {
     std::vector<float> test_data = {1.F, 2.F, 3.F, 4.F, 1.F, 2.F, 3.F, 4.F};
 
     tt::tt_metal::Shape shape = {2, 1, 1, 4};

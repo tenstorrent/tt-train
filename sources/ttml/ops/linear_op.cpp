@@ -17,7 +17,7 @@ autograd::TensorPtr linear_op(
 
     autograd::GradFunction grad = [weight, bias, tensor, out]() {
         auto bias_shape = core::get_shape_without_padding(bias->get_value());
-        auto bias_grad_tensor = core::zeros(ttnn::Shape(bias_shape), &autograd::ctx().get_device());
+        auto bias_grad_tensor = core::zeros(ttnn::Shape(bias_shape), bias->get_value().device());
         tt::operations::primary::moreh_mean(
             out->get_grad(), /* dim */ 0, /* keepdim */ true, /* divisor */ std::nullopt, /* out */ bias_grad_tensor);
         bias->add_grad(bias_grad_tensor);

@@ -7,16 +7,25 @@
 #include "core/not_null.hpp"
 namespace ttml::datasets {
 
+template <typename SampleType>
+std::vector<SampleType> default_collate_fn(std::vector<SampleType>&& samples) {
+    return std::forward<std::vector<SampleType>>(samples);
+}
+
 template <
     typename DatasetType,
     typename CollateFn =
-        std::function<std::vector<typename DatasetType::Sample>(const std::vector<typename DatasetType::Sample>&)>,
+        std::function<std::vector<typename DatasetType::Sample>(std::vector<typename DatasetType::Sample>&&)>,
     typename BatchType = std::vector<typename DatasetType::Sample>>
 class DataLoader {
 public:
     using Sample = typename DatasetType::Sample;
 
-    DataLoader(DatasetType& dataset, size_t batch_size, bool shuffle = false, CollateFn collate_fn = {}) :
+    DataLoader(
+        DatasetType& dataset,
+        size_t batch_size,
+        bool shuffle = false,
+        CollateFn collate_fn = default_collate_fn<Sample>) :
         m_dataset(&dataset),
         m_batch_size(batch_size),
         m_shuffle(shuffle),
@@ -74,11 +83,7 @@ private:
             batch.push_back(m_dataset->get_item(m_indices[i]));
         }
 
-        if (m_collate_fn) {
-            return m_collate_fn(std::move(batch));  // Apply the collate function if provided
-        }
-        // return batch;
-        throw std::runtime_error("Not implemented");
+        return m_collate_fn(std::move(batch));
     }
 };
 }  // namespace ttml::datasets

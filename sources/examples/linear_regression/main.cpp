@@ -1,4 +1,6 @@
 
+#include <fmt/format.h>
+
 #include <iostream>
 #include <ttnn/tensor/tensor.hpp>
 
@@ -14,9 +16,15 @@
 
 using ttml::autograd::TensorPtr;
 
+using DatasetSample = std::pair<std::vector<float>, std::vector<float>>;
+using BatchType = std::pair<TensorPtr, TensorPtr>;
+using DataLoader = ttml::datasets::DataLoader<
+    ttml::datasets::InMemoryFloatVecDataset,
+    std::function<BatchType(std::vector<DatasetSample>&& samples)>,
+    BatchType>;
+
 int main() {
     const size_t training_samples_count = 100000;
-    [[maybe_unused]] const size_t test_samples_count = 1000;
     const size_t num_features = 8;
     const size_t num_targets = 2;
     const float noise = 0.0F;
@@ -34,10 +42,8 @@ int main() {
 
     auto* device = &ttml::autograd::ctx().get_device();
 
-    using DatasetSample = std::pair<std::vector<float>, std::vector<float>>;
-    std::function<std::pair<ttml::autograd::TensorPtr, ttml::autograd::TensorPtr>(
-        std::vector<DatasetSample> && samples)>
-        collate_fn = [&num_features, &num_targets, device](std::vector<DatasetSample>&& samples) {
+    std::function<BatchType(std::vector<DatasetSample> && samples)> collate_fn =
+        [&num_features, &num_targets, device](std::vector<DatasetSample>&& samples) {
             const uint32_t batch_size = samples.size();
             std::vector<float> data;
             std::vector<float> targets;
@@ -55,10 +61,8 @@ int main() {
             return std::make_pair(data_tensor, targets_tensor);
         };
 
-    auto train_dataloader = ttml::datasets::DataLoader<
-        ttml::datasets::InMemoryFloatVecDataset,
-        decltype(collate_fn),
-        std::pair<ttml::autograd::TensorPtr, ttml::autograd::TensorPtr>>(training_dataset, 128, true, collate_fn);
+    const uint32_t batch_size = 128;
+    auto train_dataloader = DataLoader(training_dataset, batch_size, /* shuffle */ true, collate_fn);
 
     auto model = ttml::modules::LinearLayer(num_features, num_targets);
 
@@ -71,8 +75,9 @@ int main() {
         auto output = model(data);
         auto loss = ttml::ops::mse_loss(targets, output);
         auto loss_float = ttml::core::to_vector(loss->get_value())[0];
-        std::cout << "Step: " << (training_step++) << " Loss: " << loss_float << '\n';
+        fmt::print("Step: {} Loss: {}\n", training_step++, loss_float);
         loss->backward();
         optimizer.step();
+        ttml::autograd::ctx().reset_graph();
     }
 }

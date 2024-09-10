@@ -16,7 +16,12 @@
 #include "ops/binary_ops.hpp"
 #include "ops/unary_ops.hpp"
 
-TEST(AutogradTest, TestSum) {
+class AutogradTest : public ::testing::Test {
+protected:
+    void TearDown() override { ttml::autograd::ctx().reset_graph(); }
+};
+
+TEST_F(AutogradTest, TestSum) {
     using namespace ttml::ops;
     auto* device = &ttml::autograd::ctx().get_device();
     std::vector<float> test_data1 = {1.F, 2.F, 3.F, 4.F};
@@ -45,7 +50,7 @@ TEST(AutogradTest, TestSum) {
     }
 }
 
-TEST(AutogradTest, TestMul) {
+TEST_F(AutogradTest, TestMul) {
     using namespace ttml::ops;
     auto* device = &ttml::autograd::ctx().get_device();
     std::vector<float> test_data1 = {1.F, 2.F, 3.F, 4.F};
@@ -70,7 +75,7 @@ TEST(AutogradTest, TestMul) {
     EXPECT_EQ(t1_back, test_data2);
 }
 
-TEST(AutogradTest, BroadCastBatchTest) {
+TEST_F(AutogradTest, BroadCastBatchTest) {
     using namespace ttml::ops;
     auto* device = &ttml::autograd::ctx().get_device();
     std::vector<float> test_data1 = {1.F, 2.F, 3.F, 4.F};

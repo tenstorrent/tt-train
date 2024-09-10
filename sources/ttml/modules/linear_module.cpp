@@ -6,8 +6,7 @@
 namespace ttml::modules {
 
 // TODO: finish initialization
-void LinearLayer::initialize_tensors([[maybe_unused]] uint32_t in_features, [[maybe_unused]] uint32_t out_features) {
-    // TODO: add layout to core::zeros (and ones) function
+void LinearLayer::initialize_tensors(uint32_t in_features, uint32_t out_features) {
     auto* device = &autograd::ctx().get_device();
     tt::tt_metal::Shape weight_shape({1, 1, out_features, in_features});
     m_weight = std::make_shared<autograd::Tensor>(core::zeros(ttnn::Shape(weight_shape), device));

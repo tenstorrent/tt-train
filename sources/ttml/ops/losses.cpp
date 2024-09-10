@@ -10,8 +10,7 @@ autograd::TensorPtr mse_loss(
     auto diff = ops::sub(target, prediction);  // TODO: @rfurko-tt use "ttnn::squared_difference"
     auto diff_2 = ops::mul(diff, diff);  // TODO: need to add backward "ttnn::squared_difference_bw" might be faster
     if (reduce == ReduceType::MEAN) {
-        auto res = ops::mean(diff_2);
-        return res;
+        return ops::mean(diff_2);
     } else {
         throw std::logic_error("Unsupported MSE type reduction type");
     }
