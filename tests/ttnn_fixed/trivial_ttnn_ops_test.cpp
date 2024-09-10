@@ -5,28 +5,22 @@
 #include <memory>
 #include <vector>
 
+#include "autograd/auto_context.hpp"
 #include "core/device.hpp"
 #include "core/tt_tensor_utils.hpp"
 #include "core/ttnn_all_includes.hpp"
 #include "ttnn_fixed/trivial_ttnn_ops.hpp"
 
-class TrivialTnnFixedTest : public ::testing::Test {
-protected:
-    void SetUp() override { device = std::make_unique<ttml::core::Device>(0); }
+TEST(TrivialTnnFixedTest, TestSumOverBatch_0) {
+    auto* device = &ttml::autograd::ctx().get_device();
 
-    void TearDown() override { device.reset(); }
-
-    std::unique_ptr<ttml::core::Device> device;
-};
-
-TEST_F(TrivialTnnFixedTest, TestSumOverBatch_0) {
     const size_t batch_size = 10U;
     const size_t features = 4U;
     std::vector<float> data(batch_size * features);
     std::iota(data.begin(), data.end(), 0);
 
     tt::tt_metal::Shape shape = {batch_size, 1, 1, features};
-    auto tensor = ttml::core::from_vector(data, ttnn::Shape(shape), &device->get_device());
+    auto tensor = ttml::core::from_vector(data, ttnn::Shape(shape), device);
     auto tensor_shape = tensor.get_shape();
     EXPECT_EQ(tensor_shape[0], batch_size);
     EXPECT_EQ(tensor_shape[1], 1U);
@@ -42,7 +36,9 @@ TEST_F(TrivialTnnFixedTest, TestSumOverBatch_0) {
     EXPECT_EQ(result_shape[3], features);
 }
 
-TEST_F(TrivialTnnFixedTest, TestSumOverBatch_1) {
+TEST(TrivialTnnFixedTest, TestSumOverBatch_1) {
+    auto* device = &ttml::autograd::ctx().get_device();
+
     const size_t batch_size = 2U;
     const size_t features = 64U;
     std::vector<float> data(batch_size * features);
@@ -54,7 +50,7 @@ TEST_F(TrivialTnnFixedTest, TestSumOverBatch_1) {
     }
 
     tt::tt_metal::Shape shape = {batch_size, 1, 1, features};
-    auto tensor = ttml::core::from_vector(data, ttnn::Shape(shape), &device->get_device());
+    auto tensor = ttml::core::from_vector(data, ttnn::Shape(shape), device);
     auto tensor_shape = tensor.get_shape();
     EXPECT_EQ(tensor_shape[0], batch_size);
     EXPECT_EQ(tensor_shape[1], 1U);

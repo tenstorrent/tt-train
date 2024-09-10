@@ -16,7 +16,7 @@ using ttml::autograd::TensorPtr;
 
 int main() {
     const size_t training_samples_count = 100000;
-    const size_t test_samples_count = 1000;
+    [[maybe_unused]] const size_t test_samples_count = 1000;
     const size_t num_features = 8;
     const size_t num_targets = 2;
     const float noise = 0.F;
@@ -30,11 +30,7 @@ int main() {
         .bias = bias,
     };
 
-    auto test_params = training_params;
-    test_params.n_samples = test_samples_count;
-
     auto training_dataset = ttml::datasets::make_regression(training_params);
-    auto test_dataset = ttml::datasets::make_regression(test_params);
 
     auto* device = &ttml::autograd::ctx().get_device();
 
@@ -61,13 +57,14 @@ int main() {
     auto train_dataloader = ttml::datasets::DataLoader<
         ttml::datasets::InMemoryFloatVecDataset,
         decltype(collate_fn),
-        std::pair<tt::tt_metal::Tensor, tt::tt_metal::Tensor>>(training_dataset, 32, true, collate_fn);
+        std::pair<tt::tt_metal::Tensor, tt::tt_metal::Tensor>>(training_dataset, 128, true, collate_fn);
 
     auto model = ttml::modules::LinearLayer(num_features, num_targets);
 
-    auto sgd_config = ttml::optimizers::SGDConfig{.lr = 0.01F, .momentum = 0.9F};
+    auto sgd_config = ttml::optimizers::SGDConfig{.lr = 1.0F, .momentum = 0.F};
     auto optimizer = ttml::optimizers::SGD(model.parameters(), sgd_config);
 
+    int training_step = 0;
     for (auto [data, targets] : train_dataloader) {
         auto data_ptr = std::make_shared<ttml::autograd::Tensor>(data);
         auto targets_ptr = std::make_shared<ttml::autograd::Tensor>(targets);
@@ -75,6 +72,8 @@ int main() {
         optimizer.zero_grad();
         auto output = model(data_ptr);
         auto loss = ttml::ops::mse_loss(targets_ptr, output);
+        auto loss_float = ttml::core::to_vector(loss->get_value())[0];
+        std::cout << "Step: " << (training_step++) << " Loss: " << loss_float << '\n';
         loss->backward();
         optimizer.step();
     }

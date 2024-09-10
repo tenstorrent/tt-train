@@ -58,9 +58,8 @@ autograd::TensorPtr mean(const autograd::TensorPtr& tensor) {
         std::make_shared<autograd::Tensor>(core::from_vector({0.F}, shape, &autograd::ctx().get_device()));
     tt::operations::primary::moreh_mean(tensor->get_value(), std::nullopt, true, std::nullopt, out->get_value());
     autograd::GradFunction grad = [tensor, out]() {
-        // TODO: @rfurko-tt remove hardcoded shape
-        auto res = tt::operations::primary::moreh_mean_backward(
-            out->get_grad(), std::nullopt, false, tt::tt_metal::Shape({32, 1, 1, 2}));
+        auto resulting_shape = core::get_shape_without_padding(tensor->get_value());
+        auto res = tt::operations::primary::moreh_mean_backward(out->get_grad(), std::nullopt, false, resulting_shape);
         tensor->add_grad(res);
     };
     std::vector<autograd::NodeId> links;
@@ -71,23 +70,6 @@ autograd::TensorPtr mean(const autograd::TensorPtr& tensor) {
     out->set_node(autograd::ctx().add_backward_node(std::move(grad), links));
     return out;
 }
-
-// autograd::TensorPtr sum(const autograd::TensorPtr& tensor) {
-//     autograd::TensorPtr out = std::make_shared<autograd::Tensor>();
-//     out->set_value(ttnn::sum(tensor->get_value()));
-//     autograd::GradFunction grad = [tensor, out]() {
-//         // TODO: remove multiply in favor of ttnn::repeat
-//         auto res = ttnn::multiply(ttnn::ones_like(tensor->get_value()), out->get_grad());
-//         tensor->add_grad(res);
-//     };
-//     std::vector<autograd::NodeId> links;
-//     if (tensor->get_node().has_value()) {
-//         links.push_back(tensor->get_node().value());
-//     }
-
-//     out->set_node(autograd::ctx().add_backward_node(std::move(grad), links));
-//     return out;
-// }
 
 autograd::TensorPtr broadcast_batch(const autograd::TensorPtr& tensor, uint32_t new_batch_dim) {
     if (new_batch_dim == 1 || tensor->get_value().shape()[0] == new_batch_dim) {

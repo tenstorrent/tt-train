@@ -19,4 +19,6 @@ tt::tt_metal::Tensor from_vector(
     const std::vector<float>& buffer, const ttnn::Shape& shape, tt::tt_metal::Device* device);
 
 std::vector<float> to_vector(const tt::tt_metal::Tensor& tensor);
+
+tt::tt_metal::Shape get_shape_without_padding(const tt::tt_metal::Tensor& tensor);
 }  // namespace ttml::core

@@ -138,4 +138,14 @@ std::vector<float> to_vector(const tt::tt_metal::Tensor& tensor) {
     return final_res;
 }
 
+tt::tt_metal::Shape get_shape_without_padding(const tt::tt_metal::Tensor& tensor) {
+    auto shape = tensor.get_legacy_shape();
+    auto padding = shape.padding();
+    return tt::tt_metal::Shape{
+        static_cast<uint32_t>(shape[0] - padding[0].back - padding[0].front),
+        static_cast<uint32_t>(shape[1] - padding[1].back - padding[1].front),
+        static_cast<uint32_t>(shape[2] - padding[2].back - padding[2].front),
+        static_cast<uint32_t>(shape[3] - padding[3].back - padding[3].front)};
+}
+
 }  // namespace ttml::core
