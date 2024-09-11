@@ -79,7 +79,7 @@ TEST_F(TensorUtilsTest, TestToFromTensorLarge) {
     }
 }
 
-TEST_F(TensorUtilsTest, TestToFromTensorVatch) {
+TEST_F(TensorUtilsTest, TestToFromTensorBatch) {
     std::vector<float> test_data = {1.F, 5.F, 10.F, 15.F};
 
     tt::tt_metal::Shape shape = {2, 1, 1, 2};

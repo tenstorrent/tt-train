@@ -3,9 +3,9 @@
 #include <ttnn/tensor/types.hpp>
 
 #include "autograd/auto_context.hpp"
+#include "autograd/graph_utils.hpp"
 #include "core/tt_tensor_utils.hpp"
 #include "core/ttnn_all_includes.hpp"
-
 namespace ttml::ops {
 
 autograd::TensorPtr linear_op(
@@ -34,17 +34,7 @@ autograd::TensorPtr linear_op(
         bias->add_grad(res[2].value());
     };
 
-    std::vector<autograd::NodeId> links;
-    if (weight->get_node().has_value()) {
-        links.push_back(weight->get_node().value());
-    }
-    if (bias->get_node().has_value()) {
-        links.push_back(bias->get_node().value());
-    }
-    if (tensor->get_node().has_value()) {
-        links.push_back(tensor->get_node().value());
-    }
-
+    std::vector<autograd::NodeId> links = autograd::get_links(weight, tensor, bias);
     out->set_node(autograd::ctx().add_backward_node(std::move(grad), links));
     return out;
 }

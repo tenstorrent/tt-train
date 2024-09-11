@@ -7,10 +7,10 @@
 
 #include "autograd/auto_context.hpp"
 #include "autograd/graph.hpp"
+#include "autograd/graph_utils.hpp"
 #include "core/tt_tensor_utils.hpp"
 #include "core/ttnn_all_includes.hpp"
 #include "ttnn_fixed/trivial_ttnn_ops.hpp"
-
 namespace ttml::ops {
 
 autograd::TensorPtr relu(const autograd::TensorPtr& tensor) {
@@ -23,10 +23,7 @@ autograd::TensorPtr relu(const autograd::TensorPtr& tensor) {
         tensor->add_grad(res[0]);
     };
 
-    std::vector<autograd::NodeId> links;
-    if (tensor->get_node().has_value()) {
-        links.push_back(tensor->get_node().value());
-    }
+    std::vector<autograd::NodeId> links = autograd::get_links(tensor);
     out->set_node(autograd::ctx().add_backward_node(std::move(grad), links));
 
     return out;
@@ -43,10 +40,7 @@ autograd::TensorPtr gelu(const autograd::TensorPtr& tensor) {
         tensor->add_grad(res[0]);
     };
 
-    std::vector<autograd::NodeId> links;
-    if (tensor->get_node().has_value()) {
-        links.push_back(tensor->get_node().value());
-    }
+    std::vector<autograd::NodeId> links = autograd::get_links(tensor);
     out->set_node(autograd::ctx().add_backward_node(std::move(grad), links));
 
     return out;
@@ -62,10 +56,7 @@ autograd::TensorPtr mean(const autograd::TensorPtr& tensor) {
         auto res = tt::operations::primary::moreh_mean_backward(out->get_grad(), std::nullopt, false, resulting_shape);
         tensor->add_grad(res);
     };
-    std::vector<autograd::NodeId> links;
-    if (tensor->get_node().has_value()) {
-        links.push_back(tensor->get_node().value());
-    }
+    std::vector<autograd::NodeId> links = autograd::get_links(tensor);
 
     out->set_node(autograd::ctx().add_backward_node(std::move(grad), links));
     return out;
@@ -84,10 +75,7 @@ autograd::TensorPtr broadcast_batch(const autograd::TensorPtr& tensor, uint32_t 
         auto res = ttnn_fixed::sum_over_batch(out->get_grad());
         tensor->add_grad(res);
     };
-    std::vector<autograd::NodeId> links;
-    if (tensor->get_node().has_value()) {
-        links.push_back(tensor->get_node().value());
-    }
+    std::vector<autograd::NodeId> links = autograd::get_links(tensor);
 
     out->set_node(autograd::ctx().add_backward_node(std::move(grad), links));
     return out;
