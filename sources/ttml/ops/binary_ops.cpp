@@ -8,6 +8,7 @@
 
 #include "autograd/auto_context.hpp"
 #include "autograd/graph.hpp"
+#include "autograd/graph_utils.hpp"
 #include "autograd/tensor.hpp"
 #include "core/tt_tensor_utils.hpp"
 #include "core/ttnn_all_includes.hpp"
@@ -24,17 +25,7 @@ autograd::TensorPtr operator+(const autograd::TensorPtr& a, const autograd::Tens
         a->add_grad(res[0]);
         b->add_grad(res[1]);
     };
-    std::vector<autograd::NodeId> links;
-
-    const auto& a_node = a->get_node();
-    const auto& b_node = b->get_node();
-    if (a_node.has_value()) {
-        links.push_back(a_node.value());
-    }
-
-    if (b_node.has_value()) {
-        links.push_back(b_node.value());
-    }
+    std::vector<autograd::NodeId> links = autograd::get_links(a, b);
     out->set_node(autograd::ctx().add_backward_node(std::move(grad), links));
 
     return out;
@@ -50,17 +41,8 @@ autograd::TensorPtr operator-(const autograd::TensorPtr& a, const autograd::Tens
         a->add_grad(out->get_grad());
         b->add_grad(ttnn::neg(out->get_grad()));
     };
-    std::vector<autograd::NodeId> links;
+    std::vector<autograd::NodeId> links = autograd::get_links(a, b);
 
-    const auto& a_node = a->get_node();
-    const auto& b_node = b->get_node();
-    if (a_node.has_value()) {
-        links.push_back(a_node.value());
-    }
-
-    if (b_node.has_value()) {
-        links.push_back(b_node.value());
-    }
     out->set_node(autograd::ctx().add_backward_node(std::move(grad), links));
 
     return out;
@@ -76,17 +58,7 @@ autograd::TensorPtr operator*(const autograd::TensorPtr& a, const autograd::Tens
         a->add_grad(res[0].value());
         b->add_grad(res[1].value());
     };
-    std::vector<autograd::NodeId> links;
-
-    const auto& a_node = a->get_node();
-    const auto& b_node = b->get_node();
-    if (a_node.has_value()) {
-        links.push_back(a_node.value());
-    }
-
-    if (b_node.has_value()) {
-        links.push_back(b_node.value());
-    }
+    std::vector<autograd::NodeId> links = autograd::get_links(a, b);
     out->set_node(autograd::ctx().add_backward_node(std::move(grad), links));
 
     return out;
@@ -101,17 +73,7 @@ autograd::TensorPtr operator/(const autograd::TensorPtr& a, const autograd::Tens
         a->add_grad(res[0]);
         b->add_grad(res[1]);
     };
-    std::vector<autograd::NodeId> links;
-
-    const auto& a_node = a->get_node();
-    const auto& b_node = b->get_node();
-    if (a_node.has_value()) {
-        links.push_back(a_node.value());
-    }
-
-    if (b_node.has_value()) {
-        links.push_back(b_node.value());
-    }
+    std::vector<autograd::NodeId> links = autograd::get_links(a, b);
     out->set_node(autograd::ctx().add_backward_node(std::move(grad), links));
 
     return out;
