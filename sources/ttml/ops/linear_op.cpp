@@ -18,6 +18,7 @@ autograd::TensorPtr linear_op(
         auto bias_grad = core::zeros_like(bias->get_value());
         auto tensor_grad = core::zeros_like(tensor->get_value());
         auto weight_grad = core::zeros_like(weight->get_value());
+
         auto res = tt::operations::primary::moreh_linear_backward(
             out->get_grad(),
             tensor->get_value(),
