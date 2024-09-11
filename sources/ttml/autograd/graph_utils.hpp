@@ -9,7 +9,7 @@ std::vector<NodeId> get_links(Tensors&&... tensors) {
     static_assert(core::are_same_type<Tensors...>(), "All nodes must have the same type!");
 
     std::vector<NodeId> links;
-
+    links.reserve(sizeof...(Tensors));
     auto process_node = [&links](auto&& tensor) {
         const auto& node = tensor->get_node();
         if (node) {
