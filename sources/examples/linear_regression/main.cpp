@@ -25,8 +25,8 @@ using DataLoader = ttml::datasets::DataLoader<
 
 int main() {
     const size_t training_samples_count = 100000;
-    const size_t num_features = 8;
-    const size_t num_targets = 2;
+    const size_t num_features = 64;
+    const size_t num_targets = 4;
     const float noise = 0.0F;
     const bool bias = true;
 

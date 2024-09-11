@@ -30,12 +30,7 @@ Tensor::Tensor(tt::tt_metal::Tensor m_value, bool require_grad) :
 
 void Tensor::add_grad(const tt::tt_metal::Tensor& grad) {
     try_init_grad();
-    // current backward ops don't support broadcasting.
-    if (grad.get_shape()[0] > m_grad.get_shape()[0]) {
-        m_grad = ttnn::add(m_grad, ttnn_fixed::sum_over_batch(grad));
-    } else {
-        m_grad = ttnn::add(m_grad, grad);
-    }
+    m_grad = ttnn::add(m_grad, grad);
 }
 
 void Tensor::backward() {

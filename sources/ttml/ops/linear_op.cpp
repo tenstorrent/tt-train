@@ -1,6 +1,5 @@
 #include "linear_op.hpp"
 
-#include <tt_dnn/op_library/moreh_mean/moreh_mean_op.hpp>
 #include <ttnn/tensor/types.hpp>
 
 #include "autograd/auto_context.hpp"
@@ -16,13 +15,22 @@ autograd::TensorPtr linear_op(
         tensor->get_value(), weight->get_value(), bias->get_value(), /* transpose_a */ false, /* tranpose_b */ true));
 
     autograd::GradFunction grad = [weight, bias, tensor, out]() {
-        auto bias_shape = core::get_shape_without_padding(bias->get_value());
-        auto bias_grad_tensor = core::zeros(ttnn::Shape(bias_shape), bias->get_value().device());
-        tt::operations::primary::moreh_mean(
-            out->get_grad(), /* dim */ 0, /* keepdim */ true, /* divisor */ std::nullopt, /* out */ bias_grad_tensor);
-        bias->add_grad(bias_grad_tensor);
-        weight->add_grad(ttnn::matmul(out->get_grad(), tensor->get_value(), /* transpose_a*/ true));
-        tensor->add_grad(ttnn::matmul(out->get_grad(), weight->get_value()));
+        auto bias_grad = core::zeros_like(bias->get_value());
+        auto tensor_grad = core::zeros_like(tensor->get_value());
+        auto weight_grad = core::zeros_like(weight->get_value());
+        auto res = tt::operations::primary::moreh_linear_backward(
+            out->get_grad(),
+            tensor->get_value(),
+            weight->get_value(),
+            /* are required outputs */ {true, true, true},
+            bias->get_value(),
+            tensor_grad,
+            weight_grad,
+            bias_grad);
+
+        tensor->add_grad(res[0].value());
+        weight->add_grad(res[1].value());
+        bias->add_grad(res[2].value());
     };
 
     std::vector<autograd::NodeId> links;

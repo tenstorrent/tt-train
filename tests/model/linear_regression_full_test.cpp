@@ -16,7 +16,7 @@ TEST_F(LinearRegressionFullTest, TestLinearRegressionFull) {
     using namespace ttml::ops;
     auto* device = &ttml::autograd::ctx().get_device();
     const size_t batch_size = 128;
-    const size_t num_features = 16;
+    const size_t num_features = 64;
     std::vector<float> features;
     features.reserve(batch_size * num_features);
     for (size_t i = 0; i < batch_size; ++i) {
@@ -45,10 +45,7 @@ TEST_F(LinearRegressionFullTest, TestLinearRegressionFull) {
         auto prediction = model(data_tensor);
         auto loss = ttml::ops::mse_loss(targets_tensor, prediction);
         loss->backward();
-        fmt::print("Step: {} Loss: {}\n", step, ttml::core::to_vector(loss->get_value())[0]);
         optimizer.step();
         ttml::autograd::ctx().reset_graph();
     }
-
-    ASSERT_TRUE(false);
 }
