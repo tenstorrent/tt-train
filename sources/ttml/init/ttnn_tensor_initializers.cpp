@@ -17,7 +17,7 @@ void uniform_init(tt::tt_metal::Tensor& t, UniformRange range) {
 
     auto new_tensor = ttml::core::from_vector(vec, shape, device);
 
-    ttnn::assign(t, new_tensor);
+    ttnn::assign(new_tensor, t);
 }
 
 void normal_init(tt::tt_metal::Tensor& t, NormalParams params) {
@@ -30,7 +30,7 @@ void normal_init(tt::tt_metal::Tensor& t, NormalParams params) {
 
     auto new_tensor = ttml::core::from_vector(vec, shape, device);
 
-    ttnn::assign(t, new_tensor);
+    ttnn::assign(new_tensor, t);
 }
 
 void constant_init(tt::tt_metal::Tensor& t, float value) {
@@ -43,7 +43,7 @@ void constant_init(tt::tt_metal::Tensor& t, float value) {
 
     auto new_tensor = ttml::core::from_vector(vec, shape, device);
 
-    ttnn::assign(t, new_tensor);
+    ttnn::assign(new_tensor, t);
 }
 
 void xavier_uniform_init(tt::tt_metal::Tensor& t, FanParams params) {
@@ -56,7 +56,7 @@ void xavier_uniform_init(tt::tt_metal::Tensor& t, FanParams params) {
 
     auto new_tensor = ttml::core::from_vector(vec, shape, device);
 
-    ttnn::assign(t, new_tensor);
+    ttnn::assign(new_tensor, t);
 }
 
 void xavier_normal_init(tt::tt_metal::Tensor& t, FanParams params) {
@@ -69,7 +69,7 @@ void xavier_normal_init(tt::tt_metal::Tensor& t, FanParams params) {
 
     auto new_tensor = ttml::core::from_vector(vec, shape, device);
 
-    ttnn::assign(t, new_tensor);
+    ttnn::assign(new_tensor, t);
 }
 
 void kaiming_uniform_init(tt::tt_metal::Tensor& t, int fan_in) {
@@ -82,7 +82,7 @@ void kaiming_uniform_init(tt::tt_metal::Tensor& t, int fan_in) {
 
     auto new_tensor = ttml::core::from_vector(vec, shape, device);
 
-    ttnn::assign(t, new_tensor);
+    ttnn::assign(new_tensor, t);
 }
 
 void kaiming_normal_init(tt::tt_metal::Tensor& t, int fan_out) {
@@ -95,6 +95,6 @@ void kaiming_normal_init(tt::tt_metal::Tensor& t, int fan_out) {
 
     auto new_tensor = ttml::core::from_vector(vec, shape, device);
 
-    ttnn::assign(t, new_tensor);
+    ttnn::assign(new_tensor, t);
 }
 }  // namespace ttml::init

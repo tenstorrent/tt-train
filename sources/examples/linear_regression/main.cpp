@@ -25,8 +25,8 @@ using DataLoader = ttml::datasets::DataLoader<
 
 int main() {
     const size_t training_samples_count = 100000;
-    const size_t num_features = 8;
-    const size_t num_targets = 2;
+    const size_t num_features = 64;
+    const size_t num_targets = 32;
     const float noise = 0.0F;
     const bool bias = true;
 
@@ -66,18 +66,24 @@ int main() {
 
     auto model = ttml::modules::LinearLayer(num_features, num_targets);
 
-    auto sgd_config = ttml::optimizers::SGDConfig{.lr = 1.0F, .momentum = 0.0F};
+    float learning_rate = 0.1F * num_targets * (batch_size / 128.F);
+    auto sgd_config = ttml::optimizers::SGDConfig{.lr = learning_rate, .momentum = 0.0F};
     auto optimizer = ttml::optimizers::SGD(model.parameters(), sgd_config);
 
     int training_step = 0;
-    for (auto [data, targets] : train_dataloader) {
-        optimizer.zero_grad();
-        auto output = model(data);
-        auto loss = ttml::ops::mse_loss(targets, output);
-        auto loss_float = ttml::core::to_vector(loss->get_value())[0];
-        fmt::print("Step: {} Loss: {}\n", training_step++, loss_float);
-        loss->backward();
-        optimizer.step();
-        ttml::autograd::ctx().reset_graph();
+    const int num_epochs = 10;
+    for (int epoch = 0; epoch < num_epochs; ++epoch) {
+        for (const auto& [data, targets] : train_dataloader) {
+            optimizer.zero_grad();
+            auto output = model(data);
+            auto loss = ttml::ops::mse_loss(targets, output);
+            auto loss_float = ttml::core::to_vector(loss->get_value())[0];
+            if (training_step++ % 50 == 0) {
+                fmt::print("Step: {} Loss: {}\n", training_step, loss_float);
+            }
+            loss->backward();
+            optimizer.step();
+            ttml::autograd::ctx().reset_graph();
+        }
     }
 }

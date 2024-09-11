@@ -30,12 +30,17 @@ Tensor::Tensor(tt::tt_metal::Tensor m_value, bool require_grad) :
 
 void Tensor::add_grad(const tt::tt_metal::Tensor& grad) {
     try_init_grad();
-    // current backward ops don't support broadcasting.
-    if (grad.get_shape()[0] > m_grad.get_shape()[0]) {
-        m_grad = ttnn::add(m_grad, ttnn_fixed::sum_over_batch(grad));
-    } else {
-        m_grad = ttnn::add(m_grad, grad);
+    auto grad_shape = grad.get_shape();
+    auto m_grad_shape = m_grad.get_shape();
+
+    for (int i = 0; i < 4; ++i) {
+        if (grad_shape[i] != m_grad_shape[i]) {
+            fmt::format("Grad shape: {}, tensor shape: {}", grad_shape, m_grad_shape);
+            throw std::runtime_error("Shapes of gradients are not equal");
+        }
     }
+
+    m_grad = ttnn::add(m_grad, grad);
 }
 
 void Tensor::backward() {

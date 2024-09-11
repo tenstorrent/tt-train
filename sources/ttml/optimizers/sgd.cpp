@@ -1,5 +1,11 @@
 #include "sgd.hpp"
 
+#include <fmt/format.h>
+
+#include <ttnn/operations/eltwise/binary/binary.hpp>
+
+#include "core/tt_tensor_utils.hpp"
+
 namespace ttml::optimizers {
 
 SGD::SGD(ttml::autograd::NamedParameters parameters, const SGDConfig& config) :
@@ -15,7 +21,7 @@ void SGD::zero_grad() {
     for (auto& [name, tensor_ptr] : m_parameters) {
         if (tensor_ptr->get_require_grad() && tensor_ptr->is_grad_initialized()) {
             auto& grad = tensor_ptr->get_grad();
-            core::fill(grad, 0.0F);
+            grad = core::zeros_like(grad);
         }
     }
 }
@@ -25,10 +31,10 @@ void SGD::step() {
         auto tensor_ptr = m_parameters.at(name);
 
         theta = ttnn::multiply(theta, m_momentum);
-        theta = ttnn::subtract(theta, ttnn::multiply(tensor_ptr->get_grad(), 1 - m_momentum));
+        theta = ttnn::add(theta, ttnn::multiply(tensor_ptr->get_grad(), 1 - m_momentum));
 
-        auto update = ttnn::multiply(theta, m_lr);
-        tensor_ptr->set_value(ttnn::add(tensor_ptr->get_value(), update));
+        auto tensor_update = ttnn::multiply(theta, m_lr);
+        tensor_ptr->set_value(ttnn::subtract(tensor_ptr->get_value(), tensor_update));
     }
 }
 

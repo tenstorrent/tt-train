@@ -9,8 +9,10 @@
 #include "autograd/auto_context.hpp"
 #include "autograd/graph.hpp"
 #include "autograd/tensor.hpp"
+#include "core/tt_tensor_utils.hpp"
 #include "core/ttnn_all_includes.hpp"
 #include "ttnn_fixed/trivial_ttnn_ops.hpp"
+
 namespace ttml::ops {
 
 autograd::TensorPtr operator+(const autograd::TensorPtr& a, const autograd::TensorPtr& b) {
@@ -19,7 +21,6 @@ autograd::TensorPtr operator+(const autograd::TensorPtr& a, const autograd::Tens
     out->set_value(ttnn::add(a->get_value(), b->get_value()));
     autograd::GradFunction grad = [a, b, out]() {
         auto res = ttnn::add_bw(out->get_grad(), a->get_value(), b->get_value());
-
         a->add_grad(res[0]);
         b->add_grad(res[1]);
     };
@@ -45,11 +46,9 @@ autograd::TensorPtr operator-(const autograd::TensorPtr& a, const autograd::Tens
     out->set_value(ttnn::subtract(a->get_value(), b->get_value()));
     autograd::GradFunction grad = [a, b, out]() {
         tt::tt_metal::MemoryConfig mem_config;
-
-        auto res = ttnn::sub_bw(out->get_grad(), a->get_value(), b->get_value(), mem_config);
-
-        a->add_grad(res[0]);
-        b->add_grad(res[1]);
+        // TODO: support broadcasting
+        a->add_grad(out->get_grad());
+        b->add_grad(ttnn::neg(out->get_grad()));
     };
     std::vector<autograd::NodeId> links;
 
@@ -73,9 +72,7 @@ autograd::TensorPtr operator*(const autograd::TensorPtr& a, const autograd::Tens
     out->set_value(ttnn::multiply(a->get_value(), b->get_value()));
     autograd::GradFunction grad = [a, b, out]() {
         tt::tt_metal::MemoryConfig mem_config;
-
         auto res = ttnn::mul_bw(0, out->get_grad(), a->get_value(), b->get_value(), mem_config);
-
         a->add_grad(res[0].value());
         b->add_grad(res[1].value());
     };
@@ -100,9 +97,7 @@ autograd::TensorPtr operator/(const autograd::TensorPtr& a, const autograd::Tens
     out->set_value(ttnn::divide(a->get_value(), b->get_value()));
     autograd::GradFunction grad = [a, b, out]() {
         tt::tt_metal::MemoryConfig mem_config;
-
         auto res = ttnn::div_bw(out->get_grad(), a->get_value(), b->get_value(), "None", mem_config);
-
         a->add_grad(res[0]);
         b->add_grad(res[1]);
     };
