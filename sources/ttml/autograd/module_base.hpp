@@ -6,6 +6,9 @@
 #include "tensor.hpp"
 
 namespace ttml::autograd {
+
+enum class TrainMode { TRAIN, EVAL };
+
 class ModuleBase;
 using ModuleBasePtr = std::shared_ptr<ModuleBase>;
 using NamedParameters = std::unordered_map<std::string, TensorPtr>;
@@ -13,6 +16,8 @@ using NamedParameters = std::unordered_map<std::string, TensorPtr>;
 class ModuleBase : public std::enable_shared_from_this<ModuleBase> {
 private:
     std::string m_name;
+    TrainMode m_train_mode = TrainMode::EVAL;
+
     std::unordered_map<std::string, TensorPtr> m_named_tensors;
     std::unordered_map<std::string, ModuleBasePtr> m_named_modules;
 
@@ -24,6 +29,9 @@ protected:
 public:
     [[nodiscard]] const std::string& get_name() const;
     [[nodiscard]] NamedParameters parameters() const;
+
+    void set_train_mode(TrainMode mode);
+    [[nodiscard]] TrainMode get_train_mode() const;
 };
 
 }  // namespace ttml::autograd

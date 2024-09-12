@@ -11,7 +11,7 @@
 namespace ttml::modules {
 
 class LinearLayer : public autograd::ModuleBase {
-    std::string m_name;
+private:
     autograd::TensorPtr m_weight;
     autograd::TensorPtr m_bias;
     autograd::GradFunction backward;
@@ -19,8 +19,6 @@ class LinearLayer : public autograd::ModuleBase {
     void initialize_tensors(uint32_t in_features, uint32_t out_features);
 
 public:
-    [[nodiscard]] const std::string& get_name() const;
-
     LinearLayer(uint32_t in_features, uint32_t out_features);
 
     [[nodiscard]] autograd::TensorPtr operator()(const autograd::TensorPtr& tensor);
