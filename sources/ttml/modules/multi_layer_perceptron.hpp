@@ -17,7 +17,7 @@ struct MultiLayerPerceptronParameters {
 
 class MultiLayerPerceptron : public autograd::ModuleBase {
 private:
-    std::vector<LinearLayer> m_layers;
+    std::vector<std::shared_ptr<LinearLayer>> m_layers;
 
 public:
     explicit MultiLayerPerceptron(const MultiLayerPerceptronParameters& params);

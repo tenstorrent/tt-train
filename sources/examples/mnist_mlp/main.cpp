@@ -1,0 +1,124 @@
+
+#include <iostream>
+#include <mnist/mnist_reader.hpp>
+
+#include "autograd/auto_context.hpp"
+#include "autograd/tensor.hpp"
+#include "core/tt_tensor_utils.hpp"
+#include "core/ttnn_all_includes.hpp"
+#include "datasets/dataloader.hpp"
+#include "datasets/in_memory_dataset.hpp"
+#include "modules/linear_module.hpp"
+#include "modules/multi_layer_perceptron.hpp"
+#include "ops/losses.hpp"
+#include "optimizers/sgd.hpp"
+
+using ttml::autograd::TensorPtr;
+
+using DatasetSample = std::pair<std::vector<uint8_t>, uint8_t>;
+using BatchType = std::pair<TensorPtr, TensorPtr>;
+using DataLoader = ttml::datasets::DataLoader<
+    ttml::datasets::InMemoryDataset<std::vector<uint8_t>, uint8_t>,
+    std::function<BatchType(std::vector<DatasetSample>&& samples)>,
+    BatchType>;
+
+int main() {
+    // Load MNIST data
+    mnist::MNIST_dataset<std::vector, std::vector<uint8_t>, uint8_t> dataset =
+        mnist::read_dataset<std::vector, std::vector, uint8_t, uint8_t>(MNIST_DATA_LOCATION);
+
+    std::cout << "#training images = " << dataset.training_images.size() << std::endl;
+    std::cout << "#training labels = " << dataset.training_labels.size() << std::endl;
+    std::cout << "#test images = " << dataset.test_images.size() << std::endl;
+    std::cout << "#test labels = " << dataset.test_labels.size() << std::endl;
+
+    ttml::datasets::InMemoryDataset<std::vector<uint8_t>, uint8_t> training_dataset(
+        dataset.training_images, dataset.training_labels);
+
+    ttml::datasets::InMemoryDataset<std::vector<uint8_t>, uint8_t> test_dataset(
+        dataset.test_images, dataset.test_labels);
+
+    auto* device = &ttml::autograd::ctx().get_device();
+    const size_t num_targets = 10;
+    const size_t num_features = 784;
+    std::function<BatchType(std::vector<DatasetSample> && samples)> collate_fn =
+        [&num_features, &num_targets, device](std::vector<DatasetSample>&& samples) {
+            const uint32_t batch_size = samples.size();
+            std::vector<float> data;
+            std::vector<float> targets;
+            data.reserve(batch_size * num_features);
+            targets.reserve(batch_size * num_targets);
+            for (auto& [features, target] : samples) {
+                std::move(features.begin(), features.end(), std::back_inserter(data));
+
+                std::vector<float> one_hot_target(num_targets, 0.0F);
+                one_hot_target[target] = 1.0F;
+                std::move(one_hot_target.begin(), one_hot_target.end(), std::back_inserter(targets));
+            }
+
+            std::transform(data.begin(), data.end(), data.begin(), [](float pixel) { return pixel / 255.0F - 0.5F; });
+
+            auto data_tensor = std::make_shared<ttml::autograd::Tensor>(ttml::core::from_vector(
+                data, ttnn::Shape(std::array<uint32_t, 4>{batch_size, 1, 1, num_features}), device));
+            auto targets_tensor = std::make_shared<ttml::autograd::Tensor>(ttml::core::from_vector(
+                targets, ttnn::Shape(std::array<uint32_t, 4>{batch_size, 1, 1, num_targets}), device));
+            return std::make_pair(data_tensor, targets_tensor);
+        };
+
+    const uint32_t batch_size = 128;
+    auto train_dataloader = DataLoader(training_dataset, batch_size, /* shuffle */ true, collate_fn);
+    auto test_dataloader = DataLoader(test_dataset, batch_size, /* shuffle */ false, collate_fn);
+
+    // auto model_params = ttml::modules::MultiLayerPerceptronParameters{
+    //     .m_num_hidden_layers = 2,
+    //     .m_input_features = num_features,
+    //     .m_hidden_features = 128,
+    //     .m_output_features = num_targets};
+    // auto model = ttml::modules::MultiLayerPerceptron(model_params);
+    auto model = ttml::modules::LinearLayer(num_features, num_targets);
+
+    return 0;
+    float learning_rate = 0.01F * (batch_size / 128.F);
+    fmt::print("Learning rate: {}\n", learning_rate);
+    auto sgd_config = ttml::optimizers::SGDConfig{.lr = learning_rate, .momentum = 0.9F};
+    auto optimizer = ttml::optimizers::SGD(model.parameters(), sgd_config);
+
+    int training_step = 0;
+    const size_t num_epochs = 10;
+    for (size_t epoch = 0; epoch < num_epochs; ++epoch) {
+        for (const auto& [data, target] : train_dataloader) {
+            optimizer.zero_grad();
+            auto output = model(data);
+            auto output_tensor = output->get_value();
+            auto output_tensor_vec = ttml::core::to_vector(output_tensor);
+
+            auto data_tensor = data->get_value();
+            auto data_tensor_vec = ttml::core::to_vector(data_tensor);
+
+            fmt::print(
+                "Input: min {} max {} \n",
+                *std::min_element(data_tensor_vec.begin(), data_tensor_vec.end()),
+                *std::max_element(data_tensor_vec.begin(), data_tensor_vec.end()));
+
+            auto target_tensor = target->get_value();
+            auto target_tensor_vec = ttml::core::to_vector(target_tensor);
+            fmt::print(
+                "Target: min {} max {} \n",
+                *std::min_element(target_tensor_vec.begin(), target_tensor_vec.end()),
+                *std::max_element(target_tensor_vec.begin(), target_tensor_vec.end()));
+
+            fmt::print(
+                "Output: min {} max {} \n",
+                *std::min_element(output_tensor_vec.begin(), output_tensor_vec.end()),
+                *std::max_element(output_tensor_vec.begin(), output_tensor_vec.end()));
+
+            // auto loss = ttml::ops::cross_entropy_loss(target, output);
+            auto loss = ttml::ops::mse_loss(target, output);
+            auto loss_float = ttml::core::to_vector(loss->get_value())[0];
+            fmt::print("Step: {} Loss: {}\n", training_step++, loss_float);
+            loss->backward();
+            optimizer.step();
+            ttml::autograd::ctx().reset_graph();
+        }
+    }
+}

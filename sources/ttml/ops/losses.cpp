@@ -1,5 +1,9 @@
 #include "losses.hpp"
 
+#include "autograd/auto_context.hpp"
+#include "autograd/graph_utils.hpp"
+#include "core/tt_tensor_utils.hpp"
+#include "core/ttnn_all_includes.hpp"
 #include "ops/binary_ops.hpp"
 #include "ops/unary_ops.hpp"
 
@@ -13,6 +17,41 @@ autograd::TensorPtr mse_loss(
         return ops::mean(diff_2);
     } else {
         throw std::logic_error("Unsupported MSE reduction type");
+    }
+}
+
+autograd::TensorPtr cross_entropy_loss_without_reduce_(
+    const autograd::TensorPtr& target, const autograd::TensorPtr& prediction) {
+    const float eps = 1e-6F;
+    auto prediction_tensor = ttnn::softmax(prediction->get_value(), -1);
+    prediction_tensor = ttnn::clip(prediction_tensor, eps, 1.0F - eps);
+    auto loss = ttnn::multiply(target->get_value(), ttnn::log(prediction_tensor));
+    loss = ttnn::neg(loss);
+    // TODO: @rfurko-tt simplify extraction and multiplication of shape[3]
+    auto shape_without_padding = core::get_shape_without_padding(loss);
+    loss = ttnn::multiply(loss, shape_without_padding[3]);
+
+    auto out = std::make_shared<autograd::Tensor>();
+    out->set_value(loss);
+    autograd::GradFunction grad = [target, prediction_tensor, prediction, out]() {
+        auto grad = ttnn::subtract(prediction_tensor, target->get_value());
+        grad = ttnn::multiply(grad, out->get_grad());
+        prediction->add_grad(grad);
+    };
+
+    std::vector<autograd::NodeId> links = autograd::get_links(prediction);
+    out->set_node(autograd::ctx().add_backward_node(std::move(grad), links));
+
+    return out;
+}
+
+autograd::TensorPtr cross_entropy_loss(
+    const autograd::TensorPtr& target, const autograd::TensorPtr& prediction, ReduceType reduce) {
+    auto loss = cross_entropy_loss_without_reduce_(target, prediction);
+    if (reduce == ReduceType::MEAN) {
+        return ops::mean(loss);
+    } else {
+        throw std::logic_error("Unsupported cross entropy reduction type");
     }
 }
 

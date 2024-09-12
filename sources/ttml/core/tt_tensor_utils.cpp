@@ -126,6 +126,26 @@ tt::tt_metal::Tensor from_vector(
         output = ttnn::to_layout(output, layout, std::nullopt, output_mem_config, device);
         output = ttnn::to_device(output, device, output_mem_config);
     }
+
+    {
+        fmt::print("***************\n");
+        auto output_vec = to_vector(output);
+        fmt::print("Output vector size: {}\n", output_vec.size());
+        fmt::print(
+            "Output vector min {} max {}\n",
+            *std::min_element(output_vec.begin(), output_vec.end()),
+            *std::max_element(output_vec.begin(), output_vec.end()));
+
+        fmt::print("\n");
+        fmt::print("Buffer size: {}\n", buffer.size());
+        fmt::print(
+            "Buffer min {} max {}\n",
+            *std::min_element(buffer.begin(), buffer.end()),
+            *std::max_element(buffer.begin(), buffer.end()));
+        fmt::print("\n");
+        fmt::print("***************\n");
+    }
+
     return output;
 }
 
