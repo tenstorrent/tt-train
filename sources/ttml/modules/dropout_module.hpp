@@ -12,15 +12,12 @@ namespace ttml::modules {
 
 class DropoutLayer : public autograd::ModuleBase {
     std::string m_name;
-    bool probability
-
-        void
-        initialize_tensors(uint32_t in_features, uint32_t out_features);
+    float m_prob = 0.2F;
 
 public:
     [[nodiscard]] const std::string& get_name() const;
 
-    DropoutLayer(float probability);
+    explicit DropoutLayer(float probability);
 
     [[nodiscard]] autograd::TensorPtr operator()(const autograd::TensorPtr& tensor);
 };

@@ -2,7 +2,7 @@
 
 #include <memory>
 
-#include "ttnn_fwd.hpp"
+#include "ttnn_all_includes.hpp"
 
 namespace ttml::core {
 // should I implement pimpl or its fine

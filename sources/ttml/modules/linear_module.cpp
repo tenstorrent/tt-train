@@ -18,8 +18,6 @@ void LinearLayer::initialize_tensors(uint32_t in_features, uint32_t out_features
     m_bias = std::make_shared<autograd::Tensor>(bias);
 }
 
-const std::string& LinearLayer::get_name() const { return m_name; }
-
 LinearLayer::LinearLayer(uint32_t in_features, uint32_t out_features) {
     initialize_tensors(in_features, out_features);
 

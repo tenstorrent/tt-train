@@ -35,8 +35,10 @@ void Tensor::add_grad(const tt::tt_metal::Tensor& grad) {
 
     for (int i = 0; i < 4; ++i) {
         if (grad_shape[i] != m_grad_shape[i]) {
-            fmt::format("Grad shape: {}, tensor shape: {}", grad_shape, m_grad_shape);
-            throw std::runtime_error("Shapes of gradients are not equal");
+            throw std::runtime_error(fmt::format(
+                "wrong add_grad shape. tensor->add_grad(res[0]);Grad shape: {}, tensor shape: {}",
+                grad_shape,
+                m_grad_shape));
         }
     }
 

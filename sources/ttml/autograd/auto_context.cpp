@@ -30,4 +30,5 @@ void AutoContext::reset_graph() { m_graph.reset(); }
 
 tt::tt_metal::Device& AutoContext::get_device() { return device.get_device(); }
 
+AutoContext::AutoContext() : m_generator(m_seed) {}
 }  // namespace ttml::autograd

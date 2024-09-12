@@ -53,8 +53,7 @@ autograd::TensorPtr operator*(const autograd::TensorPtr& a, const autograd::Tens
 
     out->set_value(ttnn::multiply(a->get_value(), b->get_value()));
     autograd::GradFunction grad = [a, b, out]() {
-        tt::tt_metal::MemoryConfig mem_config;
-        auto res = ttnn::mul_bw(0, out->get_grad(), a->get_value(), b->get_value(), mem_config);
+        auto res = ttnn::mul_bw(out->get_grad(), a->get_value(), b->get_value());
         a->add_grad(res[0].value());
         b->add_grad(res[1].value());
     };
