@@ -11,10 +11,11 @@ namespace ttml::ops {
 
 autograd::TensorPtr mse_loss(
     const autograd::TensorPtr& target, const autograd::TensorPtr& prediction, ReduceType reduce) {
-    auto diff = ops::sub(target, prediction);  // TODO: @rfurko-tt use "ttnn::squared_difference"
-    auto diff_2 = ops::mul(diff, diff);  // TODO: need to add backward "ttnn::squared_difference_bw" might be faster
+    auto difference = ops::sub(target, prediction);  // TODO: @rfurko-tt use "ttnn::squared_difference"
+    auto squared_difference =
+        ops::mul(difference, difference);  // TODO: need to add backward "ttnn::squared_difference_bw" might be faster
     if (reduce == ReduceType::MEAN) {
-        return ops::mean(diff_2);
+        return ops::mean(squared_difference);
     } else {
         throw std::logic_error("Unsupported MSE reduction type");
     }
