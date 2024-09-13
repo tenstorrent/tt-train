@@ -38,12 +38,14 @@ int main() {
     auto output = model(batch);
     auto loss = ttml::ops::cross_entropy_loss(target, output);
     auto forward_trace = graph_processor.end_graph_capture();
+    auto forward_peak_l1_memory_usage = ttnn::graph::extract_peak_L1_memory_usage(forward_trace);
 
     auto call = [&] {
         loss->backward();
         return 0;
     };
     auto backward_trace = ttnn::graph::query_trace(call);
+    auto backward_peak_l1_memory_usage = ttnn::graph::extract_peak_L1_memory_usage(backward_trace);
 
     auto pretty_forward_trace = forward_trace.dump(4);
     auto pretty_backward_trace = backward_trace.dump(4);
@@ -57,6 +59,8 @@ int main() {
     backward_trace_file << pretty_backward_trace;
     backward_trace_file.close();
 
+    fmt::print("Forward peak L1 memory usage (in MB): {}\n", forward_peak_l1_memory_usage / 1024.0 / 1024.0);
+    fmt::print("Backward peak L1 memory usage (in MB): {}\n", backward_peak_l1_memory_usage / 1024.0 / 1024.0);
     fmt::print("Forward trace saved to: {}/forward_trace.json\n", path);
     fmt::print("Backward trace saved to: {}/backward_trace.json\n", path);
     fmt::print("Capture complete\n");
