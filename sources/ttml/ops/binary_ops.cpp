@@ -54,9 +54,12 @@ autograd::TensorPtr operator*(const autograd::TensorPtr& a, const autograd::Tens
     out->set_value(ttnn::multiply(a->get_value(), b->get_value()));
     autograd::GradFunction grad = [a, b, out]() {
         tt::tt_metal::MemoryConfig mem_config;
-        auto res = ttnn::mul_bw(0, out->get_grad(), a->get_value(), b->get_value(), mem_config);
-        a->add_grad(res[0].value());
-        b->add_grad(res[1].value());
+        // TODO: support broadcasting
+        auto a_grad = ttnn::multiply(out->get_grad(), b->get_value());
+        auto b_grad = ttnn::multiply(out->get_grad(), a->get_value());
+
+        a->add_grad(a_grad);
+        b->add_grad(b_grad);
     };
     std::vector<autograd::NodeId> links = autograd::get_links(a, b);
     out->set_node(autograd::ctx().add_backward_node(std::move(grad), links));

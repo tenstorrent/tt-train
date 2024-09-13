@@ -78,9 +78,7 @@ int main() {
             auto output = model(data);
             auto loss = ttml::ops::mse_loss(targets, output);
             auto loss_float = ttml::core::to_vector(loss->get_value())[0];
-            if (training_step++ % 50 == 0) {
-                fmt::print("Step: {} Loss: {}\n", training_step, loss_float);
-            }
+            fmt::print("Step: {} Loss: {}\n", training_step++, loss_float);
             loss->backward();
             optimizer.step();
             ttml::autograd::ctx().reset_graph();

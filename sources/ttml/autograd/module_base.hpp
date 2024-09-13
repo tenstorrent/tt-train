@@ -22,6 +22,13 @@ protected:
     void register_module(const ModuleBasePtr& module_ptr, const std::string& name);
 
 public:
+    ModuleBase() = default;
+    virtual ~ModuleBase() = default;
+    ModuleBase(const ModuleBase&) = default;
+    ModuleBase(ModuleBase&&) = default;
+    ModuleBase& operator=(const ModuleBase&) = default;
+    ModuleBase& operator=(ModuleBase&&) = default;
+
     [[nodiscard]] const std::string& get_name() const;
     [[nodiscard]] NamedParameters parameters() const;
 };

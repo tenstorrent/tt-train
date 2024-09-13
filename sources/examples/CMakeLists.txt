@@ -1,4 +1,4 @@
 add_subdirectory(linear_regression)
 add_subdirectory(nano_gpt)
 add_subdirectory(sample_app)
-add_subdirectory(simple_mlp)
+add_subdirectory(mnist_mlp)
