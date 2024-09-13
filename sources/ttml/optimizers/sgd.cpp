@@ -31,8 +31,7 @@ void SGD::step() {
         auto tensor_ptr = m_parameters.at(name);
 
         theta = ttnn::multiply(theta, m_momentum);
-        theta = ttnn::add(theta, ttnn::multiply(tensor_ptr->get_grad(), 1 - m_momentum));
-
+        theta = ttnn::add(theta, tensor_ptr->get_grad());
         auto tensor_update = ttnn::multiply(theta, m_lr);
         tensor_ptr->set_value(ttnn::subtract(tensor_ptr->get_value(), tensor_update));
     }

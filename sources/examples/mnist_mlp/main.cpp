@@ -42,18 +42,18 @@ int main() {
     const size_t num_targets = 10;
     const size_t num_features = 784;
     std::function<BatchType(std::vector<DatasetSample> && samples)> collate_fn =
-        [&num_features, &num_targets, device](std::vector<DatasetSample>&& samples) {
+        [num_features, num_targets, device](std::vector<DatasetSample>&& samples) {
             const uint32_t batch_size = samples.size();
             std::vector<float> data;
             std::vector<float> targets;
             data.reserve(batch_size * num_features);
             targets.reserve(batch_size * num_targets);
             for (auto& [features, target] : samples) {
-                std::move(features.begin(), features.end(), std::back_inserter(data));
+                std::copy(features.begin(), features.end(), std::back_inserter(data));
 
                 std::vector<float> one_hot_target(num_targets, 0.0F);
                 one_hot_target[target] = 1.0F;
-                std::move(one_hot_target.begin(), one_hot_target.end(), std::back_inserter(targets));
+                std::copy(one_hot_target.begin(), one_hot_target.end(), std::back_inserter(targets));
             }
 
             std::transform(data.begin(), data.end(), data.begin(), [](float pixel) { return pixel / 255.0F - 0.5F; });
@@ -76,24 +76,50 @@ int main() {
         .m_output_features = num_targets};
     auto model = ttml::modules::MultiLayerPerceptron(model_params);
 
-    float learning_rate = 0.01F * (batch_size / 128.F);
-    learning_rate *= 100.F;
+    float learning_rate = 0.1F * (batch_size / 128.F);
     fmt::print("Learning rate: {}\n", learning_rate);
-    auto sgd_config = ttml::optimizers::SGDConfig{.lr = learning_rate, .momentum = 0.9F};
+    auto sgd_config = ttml::optimizers::SGDConfig{.lr = learning_rate, .momentum = 0.1F};
     auto optimizer = ttml::optimizers::SGD(model.parameters(), sgd_config);
+
+    auto evaluate = [&](const size_t epoch) {
+        float num_correct = 0;
+        float num_samples = 0;
+        for (const auto& [data, target] : test_dataloader) {
+            auto output = model(data);
+            auto output_vec = ttml::core::to_vector(output->get_value());
+            auto target_vec = ttml::core::to_vector(target->get_value());
+            for (size_t i = 0; i < output_vec.size(); i += num_targets) {
+                auto predicted_class = std::distance(
+                    output_vec.begin() + i,
+                    std::max_element(output_vec.begin() + i, output_vec.begin() + i + num_targets));
+                auto target_class = std::distance(
+                    target_vec.begin() + i,
+                    std::max_element(target_vec.begin() + i, target_vec.begin() + i + num_targets));
+                num_correct += static_cast<float>(predicted_class == target_class);
+                num_samples++;
+            }
+        }
+        fmt::print("Epoch {} Accuracy: {}\n", epoch, num_correct / num_samples);
+    };
 
     int training_step = 0;
     const size_t num_epochs = 10;
+    evaluate(0);
+
     for (size_t epoch = 0; epoch < num_epochs; ++epoch) {
         for (const auto& [data, target] : train_dataloader) {
             optimizer.zero_grad();
             auto output = model(data);
             auto loss = ttml::ops::cross_entropy_loss(target, output);
             auto loss_float = ttml::core::to_vector(loss->get_value())[0];
-            fmt::print("Step: {} Loss: {}\n", training_step++, loss_float);
+            if (training_step % 50 == 0) {
+                fmt::print("Step: {} Loss: {}\n", training_step, loss_float);
+            }
             loss->backward();
             optimizer.step();
             ttml::autograd::ctx().reset_graph();
+            training_step++;
         }
+        evaluate(epoch + 1);
     }
 }

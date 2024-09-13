@@ -51,13 +51,6 @@ void xavier_normal_init(std::vector<float>& vec, FanParams params) {
 
     std::generate(
         vec.begin(), vec.end(), [&]() { return dist(autograd::AutoContext::get_instance().get_generator()); });
-
-    fmt::print(
-        "fan_in: {}, fan_out: {} min {} max {} \n",
-        fan_in,
-        fan_out,
-        *std::min_element(vec.begin(), vec.end()),
-        *std::max_element(vec.begin(), vec.end()));
 }
 
 void kaiming_uniform_init(std::vector<float>& vec, int fan_in) {
