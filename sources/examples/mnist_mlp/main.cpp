@@ -86,16 +86,16 @@ int main() {
     auto test_dataloader = DataLoader(test_dataset, batch_size, /* shuffle */ false, collate_fn);
 
     auto model_params = ttml::modules::MultiLayerPerceptronParameters{
-        .m_input_features = num_features, .m_hidden_features = {128}, .m_output_features = num_targets};
+        .m_input_features = num_features, .m_hidden_features = {128, 64, 32}, .m_output_features = num_targets};
     auto model = ttml::modules::MultiLayerPerceptron(model_params);
 
     // evaluate model before training (sanity check to get reasonable accuracy 1/num_targets)
-    // float accuracy_before_training = evaluate(test_dataloader, model, num_targets);
-    // fmt::print("Accuracy before training: {}\n", evaluate(test_dataloader, model, num_targets));
+    float accuracy_before_training = evaluate(test_dataloader, model, num_targets);
+    fmt::print("Accuracy before training: {}\n", evaluate(test_dataloader, model, num_targets));
 
-    const float learning_rate = 1.0F * (batch_size / 128.F);
+    const float learning_rate = 0.1F * (batch_size / 128.F);
     fmt::print("Learning rate: {}\n", learning_rate);
-    const float momentum = 0.0F;
+    const float momentum = 0.9F;
     const float weight_decay = 0.0F;
     auto sgd_config =
         ttml::optimizers::SGDConfig{.lr = learning_rate, .momentum = momentum, .weight_decay = weight_decay};
@@ -110,7 +110,11 @@ int main() {
         for (const auto& [data, target] : train_dataloader) {
             optimizer.zero_grad();
             auto output = model(data);
-            auto loss = ttml::ops::cross_entropy_loss(target, output);
+            // cross entropy currently blows up
+            // due to softmax evaluation in the loss function
+            // we requested to implement stable softmax in the future
+            // auto loss = ttml::ops::cross_entropy_loss(target, output);
+            auto loss = ttml::ops::mse_loss(target, output);
             auto loss_float = ttml::core::to_vector(loss->get_value())[0];
             loss_meter.update(loss_float, batch_size);
             if (training_step % logging_interval == 0) {
