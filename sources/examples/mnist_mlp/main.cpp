@@ -69,16 +69,15 @@ int main() {
     auto train_dataloader = DataLoader(training_dataset, batch_size, /* shuffle */ true, collate_fn);
     auto test_dataloader = DataLoader(test_dataset, batch_size, /* shuffle */ false, collate_fn);
 
-    // auto model_params = ttml::modules::MultiLayerPerceptronParameters{
-    //     .m_num_hidden_layers = 2,
-    //     .m_input_features = num_features,
-    //     .m_hidden_features = 128,
-    //     .m_output_features = num_targets};
-    // auto model = ttml::modules::MultiLayerPerceptron(model_params);
-    auto model = ttml::modules::LinearLayer(num_features, num_targets);
+    auto model_params = ttml::modules::MultiLayerPerceptronParameters{
+        .m_num_hidden_layers = 1,
+        .m_input_features = num_features,
+        .m_hidden_features = 128,
+        .m_output_features = num_targets};
+    auto model = ttml::modules::MultiLayerPerceptron(model_params);
 
-    return 0;
     float learning_rate = 0.01F * (batch_size / 128.F);
+    learning_rate *= 100.F;
     fmt::print("Learning rate: {}\n", learning_rate);
     auto sgd_config = ttml::optimizers::SGDConfig{.lr = learning_rate, .momentum = 0.9F};
     auto optimizer = ttml::optimizers::SGD(model.parameters(), sgd_config);
@@ -89,31 +88,7 @@ int main() {
         for (const auto& [data, target] : train_dataloader) {
             optimizer.zero_grad();
             auto output = model(data);
-            auto output_tensor = output->get_value();
-            auto output_tensor_vec = ttml::core::to_vector(output_tensor);
-
-            auto data_tensor = data->get_value();
-            auto data_tensor_vec = ttml::core::to_vector(data_tensor);
-
-            fmt::print(
-                "Input: min {} max {} \n",
-                *std::min_element(data_tensor_vec.begin(), data_tensor_vec.end()),
-                *std::max_element(data_tensor_vec.begin(), data_tensor_vec.end()));
-
-            auto target_tensor = target->get_value();
-            auto target_tensor_vec = ttml::core::to_vector(target_tensor);
-            fmt::print(
-                "Target: min {} max {} \n",
-                *std::min_element(target_tensor_vec.begin(), target_tensor_vec.end()),
-                *std::max_element(target_tensor_vec.begin(), target_tensor_vec.end()));
-
-            fmt::print(
-                "Output: min {} max {} \n",
-                *std::min_element(output_tensor_vec.begin(), output_tensor_vec.end()),
-                *std::max_element(output_tensor_vec.begin(), output_tensor_vec.end()));
-
-            // auto loss = ttml::ops::cross_entropy_loss(target, output);
-            auto loss = ttml::ops::mse_loss(target, output);
+            auto loss = ttml::ops::cross_entropy_loss(target, output);
             auto loss_float = ttml::core::to_vector(loss->get_value())[0];
             fmt::print("Step: {} Loss: {}\n", training_step++, loss_float);
             loss->backward();

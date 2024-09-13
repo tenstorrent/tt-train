@@ -19,11 +19,10 @@ autograd::TensorPtr relu(const autograd::TensorPtr& tensor) {
     autograd::GradFunction grad = [tensor, out]() {
         tt::tt_metal::MemoryConfig mem_config;
         auto res = ttnn::relu_bw(out->get_grad(), tensor->get_value(), mem_config);
-
         tensor->add_grad(res[0]);
     };
 
-    std::vector<autograd::NodeId> links = autograd::get_links(tensor);
+    auto links = autograd::get_links(tensor);
     out->set_node(autograd::ctx().add_backward_node(std::move(grad), links));
 
     return out;
