@@ -12,6 +12,7 @@
 #include "modules/multi_layer_perceptron.hpp"
 #include "ops/losses.hpp"
 #include "optimizers/sgd.hpp"
+#include "utils.hpp"
 
 using ttml::autograd::TensorPtr;
 
@@ -23,7 +24,7 @@ using DataLoader = ttml::datasets::DataLoader<
     BatchType>;
 
 template <typename Model>
-void evaluate(const size_t epoch, DataLoader& test_dataloader, Model& model, size_t num_targets) {
+float evaluate(DataLoader& test_dataloader, Model& model, size_t num_targets) {
     float num_correct = 0;
     float num_samples = 0;
     for (const auto& [data, target] : test_dataloader) {
@@ -41,7 +42,7 @@ void evaluate(const size_t epoch, DataLoader& test_dataloader, Model& model, siz
             num_samples++;
         }
     }
-    fmt::print("Epoch {} Accuracy: {}\n", epoch, num_correct / num_samples);
+    return num_correct / num_samples;
 };
 
 int main() {
@@ -85,16 +86,23 @@ int main() {
     auto test_dataloader = DataLoader(test_dataset, batch_size, /* shuffle */ false, collate_fn);
 
     auto model_params = ttml::modules::MultiLayerPerceptronParameters{
-        .m_input_features = num_features, .m_hidden_features = {128}, .m_output_features = num_targets};
+        .m_input_features = num_features, .m_hidden_features = {128, 64, 32}, .m_output_features = num_targets};
     auto model = ttml::modules::MultiLayerPerceptron(model_params);
 
     // evaluate model before training (sanity check to get reasonable accuracy 1/num_targets)
-    evaluate(0, test_dataloader, model, num_targets);
+    float accuracy_before_training = evaluate(test_dataloader, model, num_targets);
+    fmt::print("Accuracy before training: {}\n", evaluate(test_dataloader, model, num_targets));
 
-    float learning_rate = 0.1F * (batch_size / 128.F);
+    const float learning_rate = 0.1F * (batch_size / 128.F);
     fmt::print("Learning rate: {}\n", learning_rate);
-    auto sgd_config = ttml::optimizers::SGDConfig{.lr = learning_rate, .momentum = 0.1F};
+    const float momentum = 0.9F;
+    const float weight_decay = 0.0F;
+    auto sgd_config =
+        ttml::optimizers::SGDConfig{.lr = learning_rate, .momentum = momentum, .weight_decay = weight_decay};
     auto optimizer = ttml::optimizers::SGD(model.parameters(), sgd_config);
+
+    LossAverageMeter loss_meter;
+    const int logging_interval = 50;
 
     int training_step = 0;
     const size_t num_epochs = 50;
@@ -102,16 +110,24 @@ int main() {
         for (const auto& [data, target] : train_dataloader) {
             optimizer.zero_grad();
             auto output = model(data);
-            auto loss = ttml::ops::cross_entropy_loss(target, output);
+            // cross entropy currently blows up
+            // due to softmax evaluation in the loss function
+            // we requested to implement stable softmax in the future
+            // auto loss = ttml::ops::cross_entropy_loss(target, output);
+            auto loss = ttml::ops::mse_loss(target, output);
             auto loss_float = ttml::core::to_vector(loss->get_value())[0];
-            if (training_step % 50 == 0) {
-                fmt::print("Step: {} Loss: {}\n", training_step, loss_float);
+            loss_meter.update(loss_float, batch_size);
+            if (training_step % logging_interval == 0) {
+                fmt::print("Step: {:5d} | Average Loss: {:.4f}\n", training_step, loss_meter.average());
             }
             loss->backward();
             optimizer.step();
             ttml::autograd::ctx().reset_graph();
             training_step++;
         }
-        evaluate(epoch + 1, test_dataloader, model, num_targets);
+        const float test_accuracy = evaluate(test_dataloader, model, num_targets);
+        fmt::print(
+            "Epoch: {:3d} | Average Loss: {:.4f} | Accuracy: {:.4f}\n", epoch + 1, loss_meter.average(), test_accuracy);
+        loss_meter.reset();
     }
 }
