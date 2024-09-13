@@ -1,6 +1,7 @@
 
 #include <iostream>
 #include <mnist/mnist_reader.hpp>
+#include <ttnn/tensor/tensor_utils.hpp>
 
 #include "autograd/auto_context.hpp"
 #include "autograd/tensor.hpp"
@@ -112,6 +113,23 @@ int main() {
 
     int training_step = 0;
     const size_t num_epochs = 10;
+
+    auto clip_gradient_norm_ = [&](auto& model, float max_norm) {
+        for (auto& [name, param] : model.parameters()) {
+            const auto& grad = param->get_grad();
+            auto grad_squared = ttnn::multiply(grad, grad);
+
+            ttnn::Shape shape(std::array<uint32_t, 4>{1, 1, 1, 1});
+            auto out = ttml::core::from_vector({0.F}, shape, &ttml::autograd::ctx().get_device());
+            tt::operations::primary::moreh_mean(grad_squared, std::nullopt, true, std::nullopt, out);
+            float grad_norm = ttml::core::to_vector(out)[0] * tt::tt_metal::compute_volume(grad.get_shape());
+            if (grad_norm > max_norm) {
+                auto scale = max_norm / grad_norm;
+                param->set_grad(ttnn::multiply(grad, scale));
+            }
+        }
+    };
+
     for (size_t epoch = 0; epoch < num_epochs; ++epoch) {
         for (const auto& [data, target] : train_dataloader) {
             optimizer.zero_grad();
@@ -123,6 +141,7 @@ int main() {
                 fmt::print("Step: {:5d} | Average Loss: {:.4f}\n", training_step, loss_meter.average());
             }
             loss->backward();
+            clip_gradient_norm_(model, 1.0F);
             optimizer.step();
             ttml::autograd::ctx().reset_graph();
             training_step++;
