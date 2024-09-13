@@ -4,17 +4,19 @@
 
 namespace ttml::modules {
 
+template <typename Layers, typename... Args>
+void add_linear_layer(Layers& layers, Args&&... args) {
+    layers.push_back(std::make_shared<LinearLayer>(std::forward<Args>(args)...));
+}
+
 MultiLayerPerceptron::MultiLayerPerceptron(const MultiLayerPerceptronParameters& params) {
-    if (params.m_num_hidden_layers == 0U) {
-        m_layers.emplace_back(std::make_shared<LinearLayer>(params.m_input_features, params.m_output_features));
-    } else {
-        m_layers.reserve(1U + params.m_num_hidden_layers);
-        m_layers.emplace_back(std::make_shared<LinearLayer>(params.m_input_features, params.m_hidden_features));
-        for (uint32_t index = 0; index + 1 < params.m_num_hidden_layers; ++index) {
-            m_layers.emplace_back(std::make_shared<LinearLayer>(params.m_hidden_features, params.m_hidden_features));
-        }
-        m_layers.emplace_back(std::make_shared<LinearLayer>(params.m_hidden_features, params.m_output_features));
+    uint32_t current_input_features = params.m_input_features;
+    for (auto hidden_features : params.m_hidden_features) {
+        add_linear_layer(m_layers, current_input_features, hidden_features);
+        current_input_features = hidden_features;
     }
+    add_linear_layer(m_layers, current_input_features, params.m_output_features);
+
     create_name("mlp");
     for (auto& layer : m_layers) {
         register_module(layer, layer->get_name());

@@ -9,9 +9,8 @@
 namespace ttml::modules {
 
 struct MultiLayerPerceptronParameters {
-    uint32_t m_num_hidden_layers{};
     uint32_t m_input_features{};
-    uint32_t m_hidden_features{};
+    std::vector<uint32_t> m_hidden_features;
     uint32_t m_output_features{};
 };
 

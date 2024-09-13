@@ -22,25 +22,40 @@ using DataLoader = ttml::datasets::DataLoader<
     std::function<BatchType(std::vector<DatasetSample>&& samples)>,
     BatchType>;
 
+template <typename Model>
+void evaluate(const size_t epoch, DataLoader& test_dataloader, Model& model, size_t num_targets) {
+    float num_correct = 0;
+    float num_samples = 0;
+    for (const auto& [data, target] : test_dataloader) {
+        auto output = model(data);
+        auto output_vec = ttml::core::to_vector(output->get_value());
+        auto target_vec = ttml::core::to_vector(target->get_value());
+        for (size_t i = 0; i < output_vec.size(); i += num_targets) {
+            auto predicted_class = std::distance(
+                output_vec.begin() + i,
+                std::max_element(output_vec.begin() + i, output_vec.begin() + (i + num_targets)));
+            auto target_class = std::distance(
+                target_vec.begin() + i,
+                std::max_element(target_vec.begin() + i, target_vec.begin() + (i + num_targets)));
+            num_correct += static_cast<float>(predicted_class == target_class);
+            num_samples++;
+        }
+    }
+    fmt::print("Epoch {} Accuracy: {}\n", epoch, num_correct / num_samples);
+};
+
 int main() {
     // Load MNIST data
+    const size_t num_targets = 10;
+    const size_t num_features = 784;
     mnist::MNIST_dataset<std::vector, std::vector<uint8_t>, uint8_t> dataset =
         mnist::read_dataset<std::vector, std::vector, uint8_t, uint8_t>(MNIST_DATA_LOCATION);
-
-    std::cout << "#training images = " << dataset.training_images.size() << std::endl;
-    std::cout << "#training labels = " << dataset.training_labels.size() << std::endl;
-    std::cout << "#test images = " << dataset.test_images.size() << std::endl;
-    std::cout << "#test labels = " << dataset.test_labels.size() << std::endl;
-
     ttml::datasets::InMemoryDataset<std::vector<uint8_t>, uint8_t> training_dataset(
         dataset.training_images, dataset.training_labels);
-
     ttml::datasets::InMemoryDataset<std::vector<uint8_t>, uint8_t> test_dataset(
         dataset.test_images, dataset.test_labels);
 
     auto* device = &ttml::autograd::ctx().get_device();
-    const size_t num_targets = 10;
-    const size_t num_features = 784;
     std::function<BatchType(std::vector<DatasetSample> && samples)> collate_fn =
         [num_features, num_targets, device](std::vector<DatasetSample>&& samples) {
             const uint32_t batch_size = samples.size();
@@ -70,42 +85,19 @@ int main() {
     auto test_dataloader = DataLoader(test_dataset, batch_size, /* shuffle */ false, collate_fn);
 
     auto model_params = ttml::modules::MultiLayerPerceptronParameters{
-        .m_num_hidden_layers = 1,
-        .m_input_features = num_features,
-        .m_hidden_features = 128,
-        .m_output_features = num_targets};
+        .m_input_features = num_features, .m_hidden_features = {128}, .m_output_features = num_targets};
     auto model = ttml::modules::MultiLayerPerceptron(model_params);
+
+    // evaluate model before training (sanity check to get reasonable accuracy 1/num_targets)
+    evaluate(0, test_dataloader, model, num_targets);
 
     float learning_rate = 0.1F * (batch_size / 128.F);
     fmt::print("Learning rate: {}\n", learning_rate);
     auto sgd_config = ttml::optimizers::SGDConfig{.lr = learning_rate, .momentum = 0.1F};
     auto optimizer = ttml::optimizers::SGD(model.parameters(), sgd_config);
 
-    auto evaluate = [&](const size_t epoch) {
-        float num_correct = 0;
-        float num_samples = 0;
-        for (const auto& [data, target] : test_dataloader) {
-            auto output = model(data);
-            auto output_vec = ttml::core::to_vector(output->get_value());
-            auto target_vec = ttml::core::to_vector(target->get_value());
-            for (size_t i = 0; i < output_vec.size(); i += num_targets) {
-                auto predicted_class = std::distance(
-                    output_vec.begin() + i,
-                    std::max_element(output_vec.begin() + i, output_vec.begin() + i + num_targets));
-                auto target_class = std::distance(
-                    target_vec.begin() + i,
-                    std::max_element(target_vec.begin() + i, target_vec.begin() + i + num_targets));
-                num_correct += static_cast<float>(predicted_class == target_class);
-                num_samples++;
-            }
-        }
-        fmt::print("Epoch {} Accuracy: {}\n", epoch, num_correct / num_samples);
-    };
-
     int training_step = 0;
-    const size_t num_epochs = 10;
-    evaluate(0);
-
+    const size_t num_epochs = 50;
     for (size_t epoch = 0; epoch < num_epochs; ++epoch) {
         for (const auto& [data, target] : train_dataloader) {
             optimizer.zero_grad();
@@ -120,6 +112,6 @@ int main() {
             ttml::autograd::ctx().reset_graph();
             training_step++;
         }
-        evaluate(epoch + 1);
+        evaluate(epoch + 1, test_dataloader, model, num_targets);
     }
 }
