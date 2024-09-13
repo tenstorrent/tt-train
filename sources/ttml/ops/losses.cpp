@@ -27,9 +27,7 @@ autograd::TensorPtr cross_entropy_loss_without_reduce_(
     prediction_tensor = ttnn::clip(prediction_tensor, eps, 1.0F - eps);
     auto loss = ttnn::multiply(target->get_value(), ttnn::log(prediction_tensor));
     loss = ttnn::neg(loss);
-    // TODO: @rfurko-tt simplify extraction and multiplication of shape[3]
-    auto shape_without_padding = core::get_shape_without_padding(loss);
-    loss = ttnn::multiply(loss, shape_without_padding[3]);
+    loss = ttnn::multiply(loss, loss.get_shape()[-1]);
 
     auto out = std::make_shared<autograd::Tensor>();
     out->set_value(loss);
@@ -39,7 +37,7 @@ autograd::TensorPtr cross_entropy_loss_without_reduce_(
         prediction->add_grad(grad);
     };
 
-    std::vector<autograd::NodeId> links = autograd::get_links(prediction);
+    auto links = autograd::get_links(prediction);
     out->set_node(autograd::ctx().add_backward_node(std::move(grad), links));
 
     return out;
