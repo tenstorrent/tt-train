@@ -16,6 +16,7 @@
 #include <ttnn/deprecated/tt_dnn/op_library/moreh_linear_backward/moreh_linear_backward_op.hpp>  // NOLINT
 #include <ttnn/device.hpp>                                                                       // NOLINT
 #include <ttnn/operations/creation.hpp>                                                          // NOLINT
+#include <ttnn/operations/data_movement/pad/pad.hpp>                                             // NOLINT
 #include <ttnn/operations/data_movement/permute/permute.hpp>                                     // NOLINT
 #include <ttnn/operations/data_movement/repeat/repeat.hpp>                                       // NOLINT
 #include <ttnn/operations/data_movement/slice/slice.hpp>                                         // NOLINT
