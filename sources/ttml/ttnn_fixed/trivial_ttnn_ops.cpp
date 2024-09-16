@@ -1,5 +1,7 @@
 #include "trivial_ttnn_ops.hpp"
 
+#include <ttnn/operations/moreh/moreh_sum/moreh_sum.hpp>
+
 #include "core/tt_tensor_utils.hpp"
 #include "core/ttnn_all_includes.hpp"
 
@@ -11,9 +13,9 @@ tt::tt_metal::Tensor sum_over_batch(const tt::tt_metal::Tensor& t) {
 }
 
 tt::tt_metal::Tensor max(const tt::tt_metal::Tensor& t, int dim, bool keepdim) {
-    const float kMinValue = -200.F;
+    const float kMinValue = -10000.F;
     auto mask = core::ones(t.get_shape(), t.device());
-    auto masked_t = ttnn::where(mask, t, kMinValue);
+    auto masked_t = ttnn::where(ttnn::eq(mask, 1.F), t, kMinValue);
     auto res = ttnn::max(masked_t, dim, keepdim);
     return res;
 }
@@ -21,7 +23,12 @@ tt::tt_metal::Tensor max(const tt::tt_metal::Tensor& t, int dim, bool keepdim) {
 tt::tt_metal::Tensor softmax(const tt::tt_metal::Tensor& t, int dim) {
     auto max_t = max(t, dim, /* keepdim */ true);
     auto t_sub_max = ttnn::subtract(t, max_t);
-    return ttnn::softmax(t_sub_max, dim);
+    auto t_sub_max_exp = ttnn::exp(t_sub_max);
+    auto t_sum_over_dim =
+        ttnn::moreh_sum(t_sub_max_exp, dim, /* keep_dim */ true, std::nullopt, std::nullopt, std::nullopt);
+    auto inv_t_sum_over_dim = ttnn::reciprocal(/* queue_id */ 0, t_sum_over_dim);
+    auto inv_t_sum_over_dim_vector = core::to_vector(inv_t_sum_over_dim);
+    return ttnn::multiply(t_sub_max_exp, inv_t_sum_over_dim);
 }
 
 }  // namespace ttml::ttnn_fixed

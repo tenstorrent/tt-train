@@ -6,6 +6,7 @@
 #include "core/ttnn_all_includes.hpp"
 #include "ops/binary_ops.hpp"
 #include "ops/unary_ops.hpp"
+#include "ttnn_fixed/trivial_ttnn_ops.hpp"
 
 namespace ttml::ops {
 
@@ -24,9 +25,9 @@ autograd::TensorPtr mse_loss(
 autograd::TensorPtr cross_entropy_loss_without_reduce_(
     const autograd::TensorPtr& target, const autograd::TensorPtr& prediction) {
     const float eps = 1e-6F;
-    auto prediction_tensor = ttnn::softmax(prediction->get_value(), -1);
-    prediction_tensor = ttnn::clip(prediction_tensor, eps, 1.0F - eps);
-    auto loss = ttnn::multiply(target->get_value(), ttnn::log(prediction_tensor));
+    auto prediction_tensor = ttnn_fixed::softmax(prediction->get_value(), 3);
+    auto prediction_tensor_clipped = ttnn::clip(prediction_tensor, eps, 1.0F);
+    auto loss = ttnn::multiply(target->get_value(), ttnn::log(prediction_tensor_clipped));
     loss = ttnn::neg(loss);
     loss = ttnn::multiply(loss, loss.get_shape()[-1]);
 
@@ -34,7 +35,9 @@ autograd::TensorPtr cross_entropy_loss_without_reduce_(
     out->set_value(loss);
     autograd::GradFunction grad = [target, prediction_tensor, prediction, out]() {
         auto grad = ttnn::subtract(prediction_tensor, target->get_value());
+        grad = ttnn::multiply(grad, target->get_value().get_shape()[-1]);
         grad = ttnn::multiply(grad, out->get_grad());
+
         prediction->add_grad(grad);
     };
 

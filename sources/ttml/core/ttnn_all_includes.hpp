@@ -7,6 +7,7 @@
 
 #include <common/bfloat16.hpp>                                                                   // NOLINT
 #include <tests/tt_metal/test_utils/env_vars.hpp>                                                // NOLINT
+#include <tt_metal/common/base_types.hpp>                                                        // NOLINT
 #include <tt_metal/common/math.hpp>                                                              // NOLINT
 #include <tt_metal/host_api.hpp>                                                                 // NOLINT
 #include <tt_metal/hostdevcommon/common_values.hpp>                                              // NOLINT

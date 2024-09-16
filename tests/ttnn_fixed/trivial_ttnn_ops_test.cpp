@@ -25,6 +25,25 @@ TEST(TrivialTnnFixedTest, TestMax_0) {
     }
 }
 
+TEST(TrivialTnnFixedTest, TestMax_1) {
+    auto* device = &ttml::autograd::ctx().get_device();
+
+    tt::tt_metal::Shape shape = {4, 1, 1, 4};
+    std::vector<float> data(16);
+    for (int i = 0; i < 4; ++i) {
+        for (int j = 0; j < 4; ++j) {
+            data[i * 4 + j] = -static_cast<float>(i + 1);
+        }
+    }
+    auto tensor = ttml::core::from_vector(data, ttnn::Shape(shape), device);
+    auto res = ttml::ttnn_fixed::max(tensor, /* dim */ 3, /* keepdim */ true);
+    auto res_vector = ttml::core::to_vector(res);
+    EXPECT_EQ(res_vector.size(), 4);
+    for (int i = 0; i < 4; ++i) {
+        EXPECT_NEAR(res_vector[i], -static_cast<float>(i + 1), 1e-2);
+    }
+}
+
 TEST(TrivialTnnFixedTest, TestStableSoftmax_0) {
     auto* device = &ttml::autograd::ctx().get_device();
 

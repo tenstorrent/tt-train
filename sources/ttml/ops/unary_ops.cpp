@@ -57,7 +57,7 @@ autograd::TensorPtr mean(const autograd::TensorPtr& tensor) {
             out->get_grad(), std::nullopt, false, resulting_shape, std::nullopt, std::nullopt, std::nullopt);
         tensor->add_grad(res);
     };
-    std::vector<autograd::NodeId> links = autograd::get_links(tensor);
+    auto links = autograd::get_links(tensor);
 
     out->set_node(autograd::ctx().add_backward_node(std::move(grad), links));
     return out;

@@ -123,7 +123,7 @@ tt::tt_metal::Tensor from_vector(
     auto owned_buffer = create_owned_buffer_from_vector_of_floats(buffer, data_type);
     // remove possible paddings from the shape (it conflicts with ROW MAJOR)
     auto tt_shape = tt::tt_metal::Shape({shape[0], shape[1], shape[2], shape[3]});
-    auto output = tt::tt_metal::Tensor(OwnedStorage{owned_buffer}, tt_shape, data_type, Layout::ROW_MAJOR);
+    auto output = tt::tt_metal::Tensor(OwnedStorage{owned_buffer}, ttnn::Shape(tt_shape), data_type, Layout::ROW_MAJOR);
     if (device != nullptr) {
         output = ttnn::to_layout(output, layout, std::nullopt, output_mem_config, device);
         output = ttnn::to_device(output, device, output_mem_config);
@@ -138,16 +138,6 @@ std::vector<float> to_vector(const tt::tt_metal::Tensor& tensor) {
     auto buffer = tt::tt_metal::host_buffer::get_as<bfloat16>(cpu_tensor);
     auto final_res = untile_tensor_to_vec(cpu_tensor);
     return final_res;
-}
-
-tt::tt_metal::Shape get_shape_without_padding(const tt::tt_metal::Tensor& tensor) {
-    auto shape = tensor.get_legacy_shape();
-    auto padding = shape.padding();
-    return tt::tt_metal::Shape{
-        static_cast<uint32_t>(shape[0] - padding[0].back - padding[0].front),
-        static_cast<uint32_t>(shape[1] - padding[1].back - padding[1].front),
-        static_cast<uint32_t>(shape[2] - padding[2].back - padding[2].front),
-        static_cast<uint32_t>(shape[3] - padding[3].back - padding[3].front)};
 }
 
 }  // namespace ttml::core
