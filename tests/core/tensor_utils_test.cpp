@@ -123,7 +123,7 @@ TEST(TensorUtilsTest, TestIsInitialized) {
     tt::tt_metal::Tensor tensor;
     EXPECT_FALSE(ttml::core::is_tensor_initialized(tensor));
 
-    tt::tt_metal::Shape shape = {1, 2, 3, 4};
+    tt::tt_metal::LegacyShape shape = {1, 2, 3, 4};
     tensor = ttml::core::zeros(ttnn::Shape(shape), device);
     EXPECT_TRUE(ttml::core::is_tensor_initialized(tensor));
 }

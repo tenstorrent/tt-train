@@ -16,7 +16,7 @@ using NamedParameters = std::unordered_map<std::string, TensorPtr>;
 class ModuleBase : public std::enable_shared_from_this<ModuleBase> {
 private:
     std::string m_name;
-    RunMode m_run_mode = RunMode::EVAL;
+    RunMode m_run_mode = RunMode::TRAIN;
 
     std::unordered_map<std::string, TensorPtr> m_named_tensors;
     std::unordered_map<std::string, ModuleBasePtr> m_named_modules;
