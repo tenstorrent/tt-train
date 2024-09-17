@@ -16,33 +16,7 @@
 #include "core/ttnn_all_includes.hpp"
 
 namespace ttml::ttml::ops {
-/*
-std::vector<std::optional<Tensor>> moreh_layernorm(
-    const Tensor &input,
-    uint32_t normalized_dims,
-    float eps,
-    const std::optional<const Tensor> gamma = std::nullopt,
-    const std::optional<const Tensor> beta = std::nullopt,
-    const std::optional<const Tensor> output = std::nullopt,
-    const std::optional<const Tensor> mean = std::nullopt,
-    const std::optional<const Tensor> rstd = std::nullopt,
-    const std::optional<MemoryConfig> &memory_config = std::nullopt,
-    std::optional<const ttnn::DeviceComputeKernelConfig> compute_kernel_config = std::nullopt
-    );
 
-
-Tensor moreh_layernorm_backward_input_grad(
-    const Tensor &output_grad,
-    const Tensor &input,
-    const Tensor &mean,
-    const Tensor &rstd,
-    uint32_t normalized_dims,
-    const std::optional<const Tensor> input_grad = std::nullopt,
-    const std::optional<const Tensor> gamma = std::nullopt,
-    const std::optional<MemoryConfig> &memory_config = std::nullopt,
-    std::optional<const ttnn::DeviceComputeKernelConfig> compute_kernel_config = std::nullopt);
-
-*/
 autograd::TensorPtr layernorm(const autograd::TensorPtr& tensor) {
     autograd::TensorPtr out = std::make_shared<autograd::Tensor>();
     tt::tt_metal::Tensor mean = core::zeros(

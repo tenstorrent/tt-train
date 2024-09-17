@@ -15,8 +15,6 @@ class DropoutLayer : public autograd::ModuleBase {
     float m_prob = 0.2F;
 
 public:
-    [[nodiscard]] const std::string& get_name() const;
-
     explicit DropoutLayer(float probability);
 
     [[nodiscard]] autograd::TensorPtr operator()(const autograd::TensorPtr& tensor);

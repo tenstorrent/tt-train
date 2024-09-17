@@ -4,10 +4,10 @@
 #include "ops/dropout_op.hpp"
 namespace ttml::modules {
 
-DropoutLayer::DropoutLayer(float probability) : m_prob(probability) {}
+DropoutLayer::DropoutLayer(float probability) : m_prob(probability) { create_name("dropout"); }
 
 [[nodiscard]] autograd::TensorPtr DropoutLayer::operator()(const autograd::TensorPtr& tensor) {
-    if (this->get_train_mode() == autograd::TrainMode::EVAL) {
+    if (this->get_run_mode() == autograd::RunMode::EVAL) {
         return tensor;
     }
 

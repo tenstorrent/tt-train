@@ -48,8 +48,6 @@ void xavier_normal_init(std::vector<float>& vec, FanParams params) {
     // Random number generator with a seed
     // Mersenne Twister generator
     std::normal_distribution<float> dist(0.0F, stddev);
-    // auto& gen = autograd::AutoContext::get_instance().get_generator();
-
     std::generate(
         vec.begin(), vec.end(), [&]() { return dist(autograd::AutoContext::get_instance().get_generator()); });
 }

@@ -51,13 +51,15 @@ NamedParameters ModuleBase::parameters() const {
     return params;
 }
 
-void ModuleBase::set_train_mode(TrainMode mode) {
+void ModuleBase::set_run_mode(TrainMode mode) {
     m_train_mode = mode;
     for (auto& [_, module] : this->m_named_modules) {
         module->set_train_mode(mode);
     }
 }
 
-[[nodiscard]] TrainMode ModuleBase::get_train_mode() const { return m_train_mode; }
+[[nodiscard]] TrainMode ModuleBase::get_run_mode() const { return m_train_mode; }
 
+void ModuleBase::train() { set_run_mode(RunMode::TRAIN); }
+void ModuleBase::eval() { set_run_mode(RunMode::EVAL); }
 }  // namespace ttml::autograd
