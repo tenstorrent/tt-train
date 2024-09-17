@@ -30,16 +30,12 @@ Tensor::Tensor(tt::tt_metal::Tensor m_value, bool require_grad) :
 
 void Tensor::add_grad(const tt::tt_metal::Tensor& grad) {
     try_init_grad();
-    auto grad_shape = grad.get_shape();
-    auto m_grad_shape = m_grad.get_shape();
 
-    for (int i = 0; i < 4; ++i) {
-        if (grad_shape[i] != m_grad_shape[i]) {
-            throw std::runtime_error(fmt::format(
-                "wrong add_grad shape. tensor->add_grad(res[0]);Grad shape: {}, tensor shape: {}",
-                grad_shape,
-                m_grad_shape));
-        }
+    const auto& grad_shape = grad.get_shape();
+    const auto& m_grad_shape = m_grad.get_shape();
+    if (grad_shape != m_grad_shape) {
+        throw std::logic_error(
+            fmt::format("Shapes of gradients are not equal. Expected: {}, got: {}", m_grad_shape, grad_shape));
     }
 
     m_grad = ttnn::add(m_grad, grad);
@@ -51,12 +47,12 @@ void Tensor::backward() {
     }
     std::vector<size_t> sorted_nodes;
     std::unordered_set<std::size_t> visited_nodes;
-    auto& graph = m_node_id->get_graph();
+    const auto& graph = m_node_id->get_graph();
     topological_sort(m_node_id->get_id(), graph.get_edges(), visited_nodes, sorted_nodes);
 
     const auto& graph_nodes = graph.get_graph_nodes();
     std::ranges::reverse(sorted_nodes);
-    try_init_grad(true);
+    try_init_grad(/* init_ones */ true);
     for (const auto& node_id : sorted_nodes) {
         graph_nodes[node_id].grad_function();
     }
@@ -65,12 +61,9 @@ void Tensor::backward() {
 bool Tensor::is_grad_initialized() const { return this->get_grad().tensor_attributes != nullptr; }
 
 void Tensor::try_init_grad(bool init_ones) {
-    if (!is_grad_initialized()) {
-        if (init_ones) {
-            this->set_grad(ttml::core::ones_like(m_value));
-        } else {
-            this->set_grad(ttml::core::zeros_like(m_value));
-        }
+    if (is_grad_initialized()) {
+        return;
     }
+    this->set_grad(init_ones ? ttml::core::ones_like(m_value) : ttml::core::zeros_like(m_value));
 }
 }  // namespace ttml::autograd

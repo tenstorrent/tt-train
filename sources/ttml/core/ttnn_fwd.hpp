@@ -6,7 +6,7 @@ class CommandQueue;
 struct MemoryConfig;
 class Device;
 class DeviceMesh;
-class Shape;
+class LegacyShape;
 }  // namespace tt::tt_metal
 
 namespace ttnn {

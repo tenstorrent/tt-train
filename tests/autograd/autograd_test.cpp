@@ -26,7 +26,7 @@ TEST_F(AutogradTest, TestSum) {
     auto* device = &ttml::autograd::ctx().get_device();
     std::vector<float> test_data1 = {1.F, 2.F, 3.F, 4.F};
     std::vector<float> test_data2 = {4.F, 3.F, 2.F, 1.F};
-    tt::tt_metal::Shape shape = {1, 1, 1, 4};
+    tt::tt_metal::LegacyShape shape = {1, 1, 1, 4};
     auto tensor1 = ttml::core::from_vector(test_data1, ttnn::Shape(shape), device);
     auto tensor2 = ttml::core::from_vector(test_data2, ttnn::Shape(shape), device);
 
@@ -55,7 +55,7 @@ TEST_F(AutogradTest, TestMul) {
     auto* device = &ttml::autograd::ctx().get_device();
     std::vector<float> test_data1 = {1.F, 2.F, 3.F, 4.F};
     std::vector<float> test_data2 = {4.F, 3.F, 2.F, 1.F};
-    tt::tt_metal::Shape shape = {1, 1, 1, 4};
+    tt::tt_metal::LegacyShape shape = {1, 1, 1, 4};
     auto tensor1 = ttml::core::from_vector(test_data1, ttnn::Shape(shape), device);
     auto tensor2 = ttml::core::from_vector(test_data2, ttnn::Shape(shape), device);
 

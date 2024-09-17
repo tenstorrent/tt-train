@@ -32,8 +32,8 @@ private:
     std::vector<std::vector<size_t>> m_links;
 
 public:
-    [[nodiscard]] const std::vector<std::vector<size_t>>& get_edges();
-    [[nodiscard]] const std::vector<GraphNode>& get_graph_nodes();
+    [[nodiscard]] const std::vector<std::vector<size_t>>& get_edges() const;
+    [[nodiscard]] const std::vector<GraphNode>& get_graph_nodes() const;
     NodeId add_node(GradFunction&& grad_function, std::span<NodeId> links);
 
     void reset();

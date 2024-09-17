@@ -3,6 +3,7 @@
 #include <random>
 
 #include "autograd/auto_context.hpp"
+#include "fmt/core.h"
 
 namespace ttml::init {
 

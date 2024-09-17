@@ -10,7 +10,7 @@
 TEST(UnaryOpsTest, GlobalMean) {
     std::vector<float> test_data = {1.F, 2.F, 3.F, 4.F, 1.F, 2.F, 3.F, 4.F};
 
-    tt::tt_metal::Shape shape = {2, 1, 1, 4};
+    tt::tt_metal::LegacyShape shape = {2, 1, 1, 4};
     auto tensor = ttml::core::from_vector(test_data, ttnn::Shape(shape), &ttml::autograd::ctx().get_device());
 
     auto tensor_ptr = std::make_shared<ttml::autograd::Tensor>(tensor);

@@ -10,6 +10,9 @@ namespace ttml::optimizers {
 struct SGDConfig {
     float lr{1e-3F};
     float momentum{0.0F};
+    float dampening{0.0F};
+    float weight_decay{0.0F};
+    bool nesterov{false};
 };
 
 class SGD {
@@ -21,8 +24,8 @@ public:
     void step();
 
 private:
-    float m_lr{1e-3F};
-    float m_momentum{0.0F};
+    size_t steps{0};
+    SGDConfig m_config;
     ttml::autograd::NamedParameters m_parameters;
     std::unordered_map<std::string, tt::tt_metal::Tensor> m_theta;
 };
