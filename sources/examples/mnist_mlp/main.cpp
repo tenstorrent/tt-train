@@ -111,7 +111,7 @@ int main() {
     const int logging_interval = 50;
 
     int training_step = 0;
-    const size_t num_epochs = 50;
+    const size_t num_epochs = 10;
     for (size_t epoch = 0; epoch < num_epochs; ++epoch) {
         for (const auto& [data, target] : train_dataloader) {
             optimizer.zero_grad();
