@@ -82,19 +82,4 @@ autograd::TensorPtr broadcast_batch(const autograd::TensorPtr& tensor, uint32_t 
     return out;
 }
 
-autograd::TensorPtr identity(const autograd::TensorPtr& tensor) {
-    /*
-    autograd::GradFunction grad = [tensor, out]() {
-        tt::tt_metal::MemoryConfig mem_config;
-
-        tensor->add_grad(res[0]);
-    };
-
-    std::vector<autograd::NodeId> links = autograd::get_links(tensor);
-    out->set_node(autograd::ctx().add_backward_node(std::move(grad), links));
-    */
-
-    return tensor;
-}
-
 }  // namespace ttml::ops
