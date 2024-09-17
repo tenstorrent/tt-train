@@ -40,10 +40,9 @@ public:
     tt::tt_metal::Device& get_device();
 
 private:
-    AutoContext() = default;
-
-    std::mt19937 m_generator;
+    AutoContext();
     uint32_t m_seed = 5489U;
+    std::mt19937 m_generator;
 
     GradMode m_grads_mode = GradMode::ENABLED;
 

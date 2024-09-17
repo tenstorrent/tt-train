@@ -122,7 +122,7 @@ tt::tt_metal::Tensor from_vector(
     }
     auto owned_buffer = create_owned_buffer_from_vector_of_floats(buffer, data_type);
     // remove possible paddings from the shape (it conflicts with ROW MAJOR)
-    auto tt_shape = tt::tt_metal::Shape({shape[0], shape[1], shape[2], shape[3]});
+    auto tt_shape = tt::tt_metal::LegacyShape({shape[0], shape[1], shape[2], shape[3]});
     auto output = tt::tt_metal::Tensor(OwnedStorage{owned_buffer}, ttnn::Shape(tt_shape), data_type, Layout::ROW_MAJOR);
     if (device != nullptr) {
         output = ttnn::to_layout(output, layout, std::nullopt, output_mem_config, device);

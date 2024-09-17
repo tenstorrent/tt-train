@@ -9,7 +9,7 @@ TEST(ClipGradientNormTest, GradNormTensor_0) {
     auto* device = &ttml::autograd::ctx().get_device();
 
     std::vector<float> data(81, -1.F);
-    tt::tt_metal::Shape shape = {1, 1, 9, 9};
+    tt::tt_metal::LegacyShape shape = {1, 1, 9, 9};
     auto tensor = ttml::core::from_vector(data, ttnn::Shape(shape), device);
 
     ttml::autograd::clip_tensor_norm_(tensor, 3.F);
@@ -30,7 +30,7 @@ TEST(ClipGradientNormTest, GradNormTensor_1) {
     auto* device = &ttml::autograd::ctx().get_device();
 
     std::vector<float> data(81, -1.F);
-    tt::tt_metal::Shape shape = {1, 1, 9, 9};
+    tt::tt_metal::LegacyShape shape = {1, 1, 9, 9};
     auto tensor = ttml::core::from_vector(data, ttnn::Shape(shape), device);
 
     ttml::autograd::clip_tensor_norm_(tensor, 10.F);
@@ -51,7 +51,7 @@ TEST(ClipGradientNormTest, GradNormTensor_2) {
     auto* device = &ttml::autograd::ctx().get_device();
 
     std::vector<float> data(81, -1.F);
-    tt::tt_metal::Shape shape = {1, 1, 9, 9};
+    tt::tt_metal::LegacyShape shape = {1, 1, 9, 9};
     auto tensor = ttml::core::from_vector(data, ttnn::Shape(shape), device);
 
     ttml::autograd::clip_tensor_norm_(tensor, 1.F);

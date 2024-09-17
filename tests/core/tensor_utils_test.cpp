@@ -14,7 +14,7 @@ TEST(TensorUtilsTest, TestToFromTensorEven) {
     auto* device = &ttml::autograd::ctx().get_device();
     std::vector<float> test_data = {1.F, 5.F, 10.F, 15.F};
 
-    tt::tt_metal::Shape shape = {1, 1, 1, 4};
+    tt::tt_metal::LegacyShape shape = {1, 1, 1, 4};
     auto tensor = ttml::core::from_vector(test_data, ttnn::Shape(shape), device);
 
     auto vec_back = ttml::core::to_vector(tensor);
@@ -29,7 +29,7 @@ TEST(TensorUtilsTest, TestToFromTensorOdd) {
     auto* device = &ttml::autograd::ctx().get_device();
     std::vector<float> test_data = {30.F, 20.F, 2.F};
 
-    tt::tt_metal::Shape shape = {1, 1, 1, 3};
+    tt::tt_metal::LegacyShape shape = {1, 1, 1, 3};
     auto tensor = ttml::core::from_vector(test_data, ttnn::Shape(shape), device);
 
     auto vec_back = ttml::core::to_vector(tensor);
@@ -49,7 +49,7 @@ TEST(TensorUtilsTest, TestToFromTensorLargeWithBatch) {
         test_data.push_back((float)i / 100.0F);
     }
 
-    tt::tt_metal::Shape shape{batch_size, 1, 1, vec_size / batch_size};
+    tt::tt_metal::LegacyShape shape{batch_size, 1, 1, vec_size / batch_size};
     auto tensor = ttml::core::from_vector(test_data, ttnn::Shape(shape), device);
     auto vec_back = ttml::core::to_vector(tensor);
     ASSERT_EQ(vec_back.size(), test_data.size());
@@ -66,7 +66,7 @@ TEST(TensorUtilsTest, TestToFromTensorLarge) {
         test_data.push_back((float)i / 100.0F);
     }
 
-    tt::tt_metal::Shape shape{1, 1, 1, vec_size};
+    tt::tt_metal::LegacyShape shape{1, 1, 1, vec_size};
     auto tensor = ttml::core::from_vector(test_data, ttnn::Shape(shape), device);
     auto vec_back = ttml::core::to_vector(tensor);
     ASSERT_EQ(vec_back.size(), test_data.size());
@@ -79,7 +79,7 @@ TEST(TensorUtilsTest, TestToFromTensorBatch) {
     auto* device = &ttml::autograd::ctx().get_device();
     std::vector<float> test_data = {1.F, 5.F, 10.F, 15.F};
 
-    tt::tt_metal::Shape shape = {2, 1, 1, 2};
+    tt::tt_metal::LegacyShape shape = {2, 1, 1, 2};
     auto tensor = ttml::core::from_vector(test_data, ttnn::Shape(shape), device);
 
     auto vec_back = ttml::core::to_vector(tensor);
@@ -92,7 +92,7 @@ TEST(TensorUtilsTest, TestToFromTensorBatch) {
 
 TEST(TensorUtilsTest, TestOnes_0) {
     auto* device = &ttml::autograd::ctx().get_device();
-    tt::tt_metal::Shape shape = {1, 2, 3, 4};
+    tt::tt_metal::LegacyShape shape = {1, 2, 3, 4};
     auto tensor = ttml::core::ones(ttnn::Shape(shape), device);
     auto tensor_vec = ttml::core::to_vector(tensor);
     for (auto& val : tensor_vec) {
@@ -108,7 +108,7 @@ TEST(TensorUtilsTest, TestOnes_0) {
 
 TEST(TensorUtilsTest, TestOnes_1) {
     auto* device = &ttml::autograd::ctx().get_device();
-    tt::tt_metal::Shape shape = {1, 2, 3, 4};
+    tt::tt_metal::LegacyShape shape = {1, 2, 3, 4};
     auto tensor_zeros = ttml::core::zeros(ttnn::Shape(shape), device);
     auto tensor_ones = ttml::core::ones(tensor_zeros.get_shape(), device);
     auto tensor_vec = ttml::core::to_vector(tensor_ones);
@@ -123,7 +123,7 @@ TEST(TensorUtilsTest, TestIsInitialized) {
     tt::tt_metal::Tensor tensor;
     EXPECT_FALSE(ttml::core::is_tensor_initialized(tensor));
 
-    tt::tt_metal::Shape shape = {1, 2, 3, 4};
+    tt::tt_metal::LegacyShape shape = {1, 2, 3, 4};
     tensor = ttml::core::zeros(ttnn::Shape(shape), device);
     EXPECT_TRUE(ttml::core::is_tensor_initialized(tensor));
 }

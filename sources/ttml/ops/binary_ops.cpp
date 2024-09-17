@@ -56,7 +56,7 @@ autograd::TensorPtr operator*(const autograd::TensorPtr& a, const autograd::Tens
     out->set_value(ttnn::multiply(a->get_value(), b->get_value()));
     autograd::GradFunction grad = [a, b, out]() {
         tt::tt_metal::MemoryConfig mem_config;
-        // TODO: support broadcasting
+        // TODO: support broadcasting (or not)
         auto a_grad = ttnn::multiply(out->get_grad(), b->get_value());
         auto b_grad = ttnn::multiply(out->get_grad(), a->get_value());
 

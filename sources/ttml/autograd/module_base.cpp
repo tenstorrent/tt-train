@@ -51,4 +51,15 @@ NamedParameters ModuleBase::parameters() const {
     return params;
 }
 
+void ModuleBase::set_run_mode(RunMode mode) {
+    m_run_mode = mode;
+    for (auto& [_, module] : this->m_named_modules) {
+        module->set_run_mode(mode);
+    }
+}
+
+[[nodiscard]] RunMode ModuleBase::get_run_mode() const { return m_run_mode; }
+
+void ModuleBase::train() { set_run_mode(RunMode::TRAIN); }
+void ModuleBase::eval() { set_run_mode(RunMode::EVAL); }
 }  // namespace ttml::autograd

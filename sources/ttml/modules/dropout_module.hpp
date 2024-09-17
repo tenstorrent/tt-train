@@ -6,19 +6,16 @@
 #include "autograd/graph.hpp"
 #include "autograd/module_base.hpp"
 #include "autograd/tensor.hpp"
-#include "ops/linear_op.hpp"
+#include "ops/dropout_op.hpp"
 
 namespace ttml::modules {
 
-class LinearLayer : public autograd::ModuleBase {
-private:
-    autograd::TensorPtr m_weight;
-    autograd::TensorPtr m_bias;
-
-    void initialize_tensors(uint32_t in_features, uint32_t out_features);
+class DropoutLayer : public autograd::ModuleBase {
+    std::string m_name;
+    float m_prob = 0.2F;
 
 public:
-    LinearLayer(uint32_t in_features, uint32_t out_features);
+    explicit DropoutLayer(float probability);
 
     [[nodiscard]] autograd::TensorPtr operator()(const autograd::TensorPtr& tensor);
 };
