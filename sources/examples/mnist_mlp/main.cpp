@@ -48,42 +48,6 @@ float evaluate(DataLoader& test_dataloader, Model& model, size_t num_targets) {
     return num_correct / num_samples;
 };
 
-template <typename Model>
-void clip_gradient_norm_(Model& model, float max_norm) {
-    for (auto& [name, param] : model.parameters()) {
-        auto& grad = param->get_grad();
-        auto grad_squared = ttnn::multiply(grad, grad);
-
-        ttnn::Shape shape(std::array<uint32_t, 4>{1, 1, 1, 1});
-        auto out = ttml::core::from_vector({0.F}, shape, &ttml::autograd::ctx().get_device());
-        ttnn::moreh_sum(grad_squared, std::nullopt, true, out, grad_squared.memory_config());
-        auto grad_norm_tensor = ttnn::sqrt(out);
-
-        auto grad_norm_tensor_mask = ttnn::ge(grad_norm_tensor, max_norm);
-        auto inv_scaled_grad_norm_tensor = ttnn::divide(grad_norm_tensor, max_norm);
-
-        auto grad_legacy_shape = grad.get_legacy_shape();
-        auto inv_scaled_grad_norm_tensor_legacy_shape = inv_scaled_grad_norm_tensor.get_legacy_shape();
-        const size_t rank = grad.get_shape().rank();
-        assert(rank == 4);
-        std::vector<uint32_t> repeat_shape_array(rank);
-        for (size_t i = 0; i < rank; ++i) {
-            repeat_shape_array[i] = grad_legacy_shape[i] / inv_scaled_grad_norm_tensor_legacy_shape[i];
-        }
-        tt::tt_metal::Shape repeat_legacy_shape = tt::tt_metal::Shape(repeat_shape_array, grad_legacy_shape.padding());
-        auto repeat_shape = ttnn::Shape(repeat_legacy_shape);
-
-        inv_scaled_grad_norm_tensor = ttnn::repeat(inv_scaled_grad_norm_tensor, repeat_shape);
-        auto scaled_grads = ttnn::divide(grad, inv_scaled_grad_norm_tensor);
-        fmt::print("Shape of scaled_grads: {}\n", scaled_grads.get_shape());
-
-        auto grad_norm_tensor_mask_reshaped = ttnn::repeat(grad_norm_tensor_mask, repeat_shape);
-        auto clipped_grad = ttnn::where(grad_norm_tensor_mask_reshaped, scaled_grads, grad);
-
-        param->set_grad(clipped_grad);
-    }
-};
-
 int main() {
     // Load MNIST data
     const size_t num_targets = 10;
@@ -129,8 +93,8 @@ int main() {
     auto model = ttml::modules::MultiLayerPerceptron(model_params);
 
     // evaluate model before training (sanity check to get reasonable accuracy 1/num_targets)
-    // float accuracy_before_training = evaluate(test_dataloader, model, num_targets);
-    // fmt::print("Accuracy before training: {}\n", evaluate(test_dataloader, model, num_targets));
+    float accuracy_before_training = evaluate(test_dataloader, model, num_targets);
+    fmt::print("Accuracy before training: {}\n", evaluate(test_dataloader, model, num_targets));
 
     const float learning_rate = 0.1F * (batch_size / 128.F);
     const float momentum = 0.9F;
