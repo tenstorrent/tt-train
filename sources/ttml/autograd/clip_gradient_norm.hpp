@@ -2,7 +2,7 @@
 
 namespace ttml::autograd {
 
-void clip_tensor_norm_(tt::tt_metal::Tensor& tensor, const float max_norm);
+void clip_tensor_norm_(tt::tt_metal::Tensor& tensor, float max_norm);
 
 template <typename Model>
 void clip_gradient_norm_(Model& model, float max_norm) {
