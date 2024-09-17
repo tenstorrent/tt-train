@@ -99,11 +99,12 @@ int main() {
     auto sgd_config =
         ttml::optimizers::SGDConfig{.lr = learning_rate, .momentum = momentum, .weight_decay = weight_decay};
 
-    fmt::print("Learning rate: {}\n", sgd_config.lr);
-    fmt::print("Momentum: {}\n", sgd_config.momentum);
-    fmt::print("Dampening {}\n", sgd_config.dampening);
-    fmt::print("Weight decay: {}\n", sgd_config.weight_decay);
-    fmt::print("Nesterov: {}\n", sgd_config.nesterov);
+    fmt::print("SGD configuration:\n");
+    fmt::print("    Learning rate: {}\n", sgd_config.lr);
+    fmt::print("    Momentum: {}\n", sgd_config.momentum);
+    fmt::print("    Dampening {}\n", sgd_config.dampening);
+    fmt::print("    Weight decay: {}\n", sgd_config.weight_decay);
+    fmt::print("    Nesterov: {}\n", sgd_config.nesterov);
     auto optimizer = ttml::optimizers::SGD(model.parameters(), sgd_config);
 
     LossAverageMeter loss_meter;
