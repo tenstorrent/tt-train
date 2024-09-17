@@ -127,7 +127,6 @@ int main() {
                 fmt::print("Step: {:5d} | Average Loss: {:.4f}\n", training_step, loss_meter.average());
             }
             loss->backward();
-            clip_gradient_norm_(model, 1.0F);
             optimizer.step();
             ttml::autograd::ctx().reset_graph();
             training_step++;
