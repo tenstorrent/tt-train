@@ -18,7 +18,7 @@ void clip_tensor_norm_(tt::tt_metal::Tensor& tensor, const float max_norm) {
     auto grad_norm_tensor_float = ttml::core::to_vector(grad_norm_tensor)[0];
     if (grad_norm_tensor_float > max_norm) {
         auto scale = max_norm / grad_norm_tensor_float;
-        ttnn::multiply_(tensor, scale);
+        tensor = ttnn::multiply(tensor, scale);
     }
 }
 }  // namespace ttml::autograd

@@ -8,8 +8,8 @@
 TEST(ClipGradientNormTest, GradNormTensor_0) {
     auto* device = &ttml::autograd::ctx().get_device();
 
-    std::vector<float> data(9, -1.F);
-    tt::tt_metal::Shape shape = {1, 1, 3, 3};
+    std::vector<float> data(81, -1.F);
+    tt::tt_metal::Shape shape = {1, 1, 9, 9};
     auto tensor = ttml::core::from_vector(data, ttnn::Shape(shape), device);
 
     ttml::autograd::clip_tensor_norm_(tensor, 3.F);
@@ -29,8 +29,8 @@ TEST(ClipGradientNormTest, GradNormTensor_0) {
 TEST(ClipGradientNormTest, GradNormTensor_1) {
     auto* device = &ttml::autograd::ctx().get_device();
 
-    std::vector<float> data(9, -1.F);
-    tt::tt_metal::Shape shape = {1, 1, 3, 3};
+    std::vector<float> data(81, -1.F);
+    tt::tt_metal::Shape shape = {1, 1, 9, 9};
     auto tensor = ttml::core::from_vector(data, ttnn::Shape(shape), device);
 
     ttml::autograd::clip_tensor_norm_(tensor, 10.F);
@@ -50,8 +50,8 @@ TEST(ClipGradientNormTest, GradNormTensor_1) {
 TEST(ClipGradientNormTest, GradNormTensor_2) {
     auto* device = &ttml::autograd::ctx().get_device();
 
-    std::vector<float> data(9, -1.F);
-    tt::tt_metal::Shape shape = {1, 1, 3, 3};
+    std::vector<float> data(81, -1.F);
+    tt::tt_metal::Shape shape = {1, 1, 9, 9};
     auto tensor = ttml::core::from_vector(data, ttnn::Shape(shape), device);
 
     ttml::autograd::clip_tensor_norm_(tensor, 1.F);
@@ -62,7 +62,7 @@ TEST(ClipGradientNormTest, GradNormTensor_2) {
         norm += value * value;
     }
     norm = std::sqrt(norm);
-    EXPECT_NEAR(norm, 3.F, 1e-2);
+    EXPECT_NEAR(norm, 1.F, 1e-2);
     for (const auto& value : clipped_vec) {
         EXPECT_NEAR(value, -1.F / 9.F, 1e-2);
     }
