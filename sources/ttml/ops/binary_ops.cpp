@@ -22,8 +22,10 @@ autograd::TensorPtr operator+(const autograd::TensorPtr& a, const autograd::Tens
     out->set_value(ttnn::add(a->get_value(), b->get_value()));
     autograd::GradFunction grad = [a, b, out]() {
         auto res = ttnn::add_bw(out->get_grad(), a->get_value(), b->get_value());
-        a->add_grad(res[0]);
-        b->add_grad(res[1]);
+        assert(res.size() == 2U && "Add backward should return two gradients");
+        assert(res[0].has_value() && res[1].has_value());
+        a->add_grad(res[0].value());
+        b->add_grad(res[1].value());
     };
     std::vector<autograd::NodeId> links = autograd::get_links(a, b);
     out->set_node(autograd::ctx().add_backward_node(std::move(grad), links));

@@ -11,6 +11,81 @@
 #include "core/ttnn_all_includes.hpp"
 #include "ttnn_fixed/trivial_ttnn_ops.hpp"
 
+TEST(TrivialTnnFixedTest, TestMax_0) {
+    auto* device = &ttml::autograd::ctx().get_device();
+
+    std::vector<float> data(24, -1.F);
+    tt::tt_metal::Shape shape = {1, 2, 3, 4};
+    auto tensor = ttml::core::from_vector(data, ttnn::Shape(shape), device);
+    auto res = ttml::ttnn_fixed::max(tensor, /* dim */ 3, /* keepdim */ true);
+    auto res_vector = ttml::core::to_vector(res);
+    EXPECT_EQ(res_vector.size(), 6);
+    for (const auto& value : res_vector) {
+        EXPECT_NEAR(value, -1.F, 1e-2);
+    }
+}
+
+TEST(TrivialTnnFixedTest, TestMax_1) {
+    auto* device = &ttml::autograd::ctx().get_device();
+
+    tt::tt_metal::Shape shape = {4, 1, 1, 4};
+    std::vector<float> data(16);
+    for (int i = 0; i < 4; ++i) {
+        for (int j = 0; j < 4; ++j) {
+            data[i * 4 + j] = -static_cast<float>(i + 1);
+        }
+    }
+    auto tensor = ttml::core::from_vector(data, ttnn::Shape(shape), device);
+    auto res = ttml::ttnn_fixed::max(tensor, /* dim */ 3, /* keepdim */ true);
+    auto res_vector = ttml::core::to_vector(res);
+    EXPECT_EQ(res_vector.size(), 4);
+    for (int i = 0; i < 4; ++i) {
+        EXPECT_NEAR(res_vector[i], -static_cast<float>(i + 1), 1e-2);
+    }
+}
+
+TEST(TrivialTnnFixedTest, TestStableSoftmax_0) {
+    auto* device = &ttml::autograd::ctx().get_device();
+
+    const size_t batch_size = 1U;
+    const size_t features = 2U;
+    std::vector<float> data(batch_size * features);
+    for (int i = 0; i < data.size(); ++i) {
+        data[i] = 100.F + static_cast<float>(i);
+    }
+    tt::tt_metal::Shape shape = {batch_size, 1, 1, features};
+    auto tensor = ttml::core::from_vector(data, ttnn::Shape(shape), device);
+    auto tensor_data = ttml::core::to_vector(tensor);
+    EXPECT_NEAR(tensor_data[0], 100.F, 1e-2);
+    EXPECT_NEAR(tensor_data[1], 101.F, 1e-2);
+
+    auto res = ttml::ttnn_fixed::softmax(tensor, /* dim */ 3);
+    auto res_vector = ttml::core::to_vector(res);
+    EXPECT_NEAR(res_vector[0], 0.2689F, 2e-2);
+    EXPECT_NEAR(res_vector[1], 0.7311F, 2e-2);
+}
+
+TEST(TrivialTnnFixedTest, TestStableSoftmax_1) {
+    auto* device = &ttml::autograd::ctx().get_device();
+
+    const size_t batch_size = 1U;
+    const size_t features = 2U;
+    std::vector<float> data(batch_size * features);
+    for (int i = 0; i < data.size(); ++i) {
+        data[i] = -100.F + static_cast<float>(i);
+    }
+    tt::tt_metal::Shape shape = {batch_size, 1, 1, features};
+    auto tensor = ttml::core::from_vector(data, ttnn::Shape(shape), device);
+    auto tensor_data = ttml::core::to_vector(tensor);
+    EXPECT_NEAR(tensor_data[0], -100.F, 1e-2);
+    EXPECT_NEAR(tensor_data[1], -99.F, 1e-2);
+
+    auto res = ttml::ttnn_fixed::softmax(tensor, /* dim */ 3);
+    auto res_vector = ttml::core::to_vector(res);
+    EXPECT_NEAR(res_vector[0], 0.2689F, 2e-2);
+    EXPECT_NEAR(res_vector[1], 0.7311F, 2e-2);
+}
+
 TEST(TrivialTnnFixedTest, TestSumOverBatch_0) {
     auto* device = &ttml::autograd::ctx().get_device();
 

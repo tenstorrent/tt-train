@@ -35,8 +35,8 @@ autograd::TensorPtr gelu(const autograd::TensorPtr& tensor) {
         tt::tt_metal::MemoryConfig mem_config;
         static const std::string approx_mode = "tanh";
         auto res = ttnn::gelu_bw(out->get_grad(), tensor->get_value(), approx_mode, mem_config);
-
-        tensor->add_grad(res[0]);
+        assert(res.size() == 1U && "Gelu backward should return only one gradient");
+        tensor->add_grad(res.front().value());
     };
 
     std::vector<autograd::NodeId> links = autograd::get_links(tensor);
@@ -49,13 +49,15 @@ autograd::TensorPtr mean(const autograd::TensorPtr& tensor) {
     ttnn::Shape shape(std::array<uint32_t, 4>{1, 1, 1, 1});
     autograd::TensorPtr out =
         std::make_shared<autograd::Tensor>(core::from_vector({0.F}, shape, &autograd::ctx().get_device()));
-    tt::operations::primary::moreh_mean(tensor->get_value(), std::nullopt, true, std::nullopt, out->get_value());
+    ttnn::moreh_mean(
+        tensor->get_value(), std::nullopt, true, std::nullopt, out->get_value(), std::nullopt, std::nullopt);
     autograd::GradFunction grad = [tensor, out]() {
-        auto resulting_shape = core::get_shape_without_padding(tensor->get_value());
-        auto res = tt::operations::primary::moreh_mean_backward(out->get_grad(), std::nullopt, false, resulting_shape);
+        auto resulting_shape = tensor->get_value().get_shape();
+        auto res = ttnn::moreh_mean_backward(
+            out->get_grad(), std::nullopt, false, resulting_shape, std::nullopt, std::nullopt, std::nullopt);
         tensor->add_grad(res);
     };
-    std::vector<autograd::NodeId> links = autograd::get_links(tensor);
+    auto links = autograd::get_links(tensor);
 
     out->set_node(autograd::ctx().add_backward_node(std::move(grad), links));
     return out;
