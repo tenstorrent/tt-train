@@ -1,3 +1,4 @@
+#include "core/tt_tensor_utils.hpp"
 #include "core/ttnn_all_includes.hpp"
 
 namespace ttml::autograd {
@@ -8,7 +9,9 @@ template <typename Model>
 void clip_gradient_norm_(Model& model, float max_norm) {
     for (auto& [name, param] : model.parameters()) {
         auto& grad = param->get_grad();
-        clip_tensor_norm_(grad, max_norm);
+        if (core::is_tensor_initialized(grad)) {
+            clip_tensor_norm_(grad, max_norm);
+        }
     }
 };
 

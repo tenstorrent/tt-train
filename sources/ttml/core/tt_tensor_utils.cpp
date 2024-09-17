@@ -140,4 +140,6 @@ std::vector<float> to_vector(const tt::tt_metal::Tensor& tensor) {
     return final_res;
 }
 
+bool is_tensor_initialized(const tt::tt_metal::Tensor& tensor) { return tensor.tensor_attributes != nullptr; }
+
 }  // namespace ttml::core
