@@ -58,7 +58,7 @@ void Tensor::backward() {
     }
 }
 
-bool Tensor::is_grad_initialized() const { return this->get_grad().tensor_attributes != nullptr; }
+bool Tensor::is_grad_initialized() const { return core::is_tensor_initialized(get_grad()); }
 
 void Tensor::try_init_grad(bool init_ones) {
     if (is_grad_initialized()) {

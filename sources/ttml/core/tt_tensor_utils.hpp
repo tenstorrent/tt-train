@@ -20,4 +20,6 @@ tt::tt_metal::Tensor from_vector(
 
 std::vector<float> to_vector(const tt::tt_metal::Tensor& tensor);
 
+[[nodiscard]] bool is_tensor_initialized(const tt::tt_metal::Tensor& tensor);
+
 }  // namespace ttml::core
