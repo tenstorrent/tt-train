@@ -116,3 +116,14 @@ TEST(TensorUtilsTest, TestOnes_1) {
         EXPECT_EQ(val, 1.F);
     }
 }
+
+TEST(TensorUtilsTest, TestIsInitialized) {
+    auto* device = &ttml::autograd::ctx().get_device();
+
+    tt::tt_metal::Tensor tensor;
+    EXPECT_FALSE(ttml::core::is_tensor_initialized(tensor));
+
+    tt::tt_metal::Shape shape = {1, 2, 3, 4};
+    tensor = ttml::core::zeros(ttnn::Shape(shape), device);
+    EXPECT_TRUE(ttml::core::is_tensor_initialized(tensor));
+}

@@ -1,6 +1,9 @@
 
 #include <iostream>
 #include <mnist/mnist_reader.hpp>
+#include <ttnn/operations/eltwise/ternary/where.hpp>
+#include <ttnn/tensor/tensor_utils.hpp>
+#include <ttnn/tensor/types.hpp>
 
 #include "autograd/auto_context.hpp"
 #include "autograd/tensor.hpp"
@@ -112,6 +115,7 @@ int main() {
 
     int training_step = 0;
     const size_t num_epochs = 10;
+
     for (size_t epoch = 0; epoch < num_epochs; ++epoch) {
         for (const auto& [data, target] : train_dataloader) {
             optimizer.zero_grad();
