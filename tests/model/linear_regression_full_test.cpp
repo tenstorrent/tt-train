@@ -30,10 +30,10 @@ TEST_F(LinearRegressionFullTest, TestLinearRegressionFull) {
         targets.push_back(static_cast<float>(i) * 0.1F);
     }
 
-    auto data_tensor = std::make_shared<ttml::autograd::Tensor>(
+    auto data_tensor = ttml::autograd::create_tensor(
         ttml::core::from_vector(features, ttml::core::create_shape({batch_size, 1, 1, num_features}), device));
 
-    auto targets_tensor = std::make_shared<ttml::autograd::Tensor>(
+    auto targets_tensor = ttml::autograd::create_tensor(
         ttml::core::from_vector(targets, ttml::core::create_shape({batch_size, 1, 1, 1}), device));
 
     auto model = ttml::modules::LinearLayer(num_features, 1);
