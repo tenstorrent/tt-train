@@ -13,7 +13,7 @@ TEST(UnaryOpsTest, GlobalMean) {
     auto shape = ttml::core::create_shape({2, 1, 1, 4});
     auto tensor = ttml::core::from_vector(test_data, shape, &ttml::autograd::ctx().get_device());
 
-    auto tensor_ptr = std::make_shared<ttml::autograd::Tensor>(tensor);
+    auto tensor_ptr = ttml::autograd::create_tensor(tensor);
 
     auto result = ttml::ops::mean(tensor_ptr);
     auto result_data = ttml::core::to_vector(result->get_value());

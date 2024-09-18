@@ -11,7 +11,7 @@ namespace ttml::ops {
 
 autograd::TensorPtr linear_op(
     const autograd::TensorPtr& tensor, const autograd::TensorPtr& weight, const autograd::TensorPtr& bias) {
-    autograd::TensorPtr out = std::make_shared<autograd::Tensor>();
+    auto out = autograd::create_tensor();
     out->set_value(ttnn::linear(
         tensor->get_value(),
         weight->get_value(),

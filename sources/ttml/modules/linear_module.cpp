@@ -12,11 +12,11 @@ void LinearLayer::initialize_tensors(uint32_t in_features, uint32_t out_features
     auto weight_shape = core::create_shape({1, 1, out_features, in_features});
     std::vector<float> weight_vec((size_t)out_features * in_features);
     init::xavier_uniform_init(weight_vec, init::FanParams{in_features, out_features});
-    m_weight = std::make_shared<autograd::Tensor>(core::from_vector(weight_vec, weight_shape, device));
+    m_weight = ttml::autograd::create_tensor(core::from_vector(weight_vec, weight_shape, device));
 
     auto bias_shape = core::create_shape({1, 1, 1, out_features});
     auto bias = core::zeros(bias_shape, device);
-    m_bias = std::make_shared<autograd::Tensor>(bias);
+    m_bias = ttml::autograd::create_tensor(bias);
 }
 
 LinearLayer::LinearLayer(uint32_t in_features, uint32_t out_features) {

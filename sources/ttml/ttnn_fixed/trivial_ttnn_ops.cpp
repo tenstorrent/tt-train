@@ -24,7 +24,7 @@ tt::tt_metal::Tensor max(const tt::tt_metal::Tensor& t, int dim, bool keepdim) {
 // Stable softmax implementation
 // ttnn::softmax also exists, but it is not stable (even after max subtraction optimization)
 tt::tt_metal::Tensor softmax(const tt::tt_metal::Tensor& t, int dim) {
-    auto t_max = max(t, dim, /* keepdim */ true);
+    auto t_max = ttnn_fixed::max(t, dim, /* keepdim */ true);
     auto t_sub_max = ttnn::subtract(t, t_max);
     auto t_sub_max_exp = ttnn::exp(t_sub_max);
     auto t_sum_over_dim =

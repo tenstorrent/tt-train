@@ -71,9 +71,9 @@ int main() {
     const size_t num_features = 784;
     auto* device = &ttml::autograd::ctx().get_device();
 
-    auto batch = std::make_shared<ttml::autograd::Tensor>(
+    auto batch = ttml::autograd::create_tensor(
         ttml::core::zeros(ttml::core::create_shape({batch_size, 1, 1, num_features}), device));
-    auto target = std::make_shared<ttml::autograd::Tensor>(
+    auto target = ttml::autograd::create_tensor(
         ttml::core::zeros(ttml::core::create_shape({batch_size, 1, 1, num_targets}), device));
 
     auto model_params = ttml::modules::MultiLayerPerceptronParameters{
