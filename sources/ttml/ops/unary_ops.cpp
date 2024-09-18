@@ -14,7 +14,7 @@
 namespace ttml::ops {
 
 autograd::TensorPtr relu(const autograd::TensorPtr& tensor) {
-    autograd::TensorPtr out = std::make_shared<autograd::Tensor>();
+    auto out = autograd::create_tensor();
     out->set_value(ttnn::relu(tensor->get_value()));
     autograd::GradFunction grad = [tensor, out]() {
         tt::tt_metal::MemoryConfig mem_config;
@@ -29,7 +29,7 @@ autograd::TensorPtr relu(const autograd::TensorPtr& tensor) {
 }
 
 autograd::TensorPtr gelu(const autograd::TensorPtr& tensor) {
-    autograd::TensorPtr out = std::make_shared<autograd::Tensor>();
+    auto out = autograd::create_tensor();
     out->set_value(ttnn::gelu(tensor->get_value()));
     autograd::GradFunction grad = [tensor, out]() {
         tt::tt_metal::MemoryConfig mem_config;
@@ -47,8 +47,7 @@ autograd::TensorPtr gelu(const autograd::TensorPtr& tensor) {
 
 autograd::TensorPtr mean(const autograd::TensorPtr& tensor) {
     auto shape = core::create_shape({1, 1, 1, 1});
-    autograd::TensorPtr out =
-        std::make_shared<autograd::Tensor>(core::from_vector({0.F}, shape, &autograd::ctx().get_device()));
+    autograd::TensorPtr out = autograd::create_tensor(core::from_vector({0.F}, shape, &autograd::ctx().get_device()));
     ttnn::moreh_mean(
         tensor->get_value(), std::nullopt, true, std::nullopt, out->get_value(), std::nullopt, std::nullopt);
     autograd::GradFunction grad = [tensor, out]() {
@@ -67,7 +66,7 @@ autograd::TensorPtr broadcast_batch(const autograd::TensorPtr& tensor, uint32_t 
     if (new_batch_dim == 1 || tensor->get_value().shape()[0] == new_batch_dim) {
         return tensor;
     }
-    autograd::TensorPtr out = std::make_shared<autograd::Tensor>();
+    auto out = ttml::autograd::create_tensor();
     auto repeats = core::create_shape({new_batch_dim, 1, 1, 1});
     // currently assuming tensor came with shape: {1,X,Y,Z} and we want to get {B,X,Y,Z}
     out->set_value(ttnn::repeat(tensor->get_value(), repeats));

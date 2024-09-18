@@ -44,7 +44,11 @@ private:
     void try_init_grad(bool init_ones = false);
 };
 
-// TensorPtr createAutoTensor();
-
 using TensorPtr = std::shared_ptr<Tensor>;
+
+template <typename... Args>
+TensorPtr create_tensor(Args &&... args) {
+    return std::make_shared<Tensor>(std::forward<Args>(args)...);
+}
+
 }  // namespace ttml::autograd

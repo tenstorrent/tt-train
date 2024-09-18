@@ -17,7 +17,7 @@
 namespace ttml::ops {
 
 autograd::TensorPtr operator+(const autograd::TensorPtr& a, const autograd::TensorPtr& b) {
-    autograd::TensorPtr out = std::make_shared<autograd::Tensor>();
+    auto out = autograd::create_tensor();
 
     out->set_value(ttnn::add(a->get_value(), b->get_value()));
     autograd::GradFunction grad = [a, b, out]() {
@@ -34,7 +34,7 @@ autograd::TensorPtr operator+(const autograd::TensorPtr& a, const autograd::Tens
 }
 
 autograd::TensorPtr operator-(const autograd::TensorPtr& a, const autograd::TensorPtr& b) {
-    autograd::TensorPtr out = std::make_shared<autograd::Tensor>();
+    auto out = autograd::create_tensor();
 
     out->set_value(ttnn::subtract(a->get_value(), b->get_value()));
     autograd::GradFunction grad = [a, b, out]() {
@@ -51,7 +51,7 @@ autograd::TensorPtr operator-(const autograd::TensorPtr& a, const autograd::Tens
 }
 
 autograd::TensorPtr operator*(const autograd::TensorPtr& a, const autograd::TensorPtr& b) {
-    autograd::TensorPtr out = std::make_shared<autograd::Tensor>();
+    auto out = autograd::create_tensor();
 
     out->set_value(ttnn::multiply(a->get_value(), b->get_value()));
     autograd::GradFunction grad = [a, b, out]() {
@@ -70,7 +70,8 @@ autograd::TensorPtr operator*(const autograd::TensorPtr& a, const autograd::Tens
 }
 
 autograd::TensorPtr operator/(const autograd::TensorPtr& a, const autograd::TensorPtr& b) {
-    autograd::TensorPtr out = std::make_shared<autograd::Tensor>();
+    auto out = autograd::create_tensor();
+
     out->set_value(ttnn::divide(a->get_value(), b->get_value()));
     autograd::GradFunction grad = [a, b, out]() {
         tt::tt_metal::MemoryConfig mem_config;

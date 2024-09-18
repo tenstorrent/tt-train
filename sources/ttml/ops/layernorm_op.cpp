@@ -18,7 +18,7 @@
 namespace ttml::ttml::ops {
 
 autograd::TensorPtr layernorm(const autograd::TensorPtr& tensor) {
-    autograd::TensorPtr out = std::make_shared<autograd::Tensor>();
+    autograd::TensorPtr out = autograd::create_tensor();
     tt::tt_metal::Tensor mean =
         core::zeros(core::create_shape({tensor->get_value().get_shape()[0], 1, 1, 1}), &autograd::ctx().get_device());
     tt::tt_metal::Tensor rstd =
