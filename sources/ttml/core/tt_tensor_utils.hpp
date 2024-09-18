@@ -8,12 +8,11 @@
 #include "core/ttnn_fwd.hpp"
 
 namespace ttml::core {
-// for now we are using bfloat16 type
-void fill(tt::tt_metal::Tensor& tensor, const float value);
 
 tt::tt_metal::Tensor zeros_like(const tt::tt_metal::Tensor& tensor);
 tt::tt_metal::Tensor ones_like(const tt::tt_metal::Tensor& tensor);
 
+tt::tt_metal::Tensor full(const ttnn::Shape& shape, float value, tt::tt_metal::Device* device);
 tt::tt_metal::Tensor zeros(const ttnn::Shape& shape, tt::tt_metal::Device* device);
 tt::tt_metal::Tensor ones(const ttnn::Shape& shape, tt::tt_metal::Device* device);
 tt::tt_metal::Tensor from_vector(

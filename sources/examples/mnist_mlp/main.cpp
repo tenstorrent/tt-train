@@ -131,6 +131,7 @@ int main() {
             ttml::autograd::ctx().reset_graph();
             training_step++;
         }
+
         const float test_accuracy = evaluate(test_dataloader, model, num_targets);
         fmt::print(
             "Epoch: {:3d} | Average Loss: {:.4f} | Accuracy: {:.4f}%\n",

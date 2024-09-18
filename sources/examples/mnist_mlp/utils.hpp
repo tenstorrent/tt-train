@@ -1,24 +1,31 @@
+#pragma once
+
+#include <fmt/core.h>
+
+#include <cassert>
+#include <chrono>
 #include <cstddef>
+#include <string>
+#include <unordered_map>
 
 class LossAverageMeter {
     float m_sum = 0.0F;
     size_t m_count = 0;
 
 public:
-    void update(float loss, size_t count = 1) {
-        m_sum += loss * static_cast<float>(count);
-        m_count += count;
-    }
+    void update(float loss, size_t count = 1);
 
-    [[nodiscard]] float average() const {
-        if (m_count == 0) {
-            return 0.F;
-        }
-        return m_sum / static_cast<float>(m_count);
-    }
+    [[nodiscard]] float average() const;
 
-    void reset() {
-        m_sum = 0.0F;
-        m_count = 0;
-    }
+    void reset();
+};
+
+class Timers {
+public:
+    void start(const std::string_view& name);
+
+    long long stop(const std::string_view& name);
+
+private:
+    std::unordered_map<std::string, std::chrono::high_resolution_clock::time_point> m_timers;
 };

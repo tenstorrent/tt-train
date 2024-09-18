@@ -5,10 +5,12 @@
 #include <common/bfloat16.hpp>
 #include <cstddef>
 #include <cstdint>
+#include <functional>
 #include <optional>
 #include <stdexcept>
 #include <ttnn/operations/creation.hpp>
 #include <ttnn/tensor/types.hpp>
+#include <ttnn/types.hpp>
 
 #include "ttnn_all_includes.hpp"
 
@@ -95,19 +97,34 @@ tt::tt_metal::Tensor zeros_like(const tt::tt_metal::Tensor& tensor) { return ttn
 
 tt::tt_metal::Tensor ones_like(const tt::tt_metal::Tensor& tensor) { return ttnn::ones_like(tensor); }
 
-void fill(tt::tt_metal::Tensor& tensor, const float value) {
-    // TODO: optimize to do it in one operation
-    tensor = ttnn::multiply(ttnn::ones_like(tensor), value);
+tt::tt_metal::Tensor full(const ttnn::Shape& shape, float value, tt::tt_metal::Device* device) {
+    auto padded = shape.with_tile_padding();
+    // if the shape is not divisible by TILE_SIZE, we need to add padding
+    if (padded[2] % ttnn::types::TILE_SIZE != 0 || padded[3] % ttnn::types::TILE_SIZE != 0) {
+        int additional_padding_h =
+            (ttnn::types::TILE_SIZE - (int)padded[2] % ttnn::types::TILE_SIZE) % ttnn::types::TILE_SIZE;
+        int additional_padding_w =
+            (ttnn::types::TILE_SIZE - (int)padded[3] % ttnn::types::TILE_SIZE) % ttnn::types::TILE_SIZE;
+        auto padded_shape = ttnn::Shape(
+            {shape[0], shape[1], shape[2], shape[3]},
+            {
+                padded[0],
+                padded[1],
+                (padded[2] + additional_padding_h),
+                (padded[3] + additional_padding_w),
+            });
+        return ttnn::full(padded_shape, value, DataType::BFLOAT16, Layout::TILE, std::ref(*device));
+    }
+    // if not padding available, we can just create a tensor with the given shape
+    return ttnn::full(shape, value, DataType::BFLOAT16, Layout::TILE, std::ref(*device));
 }
 
-// TODO: optimize this functions to avoid unnecessary vector creation
 tt::tt_metal::Tensor zeros(const ttnn::Shape& shape, tt::tt_metal::Device* device) {
-    std::vector<float> data(tt::tt_metal::compute_volume(shape), 0.0F);
-    return from_vector(data, shape, device);
+    return core::full(shape, 0.F, device);
 }
+
 tt::tt_metal::Tensor ones(const ttnn::Shape& shape, tt::tt_metal::Device* device) {
-    std::vector<float> data(tt::tt_metal::compute_volume(shape), 1.0F);
-    return from_vector(data, shape, device);
+    return core::full(shape, 1.F, device);
 }
 
 tt::tt_metal::Tensor from_vector(
