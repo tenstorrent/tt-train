@@ -5,6 +5,7 @@
 #include <common/bfloat16.hpp>
 #include <cstddef>
 #include <cstdint>
+#include <functional>
 #include <optional>
 #include <stdexcept>
 #include <ttnn/operations/creation.hpp>
@@ -95,19 +96,22 @@ tt::tt_metal::Tensor zeros_like(const tt::tt_metal::Tensor& tensor) { return ttn
 
 tt::tt_metal::Tensor ones_like(const tt::tt_metal::Tensor& tensor) { return ttnn::ones_like(tensor); }
 
-void fill(tt::tt_metal::Tensor& tensor, const float value) {
-    // TODO: optimize to do it in one operation
-    tensor = ttnn::multiply(ttnn::ones_like(tensor), value);
+tt::tt_metal::Tensor full(const ttnn::Shape& shape, float value, tt::tt_metal::Device* device) {
+    auto unpadded_shape = core::create_shape(shape);
+    auto output = ttnn::full(unpadded_shape, value, DataType::BFLOAT16, Layout::ROW_MAJOR);
+    if (device != nullptr) {
+        output = ttnn::to_layout(output, Layout::TILE, std::nullopt, std::nullopt, device);
+        output = ttnn::to_device(output, device, std::nullopt);
+    }
+    return output;
 }
 
-// TODO: optimize this functions to avoid unnecessary vector creation
 tt::tt_metal::Tensor zeros(const ttnn::Shape& shape, tt::tt_metal::Device* device) {
-    std::vector<float> data(tt::tt_metal::compute_volume(shape), 0.0F);
-    return from_vector(data, shape, device);
+    return core::full(shape, 0.F, device);
 }
+
 tt::tt_metal::Tensor ones(const ttnn::Shape& shape, tt::tt_metal::Device* device) {
-    std::vector<float> data(tt::tt_metal::compute_volume(shape), 1.0F);
-    return from_vector(data, shape, device);
+    return core::full(shape, 1.F, device);
 }
 
 tt::tt_metal::Tensor from_vector(

@@ -110,6 +110,7 @@ int main() {
     fmt::print("    Nesterov: {}\n", sgd_config.nesterov);
     auto optimizer = ttml::optimizers::SGD(model.parameters(), sgd_config);
 
+    Timers timers;
     LossAverageMeter loss_meter;
     const int logging_interval = 50;
 
@@ -117,6 +118,7 @@ int main() {
     const size_t num_epochs = 10;
 
     for (size_t epoch = 0; epoch < num_epochs; ++epoch) {
+        timers.start("epoch");
         for (const auto& [data, target] : train_dataloader) {
             optimizer.zero_grad();
             auto output = model(data);
@@ -131,12 +133,19 @@ int main() {
             ttml::autograd::ctx().reset_graph();
             training_step++;
         }
+        auto epoch_ms = timers.stop("epoch");
+
+        timers.start("eval");
         const float test_accuracy = evaluate(test_dataloader, model, num_targets);
+        auto eval_ms = timers.stop("eval");
+
         fmt::print(
-            "Epoch: {:3d} | Average Loss: {:.4f} | Accuracy: {:.4f}%\n",
+            "Epoch: {:3d} | Average Loss: {:.4f} | Accuracy: {:.4f}% | Train time (ms) {} | Eval time (ms) {} \n",
             epoch + 1,
             loss_meter.average(),
-            test_accuracy * 100.F);
+            test_accuracy * 100.F,
+            epoch_ms.count(),
+            eval_ms.count());
         loss_meter.reset();
     }
 }
