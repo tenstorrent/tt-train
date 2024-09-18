@@ -94,7 +94,7 @@ int main() {
 
     // evaluate model before training (sanity check to get reasonable accuracy 1/num_targets)
     float accuracy_before_training = evaluate(test_dataloader, model, num_targets);
-    fmt::print("Accuracy before training: {}\n", evaluate(test_dataloader, model, num_targets));
+    fmt::print("Accuracy before training: {}%\n", accuracy_before_training * 100.F);
 
     const float learning_rate = 0.1F * (batch_size / 128.F);
     const float momentum = 0.9F;
@@ -133,7 +133,10 @@ int main() {
         }
         const float test_accuracy = evaluate(test_dataloader, model, num_targets);
         fmt::print(
-            "Epoch: {:3d} | Average Loss: {:.4f} | Accuracy: {:.4f}\n", epoch + 1, loss_meter.average(), test_accuracy);
+            "Epoch: {:3d} | Average Loss: {:.4f} | Accuracy: {:.4f}%\n",
+            epoch + 1,
+            loss_meter.average(),
+            test_accuracy * 100.F);
         loss_meter.reset();
     }
 }
