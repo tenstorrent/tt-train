@@ -19,12 +19,10 @@ namespace ttml::ttml::ops {
 
 autograd::TensorPtr layernorm(const autograd::TensorPtr& tensor) {
     autograd::TensorPtr out = std::make_shared<autograd::Tensor>();
-    tt::tt_metal::Tensor mean = core::zeros(
-        ttnn::Shape(std::array<uint32_t, 4>{tensor->get_value().get_shape()[0], 1, 1, 1}),
-        &autograd::ctx().get_device());
-    tt::tt_metal::Tensor rstd = core::zeros(
-        ttnn::Shape(std::array<uint32_t, 4>{tensor->get_value().get_shape()[0], 1, 1, 1}),
-        &autograd::ctx().get_device());
+    tt::tt_metal::Tensor mean =
+        core::zeros(core::create_shape({tensor->get_value().get_shape()[0], 1, 1, 1}), &autograd::ctx().get_device());
+    tt::tt_metal::Tensor rstd =
+        core::zeros(core::create_shape({tensor->get_value().get_shape()[0], 1, 1, 1}), &autograd::ctx().get_device());
 
     auto out_tensors = tt::operations::primary::moreh_layernorm(
         tensor->get_value(), 0, 1e-4F, /*beta*/ std::nullopt, /*gamma*/ std::nullopt, mean, rstd);

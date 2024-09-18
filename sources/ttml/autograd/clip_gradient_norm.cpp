@@ -10,7 +10,7 @@ void clip_tensor_norm_(tt::tt_metal::Tensor& tensor, float max_norm) {
 
     auto squared = ttnn::multiply(tensor, tensor);
 
-    ttnn::Shape shape(std::array<uint32_t, 4>{1, 1, 1, 1});
+    auto shape = core::create_shape({1, 1, 1, 1});
     auto out = ttml::core::from_vector({0.F}, shape, &ttml::autograd::ctx().get_device());
     ttnn::moreh_sum(squared, std::nullopt, true, out, squared.memory_config(), std::nullopt);
     auto grad_norm_tensor = ttnn::sqrt(out);

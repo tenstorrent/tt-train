@@ -26,9 +26,9 @@ TEST_F(AutogradTest, TestSum) {
     auto* device = &ttml::autograd::ctx().get_device();
     std::vector<float> test_data1 = {1.F, 2.F, 3.F, 4.F};
     std::vector<float> test_data2 = {4.F, 3.F, 2.F, 1.F};
-    tt::tt_metal::LegacyShape shape = {1, 1, 1, 4};
-    auto tensor1 = ttml::core::from_vector(test_data1, ttnn::Shape(shape), device);
-    auto tensor2 = ttml::core::from_vector(test_data2, ttnn::Shape(shape), device);
+    auto shape = ttml::core::create_shape({1, 1, 1, 4});
+    auto tensor1 = ttml::core::from_vector(test_data1, shape, device);
+    auto tensor2 = ttml::core::from_vector(test_data2, shape, device);
 
     auto t1 = std::make_shared<ttml::autograd::Tensor>(tensor1);
     auto t2 = std::make_shared<ttml::autograd::Tensor>(tensor2);
@@ -55,9 +55,9 @@ TEST_F(AutogradTest, TestMul) {
     auto* device = &ttml::autograd::ctx().get_device();
     std::vector<float> test_data1 = {1.F, 2.F, 3.F, 4.F};
     std::vector<float> test_data2 = {4.F, 3.F, 2.F, 1.F};
-    tt::tt_metal::LegacyShape shape = {1, 1, 1, 4};
-    auto tensor1 = ttml::core::from_vector(test_data1, ttnn::Shape(shape), device);
-    auto tensor2 = ttml::core::from_vector(test_data2, ttnn::Shape(shape), device);
+    auto shape = ttml::core::create_shape({1, 1, 1, 4});
+    auto tensor1 = ttml::core::from_vector(test_data1, shape, device);
+    auto tensor2 = ttml::core::from_vector(test_data2, shape, device);
 
     auto t1 = std::make_shared<ttml::autograd::Tensor>(tensor1);
     auto t2 = std::make_shared<ttml::autograd::Tensor>(tensor2);
@@ -79,16 +79,16 @@ TEST_F(AutogradTest, BroadCastBatchTest) {
     using namespace ttml::ops;
     auto* device = &ttml::autograd::ctx().get_device();
     std::vector<float> test_data1 = {1.F, 2.F, 3.F, 4.F};
-    ttnn::Shape shape(std::vector<uint32_t>{1, 1, 1, 4});
+    auto shape = ttml::core::create_shape({1, 1, 1, 4});
     auto tensor1 = ttml::core::from_vector(test_data1, shape, device);
     auto t1 = std::make_shared<ttml::autograd::Tensor>(tensor1);
     uint32_t new_batch = 4;
     auto res = ttml::ops::broadcast_batch(t1, new_batch);
     res->backward();
     auto t1_back = ttml::core::to_vector(t1->get_grad());
-    ttnn::Shape batch_shape(std::array<uint32_t, 4>{4, 1, 1, 4});
-    ttnn::Shape new_shape = res->get_value().get_shape();
-    ttnn::Shape back_shape = t1->get_grad().get_shape();
+    auto batch_shape = ttml::core::create_shape({4, 1, 1, 4});
+    auto new_shape = res->get_value().get_shape();
+    auto back_shape = t1->get_grad().get_shape();
 
     for (size_t i = 0; i < 4; i++) {
         EXPECT_EQ(new_shape[i], batch_shape[i]);

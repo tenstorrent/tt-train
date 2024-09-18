@@ -1,5 +1,6 @@
 #pragma once
 
+#include <initializer_list>
 #include <ttnn/tensor/types.hpp>
 #include <vector>
 
@@ -21,5 +22,9 @@ tt::tt_metal::Tensor from_vector(
 std::vector<float> to_vector(const tt::tt_metal::Tensor& tensor);
 
 [[nodiscard]] bool is_tensor_initialized(const tt::tt_metal::Tensor& tensor);
+
+[[nodiscard]] ttnn::Shape create_shape(const std::array<uint32_t, 4>& args);
+
+[[nodiscard]] ttnn::Shape create_shape(const ttnn::Shape& shape);
 
 }  // namespace ttml::core

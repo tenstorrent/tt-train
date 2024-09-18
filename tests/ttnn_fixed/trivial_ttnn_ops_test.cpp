@@ -15,8 +15,8 @@ TEST(TrivialTnnFixedTest, TestMax_0) {
     auto* device = &ttml::autograd::ctx().get_device();
 
     std::vector<float> data(24, -1.F);
-    tt::tt_metal::LegacyShape shape = {1, 2, 3, 4};
-    auto tensor = ttml::core::from_vector(data, ttnn::Shape(shape), device);
+    auto shape = ttml::core::create_shape({1, 2, 3, 4});
+    auto tensor = ttml::core::from_vector(data, shape, device);
     auto res = ttml::ttnn_fixed::max(tensor, /* dim */ 3, /* keepdim */ true);
     auto res_vector = ttml::core::to_vector(res);
     EXPECT_EQ(res_vector.size(), 6);
@@ -28,14 +28,14 @@ TEST(TrivialTnnFixedTest, TestMax_0) {
 TEST(TrivialTnnFixedTest, TestMax_1) {
     auto* device = &ttml::autograd::ctx().get_device();
 
-    tt::tt_metal::LegacyShape shape = {4, 1, 1, 4};
+    auto shape = ttml::core::create_shape({4, 1, 1, 4});
     std::vector<float> data(16);
     for (int i = 0; i < 4; ++i) {
         for (int j = 0; j < 4; ++j) {
             data[i * 4 + j] = -static_cast<float>(i + 1);
         }
     }
-    auto tensor = ttml::core::from_vector(data, ttnn::Shape(shape), device);
+    auto tensor = ttml::core::from_vector(data, shape, device);
     auto res = ttml::ttnn_fixed::max(tensor, /* dim */ 3, /* keepdim */ true);
     auto res_vector = ttml::core::to_vector(res);
     EXPECT_EQ(res_vector.size(), 4);
@@ -53,8 +53,8 @@ TEST(TrivialTnnFixedTest, TestStableSoftmax_0) {
     for (int i = 0; i < data.size(); ++i) {
         data[i] = 100.F + static_cast<float>(i);
     }
-    tt::tt_metal::LegacyShape shape = {batch_size, 1, 1, features};
-    auto tensor = ttml::core::from_vector(data, ttnn::Shape(shape), device);
+    auto shape = ttml::core::create_shape({batch_size, 1, 1, features});
+    auto tensor = ttml::core::from_vector(data, shape, device);
     auto tensor_data = ttml::core::to_vector(tensor);
     EXPECT_NEAR(tensor_data[0], 100.F, 1e-2);
     EXPECT_NEAR(tensor_data[1], 101.F, 1e-2);
@@ -74,8 +74,8 @@ TEST(TrivialTnnFixedTest, TestStableSoftmax_1) {
     for (int i = 0; i < data.size(); ++i) {
         data[i] = -100.F + static_cast<float>(i);
     }
-    tt::tt_metal::LegacyShape shape = {batch_size, 1, 1, features};
-    auto tensor = ttml::core::from_vector(data, ttnn::Shape(shape), device);
+    auto shape = ttml::core::create_shape({batch_size, 1, 1, features});
+    auto tensor = ttml::core::from_vector(data, shape, device);
     auto tensor_data = ttml::core::to_vector(tensor);
     EXPECT_NEAR(tensor_data[0], -100.F, 1e-2);
     EXPECT_NEAR(tensor_data[1], -99.F, 1e-2);
@@ -86,6 +86,32 @@ TEST(TrivialTnnFixedTest, TestStableSoftmax_1) {
     EXPECT_NEAR(res_vector[1], 0.7311F, 2e-2);
 }
 
+TEST(TrivialTnnFixedTest, TestStableSoftmax_2) {
+    auto* device = &ttml::autograd::ctx().get_device();
+
+    const size_t batch_size = 1U;
+    const size_t features = 10U;
+    std::vector<float> data(batch_size * features, 0.F);
+    data[0] = 1.0F;
+    auto shape = ttml::core::create_shape({batch_size, 1, 1, features});
+    auto tensor = ttml::core::from_vector(data, shape, device);
+    auto tensor_data = ttml::core::to_vector(tensor);
+    EXPECT_NEAR(tensor_data[0], 1.F, 1e-2);
+    EXPECT_NEAR(tensor_data[1], 0.F, 1e-2);
+
+    auto res = ttml::ttnn_fixed::softmax(tensor, /* dim */ 3);
+    auto res_vector = ttml::core::to_vector(res);
+
+    auto exp_sum = 0.0F;
+    for (auto& elem : data) {
+        exp_sum += std::exp(elem);
+    }
+
+    for (int i = 0; i < res_vector.size(); ++i) {
+        EXPECT_NEAR(res_vector[i], std::exp(data[i]) / exp_sum, 1e-2);
+    }
+}
+
 TEST(TrivialTnnFixedTest, TestSumOverBatch_0) {
     auto* device = &ttml::autograd::ctx().get_device();
 
@@ -94,8 +120,8 @@ TEST(TrivialTnnFixedTest, TestSumOverBatch_0) {
     std::vector<float> data(batch_size * features);
     std::iota(data.begin(), data.end(), 0);
 
-    tt::tt_metal::LegacyShape shape = {batch_size, 1, 1, features};
-    auto tensor = ttml::core::from_vector(data, ttnn::Shape(shape), device);
+    auto shape = ttml::core::create_shape({batch_size, 1, 1, features});
+    auto tensor = ttml::core::from_vector(data, shape, device);
     auto tensor_shape = tensor.get_shape();
     EXPECT_EQ(tensor_shape[0], batch_size);
     EXPECT_EQ(tensor_shape[1], 1U);
@@ -124,8 +150,8 @@ TEST(TrivialTnnFixedTest, TestSumOverBatch_1) {
         value += step;
     }
 
-    tt::tt_metal::LegacyShape shape = {batch_size, 1, 1, features};
-    auto tensor = ttml::core::from_vector(data, ttnn::Shape(shape), device);
+    auto shape = ttml::core::create_shape({batch_size, 1, 1, features});
+    auto tensor = ttml::core::from_vector(data, shape, device);
     auto tensor_shape = tensor.get_shape();
     EXPECT_EQ(tensor_shape[0], batch_size);
     EXPECT_EQ(tensor_shape[1], 1U);
