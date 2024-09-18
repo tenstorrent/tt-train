@@ -122,8 +122,8 @@ tt::tt_metal::Tensor from_vector(
     }
     auto owned_buffer = create_owned_buffer_from_vector_of_floats(buffer, data_type);
     // remove possible paddings from the shape (it conflicts with ROW MAJOR)
-    auto tt_shape = tt::tt_metal::LegacyShape({shape[0], shape[1], shape[2], shape[3]});
-    auto output = tt::tt_metal::Tensor(OwnedStorage{owned_buffer}, ttnn::Shape(tt_shape), data_type, Layout::ROW_MAJOR);
+    auto unpadded_shape = core::create_shape(shape);
+    auto output = tt::tt_metal::Tensor(OwnedStorage{owned_buffer}, unpadded_shape, data_type, Layout::ROW_MAJOR);
     if (device != nullptr) {
         output = ttnn::to_layout(output, layout, std::nullopt, output_mem_config, device);
         output = ttnn::to_device(output, device, output_mem_config);
@@ -142,4 +142,10 @@ std::vector<float> to_vector(const tt::tt_metal::Tensor& tensor) {
 
 bool is_tensor_initialized(const tt::tt_metal::Tensor& tensor) { return tensor.tensor_attributes != nullptr; }
 
+ttnn::Shape create_shape(const ttnn::Shape& shape) {
+    auto legacy_shape = tt::tt_metal::LegacyShape({shape[0], shape[1], shape[2], shape[3]});
+    return ttnn::Shape(legacy_shape);
+}
+
+ttnn::Shape create_shape(const std::array<uint32_t, 4>& args) { return ttnn::Shape{args}; }
 }  // namespace ttml::core

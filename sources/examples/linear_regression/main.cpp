@@ -54,10 +54,10 @@ int main() {
                 std::move(target.begin(), target.end(), std::back_inserter(targets));
             }
 
-            auto data_tensor = std::make_shared<ttml::autograd::Tensor>(ttml::core::from_vector(
-                data, ttnn::Shape(std::array<uint32_t, 4>{batch_size, 1, 1, num_features}), device));
-            auto targets_tensor = std::make_shared<ttml::autograd::Tensor>(ttml::core::from_vector(
-                targets, ttnn::Shape(std::array<uint32_t, 4>{batch_size, 1, 1, num_targets}), device));
+            auto data_tensor = std::make_shared<ttml::autograd::Tensor>(
+                ttml::core::from_vector(data, ttml::core::create_shape({batch_size, 1, 1, num_features}), device));
+            auto targets_tensor = std::make_shared<ttml::autograd::Tensor>(
+                ttml::core::from_vector(targets, ttml::core::create_shape({batch_size, 1, 1, num_targets}), device));
             return std::make_pair(data_tensor, targets_tensor);
         };
 
