@@ -1,6 +1,6 @@
 project(mnist_mlp)
 
-set(SOURCES main.cpp)
+set(SOURCES main.cpp utils.cpp)
 
 CPMAddPackage(
     NAME mnist_dataset
