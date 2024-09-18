@@ -13,13 +13,7 @@ tt::tt_metal::Tensor sum_over_batch(const tt::tt_metal::Tensor& t) {
 }
 
 // This is a workaround for the lack of working `ttnn::max` implementation.
-tt::tt_metal::Tensor max(const tt::tt_metal::Tensor& t, int dim, bool keepdim) {
-    const float kMinValue = -10000.F;
-    auto mask = core::ones(t.get_shape(), t.device());
-    auto masked_t = ttnn::where(ttnn::eq(mask, 1.F), t, kMinValue);
-    auto res = ttnn::max(masked_t, dim, keepdim);
-    return res;
-}
+tt::tt_metal::Tensor max(const tt::tt_metal::Tensor& t, int dim, bool keepdim) { return ttnn::max(t, dim, keepdim); }
 
 // Stable softmax implementation
 // ttnn::softmax also exists, but it is not stable (even after max subtraction optimization)
