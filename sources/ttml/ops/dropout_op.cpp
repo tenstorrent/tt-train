@@ -9,7 +9,8 @@
 #include "core/tt_tensor_utils.hpp"
 #include "core/ttnn_all_includes.hpp"
 
-namespace ttml::ttml::ops {
+namespace ttml::ops {
+
 autograd::TensorPtr dropout(const autograd::TensorPtr& tensor, float probability) {
     auto mask = core::ones_like(tensor->get_value());
     // dropout seed is not properly used in ttnn::dropout
@@ -29,4 +30,5 @@ autograd::TensorPtr dropout(const autograd::TensorPtr& tensor, float probability
 
     return out;
 }
-}  // namespace ttml::ttml::ops
+
+}  // namespace ttml::ops
