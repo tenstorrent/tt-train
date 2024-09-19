@@ -56,7 +56,7 @@ autograd::TensorPtr layernorm(
         beta->add_grad(res[2].value());
     };
 
-    std::vector<autograd::NodeId> links = autograd::get_links(tensor);
+    auto links = autograd::get_links(tensor);
     out->set_node(autograd::ctx().add_backward_node(std::move(grad), links));
 
     return out;
