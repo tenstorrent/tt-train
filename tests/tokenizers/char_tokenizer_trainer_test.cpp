@@ -7,7 +7,7 @@ using namespace ttml::tokenizers;
 
 // Test fixture for CharTokenizerTrainer
 class CharTokenizerTrainerTest : public ::testing::Test {
-   protected:
+protected:
     // Example CharTokenizerTrainer instance
     CharTokenizerTrainer trainer;
 };
