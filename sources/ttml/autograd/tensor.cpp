@@ -66,4 +66,10 @@ void Tensor::try_init_grad(bool init_ones) {
     }
     this->set_grad(init_ones ? ttml::core::ones_like(m_value) : ttml::core::zeros_like(m_value));
 }
+void Tensor::set_node(const std::optional<NodeId>& node) {
+    if (m_node_id.has_value()) {
+        throw std::runtime_error("Graph node is already set for this tensor!");
+    }
+    m_node_id = node;
+}
 }  // namespace ttml::autograd
