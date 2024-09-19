@@ -184,11 +184,10 @@ tt::tt_metal::Tensor from_vector<uint32_t>(
     std::vector<uint32_t> buffer_copy = buffer;
     auto unpadded_shape = core::create_shape(shape);
 
-    auto output = ttnn::operations::core::detail::create_owned_tensor(
-        std::move(buffer_copy), unpadded_shape, DataType::UINT32, layout);
+    auto output = create_owned_tensor(std::move(buffer_copy), unpadded_shape, DataType::UINT32, Layout::ROW_MAJOR);
 
     if (device != nullptr) {
-        output = ttnn::to_layout(output, layout, DataType::UINT32, output_mem_config, device);
+        output = ttnn::to_layout(output, layout, std::nullopt, output_mem_config, device);
         output = ttnn::to_device(output, device, output_mem_config);
     }
 

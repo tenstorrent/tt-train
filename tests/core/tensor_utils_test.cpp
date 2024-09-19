@@ -71,6 +71,24 @@ TEST(TensorUtilsTest, TestUint32ToFromTensorOdd) {
     }
 }
 
+TEST(TensorUtilsTest, TestUint32ToFromTensorLargeWithBatch) {
+    auto* device = &ttml::autograd::ctx().get_device();
+    std::vector<uint32_t> test_data;
+    uint32_t batch_size = 16;
+    uint32_t vec_size = 256 * batch_size;
+    for (size_t i = 0; i < vec_size; i++) {
+        test_data.push_back(i);
+    }
+
+    auto shape = ttml::core::create_shape({batch_size, 1, 1, vec_size / batch_size});
+    auto tensor = ttml::core::from_vector<uint32_t>(test_data, shape, device);
+    auto vec_back = ttml::core::to_vector<uint32_t>(tensor);
+    ASSERT_EQ(vec_back.size(), test_data.size());
+    for (size_t i = 0; i < test_data.size(); i++) {
+        EXPECT_EQ(vec_back[i], test_data[i]);
+    }
+}
+
 TEST(TensorUtilsTest, TestFloatToFromTensorLargeWithBatch) {
     auto* device = &ttml::autograd::ctx().get_device();
     std::vector<float> test_data;
