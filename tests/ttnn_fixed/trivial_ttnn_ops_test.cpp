@@ -11,7 +11,7 @@
 #include "core/ttnn_all_includes.hpp"
 #include "ttnn_fixed/trivial_ttnn_ops.hpp"
 
-TEST(TrivialTnnFixedTest, TestMax_0) {
+TEST(TrivialTnnFixedTest, TestMax_NegativeOne) {
     auto* device = &ttml::autograd::ctx().get_device();
 
     std::vector<float> data(24, -1.F);
@@ -25,7 +25,7 @@ TEST(TrivialTnnFixedTest, TestMax_0) {
     }
 }
 
-TEST(TrivialTnnFixedTest, TestMax_1) {
+TEST(TrivialTnnFixedTest, TestMax_NegativeBatch) {
     auto* device = &ttml::autograd::ctx().get_device();
 
     auto shape = ttml::core::create_shape({4, 1, 1, 4});
@@ -65,7 +65,7 @@ TEST(TrivialTnnFixedTest, TestStableSoftmax_0) {
     EXPECT_NEAR(res_vector[1], 0.7311F, 2e-2);
 }
 
-TEST(TrivialTnnFixedTest, TestStableSoftmax_1) {
+TEST(TrivialTnnFixedTest, TestStableSoftmax_AllNegative) {
     auto* device = &ttml::autograd::ctx().get_device();
 
     const size_t batch_size = 1U;

@@ -2,6 +2,7 @@
 
 #include <gtest/gtest.h>
 
+#include <cstdint>
 #include <memory>
 #include <vector>
 
@@ -10,7 +11,7 @@
 #include "core/tt_tensor_utils.hpp"
 #include "core/ttnn_all_includes.hpp"
 
-TEST(TensorUtilsTest, TestToFromTensorEven) {
+TEST(TensorUtilsTest, TestFloatToFromTensorEven) {
     auto* device = &ttml::autograd::ctx().get_device();
     std::vector<float> test_data = {1.F, 5.F, 10.F, 15.F};
 
@@ -25,7 +26,7 @@ TEST(TensorUtilsTest, TestToFromTensorEven) {
     }
 }
 
-TEST(TensorUtilsTest, TestToFromTensorOdd) {
+TEST(TensorUtilsTest, TestFloatToFromTensorOdd) {
     auto* device = &ttml::autograd::ctx().get_device();
     std::vector<float> test_data = {30.F, 20.F, 2.F};
 
@@ -40,7 +41,37 @@ TEST(TensorUtilsTest, TestToFromTensorOdd) {
     }
 }
 
-TEST(TensorUtilsTest, TestToFromTensorLargeWithBatch) {
+TEST(TensorUtilsTest, TestUint32ToFromTensorEven) {
+    auto* device = &ttml::autograd::ctx().get_device();
+    std::vector<uint32_t> test_data = {1, 5, 10, 15};
+
+    auto shape = ttml::core::create_shape({1, 1, 1, 4});
+    auto tensor = ttml::core::from_vector<uint32_t>(test_data, shape, device);
+
+    auto vec_back = ttml::core::to_vector<uint32_t>(tensor);
+
+    ASSERT_EQ(vec_back.size(), test_data.size());
+    for (size_t i = 0; i < test_data.size(); i++) {
+        EXPECT_EQ(vec_back[i], test_data[i]);
+    }
+}
+
+TEST(TensorUtilsTest, TestUint32ToFromTensorOdd) {
+    auto* device = &ttml::autograd::ctx().get_device();
+    std::vector<uint32_t> test_data = {30, 20, 2};
+
+    auto shape = ttml::core::create_shape({1, 1, 1, 3});
+    auto tensor = ttml::core::from_vector<uint32_t>(test_data, shape, device);
+
+    auto vec_back = ttml::core::to_vector<uint32_t>(tensor);
+
+    ASSERT_EQ(vec_back.size(), test_data.size());
+    for (size_t i = 0; i < test_data.size(); i++) {
+        EXPECT_EQ(vec_back[i], test_data[i]);
+    }
+}
+
+TEST(TensorUtilsTest, TestFloatToFromTensorLargeWithBatch) {
     auto* device = &ttml::autograd::ctx().get_device();
     std::vector<float> test_data;
     uint32_t batch_size = 16;

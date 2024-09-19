@@ -8,6 +8,7 @@
 #include <functional>
 #include <optional>
 #include <stdexcept>
+#include <ttnn/operations/core/to_dtype/to_dtype_op.hpp>
 #include <ttnn/operations/creation.hpp>
 #include <ttnn/tensor/types.hpp>
 #include <ttnn/types.hpp>
@@ -18,7 +19,6 @@ namespace {
 
 // copypaste from deprecated tensor pybinds ttnn
 tt::tt_metal::OwnedBuffer create_owned_buffer_from_vector_of_floats(
-
     const std::vector<float>& data, DataType data_type) {
     switch (data_type) {
         case DataType::BFLOAT8_B: {
@@ -46,10 +46,18 @@ tt::tt_metal::OwnedBuffer create_owned_buffer_from_vector_of_floats(
     }
 }
 
-// TODO: add support for other types of data
+template <typename T>
+tt::tt_metal::Tensor create_owned_tensor(
+    std::vector<T>&& data, const ttnn::Shape& shape, tt::tt_metal::DataType data_type, tt::tt_metal::Layout layout) {
+    auto buffer = tt::tt_metal::owned_buffer::create(std::move(data));
+    auto storage = OwnedStorage{std::move(buffer)};
+    return {std::move(storage), shape, data_type, layout};
+}
+
 // TODO: optimize precomputing multipliers
-std::vector<float> untile_tensor_to_vec(const tt::tt_metal::Tensor& cpu_tensor) {
-    auto tiled_buffer = tt::tt_metal::host_buffer::get_as<bfloat16>(cpu_tensor);
+template <class T = float, class InternalT = bfloat16>
+std::vector<T> untile_tensor_to_vec(const tt::tt_metal::Tensor& cpu_tensor) {
+    auto tiled_buffer = tt::tt_metal::host_buffer::get_as<InternalT>(cpu_tensor);
     auto untiled_shape = cpu_tensor.get_shape();
     auto tiled_shape = untiled_shape.with_tile_padding();
 
@@ -59,7 +67,7 @@ std::vector<float> untile_tensor_to_vec(const tt::tt_metal::Tensor& cpu_tensor) 
         total_size *= untiled_shape[i];
     }
 
-    std::vector<float> untiled_data(total_size);
+    std::vector<T> untiled_data(total_size);
 
     auto compute_flat_index = [](const std::vector<uint32_t>& indices, ttnn::Shape& shape) -> uint32_t {
         uint32_t flat_index = 0;
@@ -76,8 +84,11 @@ std::vector<float> untile_tensor_to_vec(const tt::tt_metal::Tensor& cpu_tensor) 
     for (size_t idx = 0; idx < total_size; ++idx) {
         uint32_t untiled_index = compute_flat_index(indices, untiled_shape);
         uint32_t tiled_index = compute_flat_index(indices, tiled_shape);
-
-        untiled_data[untiled_index] = tiled_buffer[tiled_index].to_float();
+        if constexpr (std::is_same_v<InternalT, bfloat16>) {
+            untiled_data[untiled_index] = tiled_buffer[tiled_index].to_float();
+        } else {
+            untiled_data[untiled_index] = tiled_buffer[tiled_index];
+        }
 
         for (int dim = (int)tiled_shape.rank() - 1; dim >= 0; --dim) {
             if (++indices[dim] < untiled_shape[dim]) {
@@ -127,7 +138,8 @@ tt::tt_metal::Tensor ones(const ttnn::Shape& shape, tt::tt_metal::Device* device
     return core::full(shape, 1.F, device);
 }
 
-tt::tt_metal::Tensor from_vector(
+template <>
+tt::tt_metal::Tensor from_vector<float>(
     const std::vector<float>& buffer, const ttnn::Shape& shape, tt::tt_metal::Device* device) {
     const Layout layout = Layout::TILE;
     const DataType data_type = DataType::BFLOAT16;
@@ -147,13 +159,48 @@ tt::tt_metal::Tensor from_vector(
     }
     return output;
 }
-
-std::vector<float> to_vector(const tt::tt_metal::Tensor& tensor) {
+template <>
+std::vector<float> to_vector<float>(const tt::tt_metal::Tensor& tensor) {
     auto cpu_tensor = tensor.cpu();
     cpu_tensor = cpu_tensor.to(Layout::ROW_MAJOR);
 
     auto buffer = tt::tt_metal::host_buffer::get_as<bfloat16>(cpu_tensor);
     auto final_res = untile_tensor_to_vec(cpu_tensor);
+    return final_res;
+}
+
+template <>
+tt::tt_metal::Tensor from_vector<uint32_t>(
+    const std::vector<uint32_t>& buffer, const ttnn::Shape& shape, tt::tt_metal::Device* device) {
+    const Layout layout = Layout::TILE;
+    MemoryConfig output_mem_config{};
+    size_t volume = tt::tt_metal::compute_volume(shape);
+    if (buffer.size() != volume) {
+        throw std::logic_error(
+            fmt::format("Current buffer size is {} different from shape volume {}", buffer.size(), volume));
+    }
+
+    // remove possible paddings from the shape (it conflicts with ROW MAJOR)
+    std::vector<uint32_t> buffer_copy = buffer;
+    auto unpadded_shape = core::create_shape(shape);
+
+    auto output = ttnn::operations::core::detail::create_owned_tensor(
+        std::move(buffer_copy), unpadded_shape, DataType::UINT32, layout);
+
+    if (device != nullptr) {
+        output = ttnn::to_layout(output, layout, DataType::UINT32, output_mem_config, device);
+        output = ttnn::to_device(output, device, output_mem_config);
+    }
+
+    return output;
+}
+template <>
+std::vector<uint32_t> to_vector<uint32_t>(const tt::tt_metal::Tensor& tensor) {
+    auto cpu_tensor = tensor.cpu();
+    cpu_tensor = cpu_tensor.to(Layout::ROW_MAJOR);
+
+    auto buffer = tt::tt_metal::host_buffer::get_as<uint32_t>(cpu_tensor);
+    auto final_res = untile_tensor_to_vec<uint32_t, uint32_t>(cpu_tensor);
     return final_res;
 }
 

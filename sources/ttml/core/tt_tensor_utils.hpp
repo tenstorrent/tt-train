@@ -15,10 +15,11 @@ tt::tt_metal::Tensor ones_like(const tt::tt_metal::Tensor& tensor);
 tt::tt_metal::Tensor full(const ttnn::Shape& shape, float value, tt::tt_metal::Device* device);
 tt::tt_metal::Tensor zeros(const ttnn::Shape& shape, tt::tt_metal::Device* device);
 tt::tt_metal::Tensor ones(const ttnn::Shape& shape, tt::tt_metal::Device* device);
-tt::tt_metal::Tensor from_vector(
-    const std::vector<float>& buffer, const ttnn::Shape& shape, tt::tt_metal::Device* device);
 
-std::vector<float> to_vector(const tt::tt_metal::Tensor& tensor);
+template <class T = float>
+tt::tt_metal::Tensor from_vector(const std::vector<T>& buffer, const ttnn::Shape& shape, tt::tt_metal::Device* device);
+template <class T = float>
+std::vector<T> to_vector(const tt::tt_metal::Tensor& tensor);
 
 [[nodiscard]] bool is_tensor_initialized(const tt::tt_metal::Tensor& tensor);
 
