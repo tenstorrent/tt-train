@@ -11,6 +11,7 @@
 #include "core/ttnn_all_includes.hpp"
 #include "datasets/dataloader.hpp"
 #include "datasets/in_memory_dataset.hpp"
+#include "model.hpp"
 #include "ops/losses.hpp"
 #include "optimizers/sgd.hpp"
 #include "utils.hpp"
