@@ -1,4 +1,4 @@
-#include "model.hpp"
+#include "models.hpp"
 
 #include "ops/unary_ops.hpp"
 
@@ -31,4 +31,9 @@ ttml::autograd::TensorPtr MNISTModel::operator()(ttml::autograd::TensorPtr x) {
     x = ttml::ops::relu(x);
     x = (*m_fc3)(x);
     return x;
+}
+ttml::modules::MultiLayerPerceptron create_base_mlp(uint32_t num_features, uint32_t num_targets) {
+    auto model_params = ttml::modules::MultiLayerPerceptronParameters{
+        .m_input_features = num_features, .m_hidden_features = {128}, .m_output_features = num_targets};
+    return ttml::modules::MultiLayerPerceptron(model_params);
 }
