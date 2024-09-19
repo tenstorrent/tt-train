@@ -25,7 +25,7 @@ public:
 
     void set_value(const tt::tt_metal::Tensor &value) { m_value = value; }
     void set_grad(const tt::tt_metal::Tensor &grad) { m_grad = grad; }
-    void set_node(const std::optional<NodeId> &node) { m_node_id = node; }
+    void set_node(const std::optional<NodeId> &node);
     void clean_node() { m_node_id = std::nullopt; }
     void add_grad(const tt::tt_metal::Tensor &grad);
     void set_require_grad(bool require_grad) { m_require_grad = require_grad; }
