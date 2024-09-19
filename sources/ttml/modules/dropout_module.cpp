@@ -2,6 +2,7 @@
 
 #include "autograd/module_base.hpp"
 #include "ops/dropout_op.hpp"
+
 namespace ttml::modules {
 
 DropoutLayer::DropoutLayer(float probability) : m_prob(probability) { create_name("dropout"); }
@@ -13,4 +14,5 @@ DropoutLayer::DropoutLayer(float probability) : m_prob(probability) { create_nam
 
     return ttml::ops::dropout(tensor, m_prob);
 }
+
 }  // namespace ttml::modules

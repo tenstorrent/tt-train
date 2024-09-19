@@ -1,5 +1,5 @@
 
-#include <iostream>
+
 #include <mnist/mnist_reader.hpp>
 #include <ttnn/operations/eltwise/ternary/where.hpp>
 #include <ttnn/tensor/tensor_utils.hpp>
@@ -11,8 +11,7 @@
 #include "core/ttnn_all_includes.hpp"
 #include "datasets/dataloader.hpp"
 #include "datasets/in_memory_dataset.hpp"
-#include "modules/linear_module.hpp"
-#include "modules/multi_layer_perceptron.hpp"
+#include "models.hpp"
 #include "ops/losses.hpp"
 #include "optimizers/sgd.hpp"
 #include "utils.hpp"
@@ -28,6 +27,7 @@ using DataLoader = ttml::datasets::DataLoader<
 
 template <typename Model>
 float evaluate(DataLoader& test_dataloader, Model& model, size_t num_targets) {
+    model.eval();
     float num_correct = 0;
     float num_samples = 0;
     for (const auto& [data, target] : test_dataloader) {
@@ -45,6 +45,7 @@ float evaluate(DataLoader& test_dataloader, Model& model, size_t num_targets) {
             num_samples++;
         }
     }
+    model.train();
     return num_correct / num_samples;
 };
 
@@ -88,9 +89,8 @@ int main() {
     auto train_dataloader = DataLoader(training_dataset, batch_size, /* shuffle */ true, collate_fn);
     auto test_dataloader = DataLoader(test_dataset, batch_size, /* shuffle */ false, collate_fn);
 
-    auto model_params = ttml::modules::MultiLayerPerceptronParameters{
-        .m_input_features = num_features, .m_hidden_features = {128}, .m_output_features = num_targets};
-    auto model = ttml::modules::MultiLayerPerceptron(model_params);
+    // MNIST model with layer norm / dropout and 2 hidden layers
+    auto model = MNISTModel();
 
     // evaluate model before training (sanity check to get reasonable accuracy 1/num_targets)
     float accuracy_before_training = evaluate(test_dataloader, model, num_targets);
