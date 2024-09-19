@@ -47,7 +47,7 @@ tt::tt_metal::OwnedBuffer create_owned_buffer_from_vector_of_floats(
 }
 
 template <typename T>
-tt::tt_metal::Tensor create_owned_tensor(
+tt::tt_metal::Tensor ttml_create_owned_tensor(
     std::vector<T>&& data, const ttnn::Shape& shape, tt::tt_metal::DataType data_type, tt::tt_metal::Layout layout) {
     auto buffer = tt::tt_metal::owned_buffer::create(std::move(data));
     auto storage = OwnedStorage{std::move(buffer)};
@@ -184,7 +184,7 @@ tt::tt_metal::Tensor from_vector<uint32_t>(
     std::vector<uint32_t> buffer_copy = buffer;
     auto unpadded_shape = core::create_shape(shape);
 
-    auto output = create_owned_tensor(std::move(buffer_copy), unpadded_shape, DataType::UINT32, Layout::ROW_MAJOR);
+    auto output = ttml_create_owned_tensor(std::move(buffer_copy), unpadded_shape, DataType::UINT32, Layout::ROW_MAJOR);
 
     if (device != nullptr) {
         output = ttnn::to_layout(output, layout, std::nullopt, output_mem_config, device);
