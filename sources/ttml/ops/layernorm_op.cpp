@@ -15,46 +15,41 @@
 #include "core/tt_tensor_utils.hpp"
 #include "core/ttnn_all_includes.hpp"
 
-namespace ttml::ttml::ops {
+namespace ttml::ops {
 
 // simplified version of layernorm
 // it works only for 4D tensors and for the last dimension
 autograd::TensorPtr layernorm(
     const autograd::TensorPtr& tensor, const autograd::TensorPtr& gamma, const autograd::TensorPtr& beta) {
-    autograd::TensorPtr out = autograd::create_tensor();
     auto tensor_shape = tensor->get_value().get_shape();
-    tt::tt_metal::Tensor mean = core::zeros(
+    auto mean = core::zeros(
         core::create_shape({tensor_shape[0], tensor_shape[1], tensor_shape[2], 1}), &autograd::ctx().get_device());
-    tt::tt_metal::Tensor rstd = core::zeros(
+    auto rstd = core::zeros(
         core::create_shape({tensor_shape[0], tensor_shape[1], tensor_shape[2], 1}), &autograd::ctx().get_device());
+    auto output = core::zeros_like(tensor->get_value());
 
-    size_t embedding_size = tensor_shape[3];
     auto out_tensors = tt::operations::primary::moreh_layernorm(
         tensor->get_value(),
-        embedding_size,
-        1e-4F,
+        1,
+        1e-6F,
         /* gamma */ gamma->get_value(),
         /* beta */ beta->get_value(),
+        output,
         mean,
         rstd);
 
+    auto out = autograd::create_tensor();
     out->set_value(out_tensors[0].value());
+    mean = out_tensors[1].value();
+    rstd = out_tensors[2].value();
 
-    autograd::GradFunction grad = [tensor, out, mean, rstd, gamma, beta, embedding_size]() {
+    autograd::GradFunction grad = [tensor, out, mean, rstd, gamma, beta]() {
         auto input_grad = core::zeros_like(tensor->get_value());
         auto gamma_grad = core::zeros_like(gamma->get_value());
         auto beta_grad = core::zeros_like(beta->get_value());
 
         auto res = tt::operations::primary::moreh_layernorm_backward(
-            out->get_grad(),
-            tensor->get_value(),
-            mean,
-            rstd,
-            embedding_size,
-            gamma->get_value(),
-            input_grad,
-            gamma_grad,
-            beta_grad);
+            out->get_grad(), tensor->get_value(), mean, rstd, 1, gamma->get_value(), input_grad, gamma_grad, beta_grad);
 
         tensor->add_grad(res[0].value());
         gamma->add_grad(res[1].value());
@@ -66,4 +61,4 @@ autograd::TensorPtr layernorm(
 
     return out;
 }
-}  // namespace ttml::ttml::ops
+}  // namespace ttml::ops
