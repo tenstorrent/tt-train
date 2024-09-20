@@ -2,21 +2,18 @@
 
 #include "core/tt_tensor_utils.hpp"
 #include "core/ttnn_all_includes.hpp"
-#include "init/cpu_initializers.hpp"
-#include "init/ttnn_tensor_initializers.hpp"
+#include "init/tensor_initializers.hpp"
 
 namespace ttml::modules {
 
 void LinearLayer::initialize_tensors(uint32_t in_features, uint32_t out_features) {
     auto* device = &autograd::ctx().get_device();
     auto weight_shape = core::create_shape({1, 1, out_features, in_features});
-    std::vector<float> weight_vec((size_t)out_features * in_features);
-    init::xavier_uniform_init(weight_vec, init::FanParams{in_features, out_features});
-    m_weight = ttml::autograd::create_tensor(core::from_vector(weight_vec, weight_shape, device));
-
+    m_weight = ttml::autograd::create_tensor();
+    init::xavier_uniform_init(m_weight, weight_shape, init::FanParams{in_features, out_features});
     auto bias_shape = core::create_shape({1, 1, 1, out_features});
-    auto bias = core::zeros(bias_shape, device);
-    m_bias = ttml::autograd::create_tensor(bias);
+    m_bias = ttml::autograd::create_tensor();
+    init::constant_init(m_bias, bias_shape, 0.F);
 }
 
 LinearLayer::LinearLayer(uint32_t in_features, uint32_t out_features) {
