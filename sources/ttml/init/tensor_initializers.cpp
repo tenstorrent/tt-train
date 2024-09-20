@@ -28,12 +28,7 @@ void normal_init(ttml::autograd::TensorPtr& t, const ttnn::Shape& shape, NormalP
 
 void constant_init(ttml::autograd::TensorPtr& t, const ttnn::Shape& shape, float value) {
     auto* device = &autograd::ctx().get_device();
-    assert(device);
-    size_t volume = tt::tt_metal::compute_volume(shape);
-    std::vector<float> vec(volume);
-    constant_init(vec, value);
-
-    t->set_value(ttml::core::from_vector(vec, shape, device));
+    t->set_value(core::full(shape, value, device));
 }
 
 void xavier_uniform_init(ttml::autograd::TensorPtr& t, const ttnn::Shape& shape, FanParams params) {
