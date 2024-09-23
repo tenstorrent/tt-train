@@ -50,7 +50,7 @@ TEST(EmbeddingOpTest, EmbeddingForwardBackward) {
     }
 }
 
-TEST(EmbeddingOpTest, EmbeddingBadShapesBroken_0) {
+TEST(EmbeddingOpTest, EmbeddingBadShapes0_BROKEN) {
     using namespace ttml;
 
     auto* device = &autograd::ctx().get_device();
@@ -70,7 +70,7 @@ TEST(EmbeddingOpTest, EmbeddingBadShapesBroken_0) {
     EXPECT_ANY_THROW(ops::embedding_op(input, weight));
 }
 
-TEST(EmbeddingOpTest, EmbeddingBadShapesBroken_1) {
+TEST(EmbeddingOpTest, EmbeddingBadShapes1_BROKEN) {
     using namespace ttml;
 
     auto* device = &autograd::ctx().get_device();
@@ -90,7 +90,7 @@ TEST(EmbeddingOpTest, EmbeddingBadShapesBroken_1) {
     EXPECT_ANY_THROW(ops::embedding_op(input, weight));
 }
 
-TEST(EmbeddingOpTest, EmbeddingBadLayoutBroken) {
+TEST(EmbeddingOpTest, EmbeddingBadLayout_BROKEN) {
     using namespace ttml;
 
     auto* device = &autograd::ctx().get_device();
