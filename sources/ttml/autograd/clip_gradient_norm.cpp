@@ -6,7 +6,9 @@
 namespace ttml::autograd {
 
 void clip_tensor_norm_(tt::tt_metal::Tensor& tensor, float max_norm) {
-    TT_FATAL(max_norm > 0.F, "max_norm should be positive");
+    if (max_norm > 0.F) {
+        throw std::logic_error("max_norm should be positive");
+    }
 
     auto squared = ttnn::multiply(tensor, tensor);
 
