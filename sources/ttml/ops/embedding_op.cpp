@@ -11,7 +11,6 @@ autograd::TensorPtr embedding_op(const autograd::TensorPtr& tensor, const autogr
     // prepare for embedding
     auto weight_tensor = weight->get_value();
     weight_tensor = ttnn::untilize(weight_tensor);
-    weight_tensor = weight_tensor.to(Layout::ROW_MAJOR);
 
     auto embeddings = ttnn::embedding(tensor->get_value(), weight_tensor, /* pad_token */ std::nullopt, Layout::TILE);
     auto embeddings_shape = embeddings.get_shape();

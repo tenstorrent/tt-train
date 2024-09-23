@@ -16,10 +16,12 @@ void Embedding::initialize_tensors(uint32_t num_embeddings, uint32_t embedding_d
 
 Embedding::Embedding(uint32_t num_embeddings, uint32_t embedding_dim) {
     if (num_embeddings % TILE_HEIGHT != 0) {
-        throw std::logic_error("num_embeddings must be a multiple of TILE_HEIGHT");
+        throw std::logic_error(
+            fmt::format("num_embeddings must be a multiple of TILE_HEIGHT, current num_embeddings {}", num_embeddings));
     }
     if (embedding_dim % TILE_WIDTH == 0) {
-        throw std::logic_error("embedding_dim must be a multiple of TILE_WIDTH");
+        throw std::logic_error(
+            fmt::format("embedding_dim must be a multiple of TILE_WIDTH, current embedding_dim {}", embedding_dim));
     }
     initialize_tensors(num_embeddings, embedding_dim);
 
@@ -30,7 +32,8 @@ Embedding::Embedding(uint32_t num_embeddings, uint32_t embedding_dim) {
 autograd::TensorPtr Embedding::operator()(const autograd::TensorPtr& tensor) {
     auto sentence_size = tensor->get_value().get_shape()[-1];
     if (sentence_size % TILE_HEIGHT != 0 || sentence_size % TILE_WIDTH != 0) {
-        throw std::logic_error("sentence_size must be a multiple of TILE_HEIGHT and TILE_WIDTH");
+        throw std::logic_error(fmt::format(
+            "sentence_size must be a multiple of TILE_HEIGHT and TILE_WIDTH, current sentence_size {}", sentence_size));
     }
     return ops::embedding_op(tensor, m_weight);
 }

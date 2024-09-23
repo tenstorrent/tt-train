@@ -6,12 +6,11 @@
 namespace ttml::autograd {
 
 void clip_tensor_norm_(tt::tt_metal::Tensor& tensor, float max_norm) {
-    if (max_norm > 0.F) {
-        throw std::logic_error("max_norm should be positive");
+    if (max_norm <= 0.F) {
+        throw std::logic_error(fmt::format("max_norm should be positive, current max norm {}", max_norm));
     }
 
     auto squared = ttnn::multiply(tensor, tensor);
-
     auto shape = core::create_shape({1, 1, 1, 1});
     auto out = ttml::core::from_vector({0.F}, shape, &ttml::autograd::ctx().get_device());
     ttnn::moreh_sum(squared, std::nullopt, true, out, squared.memory_config(), std::nullopt);
