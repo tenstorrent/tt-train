@@ -16,6 +16,9 @@ Embedding::Embedding(uint32_t num_embeddings, uint32_t embedding_dim) {
     TT_FATAL(num_embeddings % TILE_HEIGHT == 0, "num_embeddings must be a multiple of TILE_HEIGHT");
     TT_FATAL(embedding_dim % TILE_WIDTH == 0, "embedding_dim must be a multiple of TILE_WIDTH");
     initialize_tensors(num_embeddings, embedding_dim);
+
+    create_name("embedding");
+    register_tensor(m_weight, "weight");
 }
 
 autograd::TensorPtr Embedding::operator()(const autograd::TensorPtr& tensor) {
