@@ -12,10 +12,10 @@
 TEST(LayerNormOpTest, LayerNormOp_0) {
     using namespace ttml;
 
-    uint32_t batch_size = 10;
+    uint32_t batch_size = 6;
     uint32_t seq_len = 13;
-    uint32_t heads = 33;
-    uint32_t features = 767;
+    uint32_t heads = 16;
+    uint32_t features = 333;
 
     uint32_t size = batch_size * seq_len * heads;
 

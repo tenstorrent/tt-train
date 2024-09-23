@@ -18,7 +18,7 @@ tt::tt_metal::Tensor ones(const ttnn::Shape& shape, tt::tt_metal::Device* device
 
 template <class T = float>
 [[nodiscard]] tt::tt_metal::Tensor from_vector(
-    const std::vector<T>& buffer, const ttnn::Shape& shape, tt::tt_metal::Device* device);
+    const std::vector<T>& buffer, const ttnn::Shape& shape, tt::tt_metal::Device* device, Layout layout = Layout::TILE);
 template <class T = float>
 [[nodiscard]] std::vector<T> to_vector(const tt::tt_metal::Tensor& tensor);
 
