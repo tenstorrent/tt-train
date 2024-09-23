@@ -140,8 +140,7 @@ tt::tt_metal::Tensor ones(const ttnn::Shape& shape, tt::tt_metal::Device* device
 
 template <>
 tt::tt_metal::Tensor from_vector<float>(
-    const std::vector<float>& buffer, const ttnn::Shape& shape, tt::tt_metal::Device* device) {
-    const Layout layout = Layout::TILE;
+    const std::vector<float>& buffer, const ttnn::Shape& shape, tt::tt_metal::Device* device, Layout layout) {
     const DataType data_type = DataType::BFLOAT16;
     MemoryConfig output_mem_config{};
     size_t volume = tt::tt_metal::compute_volume(shape);
@@ -154,7 +153,9 @@ tt::tt_metal::Tensor from_vector<float>(
     auto unpadded_shape = core::create_shape(shape);
     auto output = tt::tt_metal::Tensor(OwnedStorage{owned_buffer}, unpadded_shape, data_type, Layout::ROW_MAJOR);
     if (device != nullptr) {
-        output = ttnn::to_layout(output, layout, std::nullopt, output_mem_config, device);
+        if (layout != Layout::ROW_MAJOR) {
+            output = ttnn::to_layout(output, layout, std::nullopt, output_mem_config, device);
+        }
         output = ttnn::to_device(output, device, output_mem_config);
     }
     return output;
@@ -171,8 +172,7 @@ std::vector<float> to_vector<float>(const tt::tt_metal::Tensor& tensor) {
 
 template <>
 tt::tt_metal::Tensor from_vector<uint32_t>(
-    const std::vector<uint32_t>& buffer, const ttnn::Shape& shape, tt::tt_metal::Device* device) {
-    const Layout layout = Layout::TILE;
+    const std::vector<uint32_t>& buffer, const ttnn::Shape& shape, tt::tt_metal::Device* device, Layout layout) {
     MemoryConfig output_mem_config{};
     size_t volume = tt::tt_metal::compute_volume(shape);
     if (buffer.size() != volume) {
@@ -183,11 +183,11 @@ tt::tt_metal::Tensor from_vector<uint32_t>(
     // remove possible paddings from the shape (it conflicts with ROW MAJOR)
     std::vector<uint32_t> buffer_copy = buffer;
     auto unpadded_shape = core::create_shape(shape);
-
     auto output = ttml_create_owned_tensor(std::move(buffer_copy), unpadded_shape, DataType::UINT32, Layout::ROW_MAJOR);
-
     if (device != nullptr) {
-        output = ttnn::to_layout(output, layout, std::nullopt, output_mem_config, device);
+        if (layout != Layout::ROW_MAJOR) {
+            output = ttnn::to_layout(output, layout, std::nullopt, output_mem_config, device);
+        }
         output = ttnn::to_device(output, device, output_mem_config);
     }
 

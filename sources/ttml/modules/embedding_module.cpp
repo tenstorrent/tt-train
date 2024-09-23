@@ -13,10 +13,16 @@ void Embedding::initialize_tensors(uint32_t num_embeddings, uint32_t embedding_d
 }
 
 Embedding::Embedding(uint32_t num_embeddings, uint32_t embedding_dim) {
+    TT_FATAL(num_embeddings % TILE_HEIGHT == 0, "num_embeddings must be a multiple of TILE_HEIGHT");
+    TT_FATAL(embedding_dim % TILE_WIDTH == 0, "embedding_dim must be a multiple of TILE_WIDTH");
     initialize_tensors(num_embeddings, embedding_dim);
 }
 
 autograd::TensorPtr Embedding::operator()(const autograd::TensorPtr& tensor) {
+    auto sentence_size = tensor->get_value().get_shape()[-1];
+    TT_FATAL(
+        sentence_size % TILE_WIDTH == 0 && sentence_size % TILE_HEIGHT == 0,
+        "sentence_size must be a multiple of TILE_HEIGHT and TILE_WIDTH");
     return ops::embedding_op(tensor, m_weight);
 }
 

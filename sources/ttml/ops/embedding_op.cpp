@@ -2,18 +2,31 @@
 
 #include "autograd/auto_context.hpp"
 #include "autograd/graph_utils.hpp"
+#include "core/tt_tensor_utils.hpp"
 #include "core/ttnn_all_includes.hpp"
 
 namespace ttml::ops {
 
 autograd::TensorPtr embedding_op(const autograd::TensorPtr& tensor, const autograd::TensorPtr& weight) {
-    auto embeddings =
-        ttnn::embedding(tensor->get_value(), weight->get_value(), /* pad_token */ std::nullopt, Layout::TILE);
+    // prepare for embedding
+    auto weight_tensor = weight->get_value();
+    weight_tensor = ttnn::untilize(weight_tensor);
+    weight_tensor = weight_tensor.to(Layout::ROW_MAJOR);
+
+    auto embeddings = ttnn::embedding(tensor->get_value(), weight_tensor, /* pad_token */ std::nullopt, Layout::TILE);
+    auto embeddings_shape = embeddings.get_shape();
+    auto batch_size = embeddings_shape[0];
+    auto sentence_size = embeddings_shape[1];
+    auto embedding_dim = embeddings_shape[2];
+    embeddings = ttnn::reshape(embeddings, core::create_shape({batch_size, 1, sentence_size, embedding_dim}));
     auto out = autograd::create_tensor(embeddings);
 
     autograd::GradFunction grad = [tensor, weight, out]() {
-        // there is not gradient flowing back to the input tensor, only to weights
-        auto weight_grad = ttnn::embedding_bw(tensor->get_value(), weight->get_value(), out->get_grad());
+        auto out_grad = out->get_grad();
+        auto tensor_shape = tensor->get_value().get_shape();
+        out_grad = ttnn::reshape(
+            out_grad, core::create_shape({1, 1, tensor_shape[0] * tensor_shape[-1], out_grad.get_shape()[-1]}));
+        auto weight_grad = ttnn::embedding_bw(tensor->get_value(), weight->get_value(), out_grad);
         weight->add_grad(weight_grad);
     };
 
