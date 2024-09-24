@@ -68,6 +68,10 @@ target_link_libraries(ttml PUBLIC
     yaml-cpp::yaml-cpp
 )
 
+target_link_libraries(ttml PUBLIC 
+    high-five::high-five
+)
+
 target_compile_definitions(ttml PUBLIC
     FMT_HEADER_ONLY
 )

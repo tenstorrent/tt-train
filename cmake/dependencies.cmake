@@ -57,3 +57,27 @@ CPMAddPackage(
   GITHUB_REPOSITORY boost-ext/reflect
   GIT_TAG v1.1.1
 )
+
+CPMAddPackage(
+  NAME hdf5
+  GITHUB_REPOSITORY HDFGroup/hdf5
+  GIT_TAG hdf5_1.14.4.3
+)
+
+if (hdf5_ADDED)
+  target_link_libraries(hdf5 PUBLIC ${LIBC++} ${LIBC++ABI})
+  target_compile_options(hdf5 PUBLIC -stdlib=libc++)
+endif()
+
+CPMAddPackage(
+  NAME high-five
+  GITHUB_REPOSITORY BlueBrain/HighFive
+  GIT_TAG v2.10.0
+)
+
+if (high-five_ADDED)
+  target_link_libraries(high-five PUBLIC ${LIBC++} ${LIBC++ABI})
+  target_compile_options(high-five PUBLIC -stdlib=libc++)
+endif()
+
+
