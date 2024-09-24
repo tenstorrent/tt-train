@@ -7,10 +7,10 @@ from torch.utils.data import DataLoader
 from torchvision import datasets
 from torchvision.transforms import transforms
 
-def create_mnist_dataset():
+def create_mnist_dataset(batch_size):
     transform = transforms.Compose([
         transforms.ToTensor(),
-        transforms.Normalize((0.5,), (0.5,))
+        transforms.Normalize((0.5,), (1.0,))
     ])
 
     train_dataset = datasets.MNIST(
@@ -28,7 +28,7 @@ def create_mnist_dataset():
 
     train_loader = DataLoader(
         dataset=train_dataset,
-        batch_size=128,
+        batch_size=batch_size,
         shuffle=True,
         drop_last=False,
         num_workers=4
@@ -36,7 +36,7 @@ def create_mnist_dataset():
 
     test_loader = DataLoader(
         dataset=test_dataset,
-        batch_size=128,
+        batch_size=batch_size,
         shuffle=False,
         drop_last=False,
         num_workers=4
@@ -78,9 +78,10 @@ if __name__ == '__main__':
     model = MLP().bfloat16()
     criterion = nn.CrossEntropyLoss().bfloat16()
     optimizer = SGD(model.parameters(), lr=0.1)
-    train_loader, test_loader = create_mnist_dataset()
 
     num_epochs = 10
+    batch_size = 128
+    train_loader, test_loader = create_mnist_dataset(batch_size)
     for epoch in range(num_epochs):
         model.train()
         for i, (images, labels) in enumerate(train_loader):
