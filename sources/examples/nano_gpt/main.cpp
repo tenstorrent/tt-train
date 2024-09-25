@@ -4,16 +4,8 @@
 #include "core/ttnn_all_includes.hpp"
 
 int main() {
-    const size_t tensor_width = 32;
-    const size_t tensor_height = 32;
+    const std::string data_folder = "/home/ubuntu/ML-Framework-CPP/sources/examples/nano_gpt/data";
+    const std::string data_path = data_folder + "/shakespeare.txt";
 
-    std::srand(0);
-    auto arch_ = tt::get_arch_from_string(tt::test_utils::get_env_arch_name());
-    auto num_devices_ = tt::tt_metal::GetNumAvailableDevices();
-    std::cout << "Arch:" << tt::test_utils::get_env_arch_name() << std::endl;
-    std::cout << "num_devices:" << num_devices_ << std::endl;
-    auto device = tt::tt_metal::CreateDevice(0);
-    std::cout << "Device created" << std::endl;
-    tt::tt_metal::CloseDevice(device);
     return 0;
 }

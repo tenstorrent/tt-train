@@ -1,23 +1,30 @@
 #include "in_memory_char_dataset.hpp"
 
+#include <cstddef>
+
 namespace ttml::datasets {
 
 InMemoryCharDataset::InMemoryCharDataset(const std::vector<int>& tokens, int seq_length) :
     m_tokens(tokens), m_seq_length(seq_length) {}
 
-[[nodiscard]] size_t InMemoryCharDataset::get_size_impl() const { return m_tokens.size() / m_seq_length; }
+[[nodiscard]] size_t InMemoryCharDataset::get_size_impl() const {
+    if (m_tokens.size() < m_seq_length) {
+        return 0;
+    }
+    return m_tokens.size() - m_seq_length + 1U;
+}
 
 [[nodiscard]] InMemoryCharDataset::Sample InMemoryCharDataset::get_item_impl(size_t index) const {
     size_t dataset_size = get_size_impl();
-    if (index >= dataset_size) {
+    // 1. index >= dataset_size -> can't prepare input
+    // 2. `index + m_seq_length >= m_tokens.size()` -> can't prepare target
+    if (index >= dataset_size || index + m_seq_length >= m_tokens.size()) {
         throw std::out_of_range("Index out of range");
     }
 
-    size_t start_pos = index * m_seq_length;
-
-    std::span<const int> input_span(m_tokens.data() + start_pos, m_seq_length);
-
-    std::span<const int> target_span(m_tokens.data() + start_pos + 1, m_seq_length);
+    const auto* data_ptr = std::next(m_tokens.data(), static_cast<ptrdiff_t>(index));
+    std::span<const int> input_span(data_ptr, m_seq_length);
+    std::span<const int> target_span(std::next(data_ptr), m_seq_length);
 
     return {input_span, target_span};
 }
