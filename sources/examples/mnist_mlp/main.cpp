@@ -27,6 +27,7 @@ using DataLoader = ttml::datasets::DataLoader<
 
 template <typename Model>
 float evaluate(DataLoader& test_dataloader, Model& model, size_t num_targets) {
+    fmt::print("Model evalution started...\n");
     model.eval();
     float num_correct = 0;
     float num_samples = 0;
@@ -85,12 +86,16 @@ int main() {
             return std::make_pair(data_tensor, targets_tensor);
         };
 
+    LossAverageMeter loss_meter;
+    const int logging_interval = 10;
+
+    int training_step = 0;
+
     const uint32_t batch_size = 128;
     auto train_dataloader = DataLoader(training_dataset, batch_size, /* shuffle */ true, collate_fn);
     auto test_dataloader = DataLoader(test_dataset, batch_size, /* shuffle */ false, collate_fn);
 
-    // MNIST model with layer norm / dropout and 2 hidden layers
-    auto model = MNISTModel();
+    auto model = create_base_mlp(784, 10);
 
     // evaluate model before training (sanity check to get reasonable accuracy 1/num_targets)
     float accuracy_before_training = evaluate(test_dataloader, model, num_targets);
@@ -110,12 +115,7 @@ int main() {
     fmt::print("    Nesterov: {}\n", sgd_config.nesterov);
     auto optimizer = ttml::optimizers::SGD(model.parameters(), sgd_config);
 
-    LossAverageMeter loss_meter;
-    const int logging_interval = 50;
-
-    int training_step = 0;
     const size_t num_epochs = 10;
-
     for (size_t epoch = 0; epoch < num_epochs; ++epoch) {
         for (const auto& [data, target] : train_dataloader) {
             optimizer.zero_grad();
