@@ -1,5 +1,4 @@
 cmake_minimum_required(VERSION 3.16)
-cmake_policy(VERSION 3.16)
 include(cmake/compilers.cmake)
 
 if (DEFINED ENV{CMAKE_C_COMPILER} AND DEFINED ENV{CMAKE_CXX_COMPILER})
@@ -52,3 +51,7 @@ include(CTest)
 enable_testing()
 add_subdirectory(tests)
 
+include(cmake/conan_toolchain.cmake)
+
+
+find_package(HighFive::HighFive REQUIRED)

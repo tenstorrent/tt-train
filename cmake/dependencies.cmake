@@ -8,7 +8,7 @@ set(ENV{CPM_SOURCE_CACHE} "${PROJECT_SOURCE_DIR}/.cpmcache")
 include(${PROJECT_SOURCE_DIR}/cmake/fetch_boost.cmake)
 
 fetch_boost_library(smart_ptr)
-fetch_boost_library(serialization)
+
 ############################################################################################################################
 # yaml-cpp
 ############################################################################################################################
@@ -57,16 +57,3 @@ CPMAddPackage(
   GITHUB_REPOSITORY boost-ext/reflect
   GIT_TAG v1.1.1
 )
-
-CPMAddPackage(
-  NAME high-five
-  GITHUB_REPOSITORY BlueBrain/HighFive
-  GIT_TAG v2.10.0
-)
-
-if (high-five_ADDED)
-  target_link_libraries(high-five PUBLIC ${LIBC++} ${LIBC++ABI})
-  target_compile_options(high-five PUBLIC -stdlib=libc++)
-endif()
-
-

@@ -9,6 +9,7 @@ add_library(ttml STATIC ${SOURCES})
 
 add_library(stdlib INTERFACE)
 
+
 if(CMAKE_CXX_COMPILER_ID MATCHES "Clang" )
     find_library(LIBC++ c++)
     find_library(LIBC++ABI c++abi)
@@ -68,9 +69,6 @@ target_link_libraries(ttml PUBLIC
     yaml-cpp::yaml-cpp
 )
 
-target_link_libraries(ttml PUBLIC 
-    high-five::high-five
-)
 
 target_compile_definitions(ttml PUBLIC
     FMT_HEADER_ONLY
