@@ -6,7 +6,7 @@ using namespace ttml::datasets;
 
 // Test fixture for InMemoryCharDataset
 class InMemoryCharDatasetTest : public ::testing::Test {
-   protected:
+protected:
     // Example tokens for testing
     std::vector<int> tokens = {1, 2, 3, 4, 5, 6, 7, 8, 9, 10};
 
@@ -20,7 +20,7 @@ class InMemoryCharDatasetTest : public ::testing::Test {
 // Test get_size_impl function
 TEST_F(InMemoryCharDatasetTest, GetSize) {
     // Expected number of samples
-    size_t expected_size = tokens.size() / seq_length;
+    size_t expected_size = tokens.size() - seq_length;
 
     ASSERT_EQ(dataset.get_size(), expected_size);
 }
@@ -46,8 +46,8 @@ TEST_F(InMemoryCharDatasetTest, GetItemSecondSample) {
     auto sample = dataset.get_item(index);
 
     // Expected input and target spans
-    std::vector<int> expected_input = {4, 5, 6};
-    std::vector<int> expected_target = {5, 6, 7};
+    std::vector<int> expected_input = {2, 3, 4};
+    std::vector<int> expected_target = {3, 4, 5};
 
     ASSERT_EQ(std::vector<int>(sample.first.begin(), sample.first.end()), expected_input);
     ASSERT_EQ(std::vector<int>(sample.second.begin(), sample.second.end()), expected_target);

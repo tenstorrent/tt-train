@@ -11,7 +11,7 @@ InMemoryCharDataset::InMemoryCharDataset(const std::vector<int>& tokens, int seq
     if (m_tokens.size() < m_seq_length) {
         return 0;
     }
-    return m_tokens.size() - m_seq_length + 1U;
+    return m_tokens.size() - m_seq_length;
 }
 
 [[nodiscard]] InMemoryCharDataset::Sample InMemoryCharDataset::get_item_impl(size_t index) const {

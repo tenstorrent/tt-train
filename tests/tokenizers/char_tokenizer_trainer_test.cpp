@@ -18,10 +18,11 @@ TEST_F(CharTokenizerTrainerTest, TrainVocabulary) {
     CharTokenizer tokenizer = trainer.train(text);
 
     CharTokenizer::Vocabulary expected_vocabulary = {
-        {' ', 1}, {'d', 2}, {'e', 3}, {'h', 4}, {'l', 5}, {'o', 6}, {'r', 7}, {'w', 8}};
+        {" ", 1}, {"d", 2}, {"e", 3}, {"h", 4}, {"l", 5}, {"o", 6}, {"r", 7}, {"w", 8}};
 
     // Verify that the generated vocabulary matches the expected one
-    ASSERT_EQ(tokenizer.get_vocabulary().size(), expected_vocabulary.size());
+    const auto special_tokens_count = 3UL;
+    ASSERT_EQ(tokenizer.get_vocabulary().size(), expected_vocabulary.size() + special_tokens_count);
 
     for (const auto& pair : expected_vocabulary) {
         auto it = tokenizer.get_vocabulary().find(pair.first);
@@ -35,10 +36,11 @@ TEST_F(CharTokenizerTrainerTest, TrainWithDuplicateCharacters) {
     std::string text = "aaaabbbb";
     CharTokenizer tokenizer = trainer.train(text);
 
-    CharTokenizer::Vocabulary expected_vocabulary = {{'a', 1}, {'b', 2}};
+    CharTokenizer::Vocabulary expected_vocabulary = {{"a", 1}, {"b", 2}};
 
     // Verify that the generated vocabulary has no duplicates
-    ASSERT_EQ(tokenizer.get_vocabulary().size(), expected_vocabulary.size());
+    const auto special_tokens_count = 3UL;
+    ASSERT_EQ(tokenizer.get_vocabulary().size(), expected_vocabulary.size() + special_tokens_count);
 
     for (const auto& pair : expected_vocabulary) {
         auto it = tokenizer.get_vocabulary().find(pair.first);
@@ -48,15 +50,15 @@ TEST_F(CharTokenizerTrainerTest, TrainWithDuplicateCharacters) {
 }
 
 // Test that the trainer starts indexing from the specified starting index
-TEST_F(CharTokenizerTrainerTest, TrainWithCustomStartingIndex) {
+TEST_F(CharTokenizerTrainerTest, TrainWithNoPaddingToken) {
     std::string text = "abc";
-    int starting_index = 10;
-    CharTokenizer tokenizer = trainer.train(text, starting_index);
+    CharTokenizer tokenizer = trainer.train(text, /* add_padding_token */ false);
 
-    CharTokenizer::Vocabulary expected_vocabulary = {{'a', 10}, {'b', 11}, {'c', 12}};
+    CharTokenizer::Vocabulary expected_vocabulary = {{"a", 0}, {"b", 1}, {"c", 2}};
 
     // Verify that the generated vocabulary starts at the correct index
-    ASSERT_EQ(tokenizer.get_vocabulary().size(), expected_vocabulary.size());
+    const auto special_tokens_count = 2UL;
+    ASSERT_EQ(tokenizer.get_vocabulary().size(), expected_vocabulary.size() + special_tokens_count);
 
     for (const auto& pair : expected_vocabulary) {
         auto it = tokenizer.get_vocabulary().find(pair.first);
@@ -67,9 +69,10 @@ TEST_F(CharTokenizerTrainerTest, TrainWithCustomStartingIndex) {
 
 // Test that the trainer handles an empty string correctly
 TEST_F(CharTokenizerTrainerTest, TrainWithEmptyString) {
-    std::string text = "";
-    CharTokenizer tokenizer = trainer.train(text);
+    std::string text;
+    CharTokenizer tokenizer = trainer.train(text, /* add_padding_token */ false);
 
     // Verify that the generated vocabulary is empty
-    ASSERT_TRUE(tokenizer.get_vocabulary().empty());
+    const auto special_tokens_count = 2UL;
+    ASSERT_EQ(tokenizer.get_vocabulary().size(), special_tokens_count);
 }
