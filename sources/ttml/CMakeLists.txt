@@ -71,3 +71,10 @@ target_link_libraries(ttml PUBLIC
 target_compile_definitions(ttml PUBLIC
     FMT_HEADER_ONLY
 )
+
+find_package(HDF5 REQUIRED)
+
+
+target_link_libraries(ttml PUBLIC 
+    HDF5::HDF5
+)
