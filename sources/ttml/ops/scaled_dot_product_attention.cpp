@@ -17,7 +17,7 @@ autograd::TensorPtr scaled_dot_product_attention(
     if (mask.has_value()) {
         qk_scaled = ttnn::where(mask.value()->get_value(), qk_scaled, /* other */ -1e9F);
     }
-    auto attention_weights = ttnn_fixed::softmax(qk_scaled, /* axis */ -1);
+    auto attention_weights = ttnn_fixed::softmax(qk_scaled, /* axis */ 3);
     auto attention_qkv =
         ttnn::matmul(attention_weights, value->get_value(), /* transpose_a */ false, /* transpose_b */ false);
 
@@ -32,7 +32,7 @@ autograd::TensorPtr scaled_dot_product_attention(
             auto grad_scaled_dot = ttnn::multiply(
                 attention_weights,
                 ttnn::subtract(
-                    grad_attention_weights, ttnn::sum(ttnn::multiply(attention_weights, grad_attention_weights), -1)));
+                    grad_attention_weights, ttnn::sum(ttnn::multiply(attention_weights, grad_attention_weights), 3)));
             if (mask.has_value()) {
                 grad_scaled_dot = ttnn::where(mask.value()->get_value(), grad_scaled_dot, /* other */ 0.0F);
             }

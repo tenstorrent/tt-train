@@ -19,12 +19,13 @@ SingleHeadAttention::SingleHeadAttention(uint32_t embedding_dim, float dropout_p
     register_module(out_linear, "out_linear");
 }
 
-ttml::autograd::TensorPtr SingleHeadAttention::operator()(const ttml::autograd::TensorPtr& x) {
+ttml::autograd::TensorPtr SingleHeadAttention::operator()(
+    const ttml::autograd::TensorPtr& x, const ttml::autograd::TensorPtr& mask) {
     auto query = (*q_linear)(x);
     auto key = (*k_linear)(x);
     auto value = (*v_linear)(x);
 
-    auto attention = ttml::ops::scaled_dot_product_attention(query, key, value);
+    auto attention = ttml::ops::scaled_dot_product_attention(query, key, value, mask);
     auto out = (*out_linear)(attention);
     out = (*dropout)(out);
 

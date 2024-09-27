@@ -1,5 +1,8 @@
 #include "gpt_block.hpp"
 
+#include "ops/binary_ops.hpp"
+#include "ops/unary_ops.hpp"
+
 namespace ttml::modules {
 
 GPTMLP::GPTMLP(uint32_t embedding_size, float dropout_prob) {
@@ -38,10 +41,10 @@ GPTBlock::GPTBlock(uint32_t embedding_size, float dropout_prob) {
     register_module(attention, "attention");
 }
 
-autograd::TensorPtr GPTBlock::operator()(autograd::TensorPtr x) {
+autograd::TensorPtr GPTBlock::operator()(autograd::TensorPtr x, const autograd::TensorPtr& mask) {
     auto residual = x;
     x = (*ln1)(x);
-    x = (*attention)(x);
+    x = (*attention)(x, mask);
     x = ops::add(x, residual);
 
     residual = x;

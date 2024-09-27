@@ -6,16 +6,16 @@
 namespace ttml::modules {
 
 class SingleHeadAttention : public ttml::autograd::ModuleBase {
-    std::shared_ptr<ttml::modules::LinearLayer> q_linear;
-    std::shared_ptr<ttml::modules::LinearLayer> k_linear;
-    std::shared_ptr<ttml::modules::LinearLayer> v_linear;
-    std::shared_ptr<ttml::modules::LinearLayer> out_linear;
-    std::shared_ptr<ttml::modules::DropoutLayer> dropout;
+    std::shared_ptr<LinearLayer> q_linear;
+    std::shared_ptr<LinearLayer> k_linear;
+    std::shared_ptr<LinearLayer> v_linear;
+    std::shared_ptr<LinearLayer> out_linear;
+    std::shared_ptr<DropoutLayer> dropout;
 
 public:
     explicit SingleHeadAttention(uint32_t embedding_dim, float dropout_prob = 0.2);
 
-    ttml::autograd::TensorPtr operator()(const ttml::autograd::TensorPtr& x);
+    autograd::TensorPtr operator()(const autograd::TensorPtr& x, const autograd::TensorPtr& mask);
 };
 
 }  // namespace ttml::modules

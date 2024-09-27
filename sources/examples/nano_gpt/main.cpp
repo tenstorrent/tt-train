@@ -8,7 +8,9 @@
 #include "datasets/in_memory_char_dataset.hpp"
 #include "datasets/utils.hpp"
 #include "modules/embedding_module.hpp"
+#include "modules/gpt_block.hpp"
 #include "modules/linear_module.hpp"
+#include "ops/binary_ops.hpp"
 #include "ops/losses.hpp"
 #include "optimizers/sgd.hpp"
 #include "ttnn_fixed/trivial_ttnn_ops.hpp"
@@ -83,6 +85,38 @@ public:
     }
 };
 
+class Transformer : public ttml::autograd::ModuleBase {
+    std::shared_ptr<ttml::modules::Embedding> tok_emb;
+    std::shared_ptr<ttml::modules::Embedding> pos_emb;
+    std::shared_ptr<ttml::modules::GPTBlock> block;
+
+public:
+    Transformer(uint32_t vocab_size, uint32_t max_sequence_length) {
+        uint32_t embedding_size = 128;
+        float dropout_prob = 0.2;
+
+        uint32_t vocab_size_divisible = (vocab_size + 31) / 32 * 32;
+        assert(vocab_size_divisible % 32 == 0);
+        assert(max_sequence_length % 32 == 0);
+        assert(embedding_size % 32 == 0);
+        tok_emb = std::make_shared<ttml::modules::Embedding>(vocab_size_divisible, embedding_size);
+        pos_emb = std::make_shared<ttml::modules::Embedding>(max_sequence_length, embedding_size);
+
+        block = std::make_shared<ttml::modules::GPTBlock>(embedding_size, dropout_prob);
+    }
+
+    ttml::autograd::TensorPtr operator()(
+        const ttml::autograd::TensorPtr& x,
+        const ttml::autograd::TensorPtr& positions,
+        const ttml::autograd::TensorPtr& mask) {
+        auto tok_emb_out = (*tok_emb)(x);
+        auto pos_emb_out = (*pos_emb)(positions);
+        auto emb_out = ttml::ops::add(tok_emb_out, pos_emb_out);
+        auto block_out = (*block)(emb_out, mask);
+        return block_out;
+    }
+};
+
 int main() {
     const std::string data_folder = "/home/ubuntu/ML-Framework-CPP/sources/examples/nano_gpt/data";
     const std::string data_path = data_folder + "/shakespeare.txt";
@@ -137,7 +171,7 @@ int main() {
                 targets, ttml::core::create_shape({batch_size, 1, sequence_length, num_tokens}), device));
             auto masks_tensor = ttml::autograd::create_tensor(ttml::core::from_vector(
                 mask, ttml::core::create_shape({batch_size, 1, sequence_length, sequence_length}), device));
-            auto positions_tensor = ttml::autograd::create_tensor(ttml::core::from_vector(
+            auto positions_tensor = ttml::autograd::create_tensor(ttml::core::from_vector<uint32_t>(
                 positions, ttml::core::create_shape({batch_size, 1, 1, sequence_length}), device, Layout::ROW_MAJOR));
             return std::make_tuple(data_tensor, targets_tensor, masks_tensor, positions_tensor);
         };
@@ -148,16 +182,17 @@ int main() {
 
     auto train_dataloader = DataLoader(dataset, /* batch_size */ batch_size, /* shuffle */ true, collate_fn);
 
-    auto model = BigramFCModel(tokenizer.get_vocab_size(), tokenizer.get_vocab_size(), /* hidden_dim */ 128);
+    // auto model = BigramFCModel(tokenizer.get_vocab_size(), tokenizer.get_vocab_size(), /* hidden_dim */ 128);
+    auto model = Transformer(tokenizer.get_vocab_size(), sequence_length);
 
     auto sgd_params = ttml::optimizers::SGDConfig();
     sgd_params.lr = 0.1;
     sgd_params.momentum = 0.9;
 
     auto optimizer = ttml::optimizers::SGD(model.parameters(), sgd_params);
-    for (auto [features, target, _, _] : train_dataloader) {
+    for (auto [features, target, masks, positions] : train_dataloader) {
         optimizer.zero_grad();
-        auto output = model(features);
+        auto output = model(features, positions, masks);
         auto loss = ttml::ops::cross_entropy_loss(target, output);
         auto loss_float = ttml::core::to_vector(loss->get_value())[0];
         loss_meter.update(loss_float, features->get_value().get_shape()[0]);

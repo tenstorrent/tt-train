@@ -3,7 +3,6 @@
 #include "modules/layer_norm_module.hpp"
 #include "modules/linear_module.hpp"
 #include "modules/single_head_attention.hpp"
-#include "ops/unary_ops.hpp"
 
 namespace ttml::modules {
 
@@ -28,7 +27,7 @@ class GPTBlock : public autograd::ModuleBase {
 public:
     explicit GPTBlock(uint32_t embedding_size, float dropout_prob = 0.2);
 
-    autograd::TensorPtr operator()(autograd::TensorPtr x);
+    autograd::TensorPtr operator()(autograd::TensorPtr x, const autograd::TensorPtr& mask);
 };
 
 }  // namespace ttml::modules
