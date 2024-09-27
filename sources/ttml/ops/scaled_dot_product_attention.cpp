@@ -42,7 +42,7 @@ autograd::TensorPtr scaled_dot_product_attention(
             grad_q = ttnn::multiply(grad_q, scale);
 
             auto grad_k =
-                ttnn::matmul(query->get_value(), grad_scaled_dot, /* transpose_a */ true, /* transpose_b */ false);
+                ttnn::matmul(grad_scaled_dot, query->get_value(), /* transpose_a */ true, /* transpose_b */ false);
             grad_k = ttnn::multiply(grad_k, scale);
 
             query->add_grad(grad_q);

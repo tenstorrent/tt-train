@@ -89,6 +89,7 @@ class Transformer : public ttml::autograd::ModuleBase {
     std::shared_ptr<ttml::modules::Embedding> tok_emb;
     std::shared_ptr<ttml::modules::Embedding> pos_emb;
     std::shared_ptr<ttml::modules::GPTBlock> block;
+    std::shared_ptr<ttml::modules::LinearLayer> fc;
 
 public:
     Transformer(uint32_t vocab_size, uint32_t max_sequence_length) {
@@ -101,8 +102,14 @@ public:
         assert(embedding_size % 32 == 0);
         tok_emb = std::make_shared<ttml::modules::Embedding>(vocab_size_divisible, embedding_size);
         pos_emb = std::make_shared<ttml::modules::Embedding>(max_sequence_length, embedding_size);
-
         block = std::make_shared<ttml::modules::GPTBlock>(embedding_size, dropout_prob);
+        fc = std::make_shared<ttml::modules::LinearLayer>(embedding_size, vocab_size);
+
+        create_name("transformer");
+        register_module(tok_emb, "tok_emb");
+        register_module(pos_emb, "pos_emb");
+        register_module(block, "block");
+        register_module(fc, "fc");
     }
 
     ttml::autograd::TensorPtr operator()(
@@ -113,7 +120,8 @@ public:
         auto pos_emb_out = (*pos_emb)(positions);
         auto emb_out = ttml::ops::add(tok_emb_out, pos_emb_out);
         auto block_out = (*block)(emb_out, mask);
-        return block_out;
+        auto logits = (*fc)(block_out);
+        return logits;
     }
 };
 
