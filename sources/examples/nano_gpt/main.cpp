@@ -11,15 +11,40 @@
 #include "modules/linear_module.hpp"
 #include "ops/losses.hpp"
 #include "optimizers/sgd.hpp"
+#include "ttnn_fixed/trivial_ttnn_ops.hpp"
 
 using ttml::autograd::TensorPtr;
 
 using DatasetSample = std::pair<std::span<const uint32_t>, std::span<const uint32_t>>;
-using BatchType = std::pair<TensorPtr, TensorPtr>;
+// tokens, targets, mask, positions
+using BatchType = std::tuple<TensorPtr, TensorPtr, TensorPtr, TensorPtr>;
 using DataLoader = ttml::datasets::DataLoader<
     ttml::datasets::InMemoryCharDataset,
     std::function<BatchType(std::vector<DatasetSample>&& samples)>,
     BatchType>;
+
+class LossAverageMeter {
+    float m_sum = 0.0F;
+    size_t m_count = 0;
+
+public:
+    void update(float loss, size_t count = 1) {
+        m_sum += loss * static_cast<float>(count);
+        m_count += count;
+    }
+
+    [[nodiscard]] float average() const {
+        if (m_count == 0) {
+            return 0.F;
+        }
+        return m_sum / static_cast<float>(m_count);
+    }
+
+    void reset() {
+        m_sum = 0.0F;
+        m_count = 0;
+    }
+};
 
 std::string read_file_to_str(const std::string& file_path) {
     std::ifstream file(file_path);
@@ -76,13 +101,26 @@ int main() {
 
     auto* device = &ttml::autograd::ctx().get_device();
     std::function<BatchType(std::vector<DatasetSample> && samples)> collate_fn =
-        [sequence_length, num_tokens = tokenizer.get_vocab_size(), device, &tokenizer](
-            std::vector<DatasetSample>&& samples) {
+        [sequence_length, num_tokens = tokenizer.get_vocab_size(), device](std::vector<DatasetSample>&& samples) {
             const uint32_t batch_size = samples.size();
             std::vector<uint32_t> data;
             std::vector<float> targets;
-            data.reserve(static_cast<size_t>(batch_size * sequence_length));
-            targets.reserve(static_cast<size_t>(batch_size * num_tokens * sequence_length));
+            std::vector<uint32_t> positions;
+            std::vector<float> mask;
+
+            positions.reserve((size_t)batch_size * sequence_length);
+            mask.reserve((size_t)batch_size * sequence_length * sequence_length);
+            for (int sample_idx = 0; sample_idx < batch_size; ++sample_idx) {
+                for (int i = 0; i < sequence_length; ++i) {
+                    positions.push_back(i);
+                    for (int j = 0; j < sequence_length; ++j) {
+                        mask.push_back(i >= j ? 1.0F : 0.0F);
+                    }
+                }
+            }
+
+            data.reserve((size_t)batch_size * sequence_length);
+            targets.reserve((size_t)batch_size * num_tokens * sequence_length);
             std::vector<float> one_hot_target(num_tokens);
             for (auto& [features, target_span] : samples) {
                 std::copy(features.begin(), features.end(), std::back_inserter(data));
@@ -93,15 +131,21 @@ int main() {
                     std::copy(one_hot_target.begin(), one_hot_target.end(), std::back_inserter(targets));
                 }
             }
-
             auto data_tensor = ttml::autograd::create_tensor(ttml::core::from_vector<uint32_t>(
                 data, ttml::core::create_shape({batch_size, 1, 1, sequence_length}), device, Layout::ROW_MAJOR));
             auto targets_tensor = ttml::autograd::create_tensor(ttml::core::from_vector(
                 targets, ttml::core::create_shape({batch_size, 1, sequence_length, num_tokens}), device));
-            return std::make_pair(data_tensor, targets_tensor);
+            auto masks_tensor = ttml::autograd::create_tensor(ttml::core::from_vector(
+                mask, ttml::core::create_shape({batch_size, 1, sequence_length, sequence_length}), device));
+            auto positions_tensor = ttml::autograd::create_tensor(ttml::core::from_vector(
+                positions, ttml::core::create_shape({batch_size, 1, 1, sequence_length}), device, Layout::ROW_MAJOR));
+            return std::make_tuple(data_tensor, targets_tensor, masks_tensor, positions_tensor);
         };
 
-    uint32_t batch_size = 1;
+    uint32_t batch_size = 32;
+    LossAverageMeter loss_meter;
+    int global_step = 0;
+
     auto train_dataloader = DataLoader(dataset, /* batch_size */ batch_size, /* shuffle */ true, collate_fn);
 
     auto model = BigramFCModel(tokenizer.get_vocab_size(), tokenizer.get_vocab_size(), /* hidden_dim */ 128);
@@ -111,14 +155,16 @@ int main() {
     sgd_params.momentum = 0.9;
 
     auto optimizer = ttml::optimizers::SGD(model.parameters(), sgd_params);
-    for (auto [features, target] : train_dataloader) {
+    for (auto [features, target, _, _] : train_dataloader) {
         optimizer.zero_grad();
         auto output = model(features);
-        auto output_vec = ttml::core::to_vector(output->get_value());
-        // fmt::print("Output: {}\n", output_vec);
         auto loss = ttml::ops::cross_entropy_loss(target, output);
         auto loss_float = ttml::core::to_vector(loss->get_value())[0];
-        fmt::print("Loss: {}\n", loss_float);
+        loss_meter.update(loss_float, features->get_value().get_shape()[0]);
+        if (global_step++ % 100 == 0) {
+            fmt::print("Step: {}, Loss: {}\n", global_step, loss_meter.average());
+            loss_meter.reset();
+        }
         loss->backward();
         optimizer.step();
         ttml::autograd::ctx().reset_graph();
