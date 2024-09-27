@@ -8,14 +8,16 @@
 #include <cstdint>
 #include <memory>
 #include <stdexcept>
+#include <string_view>
 
 #include "H5Cpp.h"
 
 using namespace H5;
 
 namespace {
-template <typename T>
-constexpr const H5::PredType& getHDF5PredType() {
+template <typename TFull>
+H5::PredType getHDF5PredType() {
+    using T = std::remove_cv_t<std::remove_reference_t<TFull>>;
     if constexpr (std::is_same_v<T, int>) {
         return H5::PredType::NATIVE_INT;
     } else if constexpr (std::is_same_v<T, unsigned int>) {
@@ -29,6 +31,10 @@ constexpr const H5::PredType& getHDF5PredType() {
     } else if constexpr (std::is_same_v<T, short>) {
         return H5::PredType::NATIVE_SHORT;
     } else if constexpr (std::is_same_v<T, char>) {
+        return H5::PredType::NATIVE_CHAR;
+    } else if constexpr (std::is_same_v<T, std::string_view>) {
+        return H5::PredType::NATIVE_CHAR;
+    } else if constexpr (std::is_same_v<T, std::string>) {
         return H5::PredType::NATIVE_CHAR;
     } else if constexpr (std::is_same_v<T, unsigned char>) {
         return H5::PredType::NATIVE_UCHAR;
@@ -49,40 +55,33 @@ namespace ttml::serialization {
 class HDF5File::Impl {
 private:
     // File operations
-    void create_file(const std::string& filename) {
-        if (m_file && m_file->getId() >= 0) {
-            throw std::runtime_error("A m_file is already open.");
-        }
+    void create_file(const std::string& filename) { m_file = std::make_unique<H5File>(filename, H5F_ACC_TRUNC); }
 
-        m_file = std::make_unique<H5File>(filename, H5F_ACC_TRUNC);
-    }
-
-    void open_file(const std::string& filename, bool readOnly) {
-        auto flag = readOnly ? H5F_ACC_RDONLY : H5F_ACC_RDWR;
+    void open_file(const std::string& filename, bool read_only) {
+        auto flag = read_only ? H5F_ACC_RDONLY : H5F_ACC_RDWR;
 
         m_file = std::make_unique<H5File>(filename, flag);
     }
 
 public:
-    Impl(const std::string& filename, bool readOnly) { open_file(filename, readOnly); }
+    Impl(const std::string& filename, bool read_only) { open_file(filename, read_only); }
 
-    ~Impl() = default;
     template <class T>
-    void create_dataset(const std::string& dataset_name, const std::vector<hsize_t>& dims) {
+    void create_storage(const std::string& storage_name, const std::vector<hsize_t>& dims) {
         DataSpace dataspace((int)dims.size(), dims.data());
 
-        m_file->createDataSet(dataset_name, getHDF5PredType<T>(), dataspace);
+        m_file->createDataSet(storage_name, getHDF5PredType<T>(), dataspace);
     }
 
     template <class T>
-    void write_dataset(const std::string& dataset_name, const std::vector<T>& data) {
-        DataSet dataset = m_file->openDataSet(dataset_name);
+    void write_storage(const std::string& storage_name, const std::vector<T>& data) {
+        DataSet dataset = m_file->openDataSet(storage_name);
         dataset.write(data.data(), getHDF5PredType<T>());
     }
 
     template <class T>
-    std::vector<T> read_dataset(const std::string& dataset_name) {
-        DataSet dataset = m_file->openDataSet(dataset_name);
+    std::vector<T> read_storage(const std::string& storage_name) {
+        DataSet dataset = m_file->openDataSet(storage_name);
         DataSpace dataspace = dataset.getSpace();
 
         hsize_t dims = 0;
@@ -94,8 +93,8 @@ public:
 
     template <class T>
     void write_attribute_vec(
-        const std::string& dataset_name, const std::string& attr_name, const std::vector<T>& data) {
-        DataSet dataset = m_file->openDataSet(dataset_name);
+        const std::string& storage_name, const std::string& attr_name, const std::vector<T>& data) {
+        DataSet dataset = m_file->openDataSet(storage_name);
         hsize_t dims = data.size();
         DataSpace attr_space(1, &dims);
         auto attr_type = getHDF5PredType<T>();
@@ -103,16 +102,16 @@ public:
         attr.write(attr_type, data.data());
     }
     template <class T>
-    void write_attribute(const std::string& dataset_name, const std::string& attr_name, const T& value) {
-        DataSet dataset = m_file->openDataSet(dataset_name);
+    void write_attribute(const std::string& storage_name, const std::string& attr_name, const T& value) {
+        DataSet dataset = m_file->openDataSet(storage_name);
         StrType attr_type(getHDF5PredType<T>(), H5T_VARIABLE);
         Attribute attr = dataset.createAttribute(attr_name, attr_type, DataSpace());
         attr.write(attr_type, &value);
     }
 
     template <class T>
-    std::vector<T> read_attribute_vec(const std::string& dataset_name, const std::string& attr_name) {
-        DataSet dataset = m_file->openDataSet(dataset_name);
+    std::vector<T> read_attribute_vec(const std::string& storage_name, const std::string& attr_name) {
+        DataSet dataset = m_file->openDataSet(storage_name);
         if (!dataset.attrExists(attr_name)) {
             throw std::runtime_error("Attribute " + attr_name + " does not exist.");
         }
@@ -128,8 +127,8 @@ public:
     }
 
     template <class T>
-    T read_attribute(const std::string& dataset_name, const std::string& attr_name) {
-        DataSet dataset = m_file->openDataSet(dataset_name);
+    T read_attribute(const std::string& storage_name, const std::string& attr_name) {
+        DataSet dataset = m_file->openDataSet(storage_name);
         if (!dataset.attrExists(attr_name)) {
             throw std::runtime_error("Attribute " + attr_name + " does not exist.");
         }
@@ -147,7 +146,7 @@ private:
 
 // HDF5File Method Implementations
 
-HDF5File::HDF5File(const std::string& filename, bool readOnly) : pImpl(std::make_unique<Impl>(filename, readOnly)) {}
+HDF5File::HDF5File(const std::string& filename, bool read_only) : pImpl(std::make_unique<Impl>(filename, read_only)) {}
 HDF5File::~HDF5File() = default;
 
 HDF5File::HDF5File(HDF5File&& other) noexcept = default;
@@ -155,77 +154,77 @@ HDF5File::HDF5File(HDF5File&& other) noexcept = default;
 HDF5File& HDF5File::operator=(HDF5File&& other) noexcept = default;
 
 template <>
-void HDF5File::create_dataset<float>(const std::string& dataset_name, const std::vector<unsigned long long>& dims) {
-    pImpl->create_dataset<float>(dataset_name, dims);
+void HDF5File::create_storage<float>(const std::string& storage_name, const std::vector<unsigned long long>& dims) {
+    pImpl->create_storage<float>(storage_name, dims);
 }
 template <>
-void HDF5File::create_dataset<uint32_t>(const std::string& dataset_name, const std::vector<unsigned long long>& dims) {
-    pImpl->create_dataset<uint32_t>(dataset_name, dims);
-}
-
-template <>
-void HDF5File::write_dataset<float>(const std::string& dataset_name, const std::vector<float>& data) {
-    pImpl->write_dataset(dataset_name, data);
+void HDF5File::create_storage<uint32_t>(const std::string& storage_name, const std::vector<unsigned long long>& dims) {
+    pImpl->create_storage<uint32_t>(storage_name, dims);
 }
 
 template <>
-void HDF5File::write_dataset<uint32_t>(const std::string& dataset_name, const std::vector<uint32_t>& data) {
-    pImpl->write_dataset(dataset_name, data);
+void HDF5File::write_storage<float>(const std::string& storage_name, const std::vector<float>& data) {
+    pImpl->write_storage(storage_name, data);
 }
 
 template <>
-std::vector<float> HDF5File::read_dataset<float>(const std::string& dataset_name) {
-    return pImpl->read_dataset<float>(dataset_name);
+void HDF5File::write_storage<uint32_t>(const std::string& storage_name, const std::vector<uint32_t>& data) {
+    pImpl->write_storage(storage_name, data);
 }
 
 template <>
-std::vector<uint32_t> HDF5File::read_dataset<uint32_t>(const std::string& dataset_name) {
-    return pImpl->read_dataset<uint32_t>(dataset_name);
+std::vector<float> HDF5File::read_storage<float>(const std::string& storage_name) {
+    return pImpl->read_storage<float>(storage_name);
+}
+
+template <>
+std::vector<uint32_t> HDF5File::read_storage<uint32_t>(const std::string& storage_name) {
+    return pImpl->read_storage<uint32_t>(storage_name);
 }
 
 template <>
 void HDF5File::write_attribute<std::string>(
-    const std::string& dataset_name, const std::string& attr_name, const std::string& attr) {
-    pImpl->write_attribute<std::string>(dataset_name, attr_name, attr);
+    const std::string& storage_name, const std::string& attr_name, const std::string& attr) {
+    pImpl->write_attribute<std::string>(storage_name, attr_name, attr);
 }
 
 template <>
 void HDF5File::write_attribute<uint32_t>(
-    const std::string& dataset_name, const std::string& attr_name, const uint32_t& attr) {
-    pImpl->write_attribute<uint32_t>(dataset_name, attr_name, attr);
+    const std::string& storage_name, const std::string& attr_name, const uint32_t& attr) {
+    pImpl->write_attribute<uint32_t>(storage_name, attr_name, attr);
 }
 
 template <>
 void HDF5File::write_attribute_vec<float>(
-    const std::string& dataset_name, const std::string& attr_name, const std::vector<float>& attr) {
-    pImpl->write_attribute_vec<float>(dataset_name, attr_name, attr);
+    const std::string& storage_name, const std::string& attr_name, const std::vector<float>& attr) {
+    pImpl->write_attribute_vec<float>(storage_name, attr_name, attr);
 }
 
 template <>
 void HDF5File::write_attribute_vec<uint32_t>(
-    const std::string& dataset_name, const std::string& attr_name, const std::vector<uint32_t>& attr) {
-    pImpl->write_attribute_vec<uint32_t>(dataset_name, attr_name, attr);
+    const std::string& storage_name, const std::string& attr_name, const std::vector<uint32_t>& attr) {
+    pImpl->write_attribute_vec<uint32_t>(storage_name, attr_name, attr);
 }
 
 template <>
-float HDF5File::read_attribute<float>(const std::string& dataset_name, const std::string& attr_name) {
-    return pImpl->read_attribute<float>(dataset_name, attr_name);
+float HDF5File::read_attribute<float>(const std::string& storage_name, const std::string& attr_name) {
+    return pImpl->read_attribute<float>(storage_name, attr_name);
 }
 
 template <>
-uint32_t HDF5File::read_attribute<uint32_t>(const std::string& dataset_name, const std::string& attr_name) {
-    return pImpl->read_attribute<uint32_t>(dataset_name, attr_name);
+uint32_t HDF5File::read_attribute<uint32_t>(const std::string& storage_name, const std::string& attr_name) {
+    return pImpl->read_attribute<uint32_t>(storage_name, attr_name);
 }
 
 template <>
-std::vector<float> HDF5File::read_attribute_vec<float>(const std::string& dataset_name, const std::string& attr_name) {
-    return pImpl->read_attribute_vec<float>(dataset_name, attr_name);
+std::vector<float> HDF5File::read_attribute_vec<float>(const std::string& storage_name, const std::string& attr_name) {
+    return pImpl->read_attribute_vec<float>(storage_name, attr_name);
 }
 
 template <>
 std::vector<uint32_t> HDF5File::read_attribute_vec<uint32_t>(
-    const std::string& dataset_name, const std::string& attr_name) {
-    return pImpl->read_attribute_vec<uint32_t>(dataset_name, attr_name);
+    const std::string& storage_name, const std::string& attr_name) {
+    return pImpl->read_attribute_vec<uint32_t>(storage_name, attr_name);
 }
 
 }  // namespace ttml::serialization

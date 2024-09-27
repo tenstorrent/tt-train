@@ -16,31 +16,30 @@ public:
     HDF5File(HDF5File&&) noexcept;
     HDF5File& operator=(HDF5File&&) noexcept;
 
-    HDF5File(const std::string& filename, bool readOnly);
+    HDF5File(const std::string& filename, bool read_only);
 
     template <class T>
-    void create_dataset(const std::string& dataset_name, const std::vector<unsigned long long>& dims);
+    void create_storage(const std::string& storage_name, const std::vector<unsigned long long>& dims);
 
     template <class T>
-    void write_dataset(const std::string& dataset_name, const std::vector<T>& data);
+    void write_storage(const std::string& storage_name, const std::vector<T>& data);
 
     template <class T>
-    std::vector<T> read_dataset(const std::string& dataset_name);
+    std::vector<T> read_storage(const std::string& storage_name);
 
     template <class T>
-    void write_attribute(const std::string& dataset_name, const std::string& attr_name, const T& attr);
+    void write_attribute(const std::string& storage_name, const std::string& attr_name, const T& attr);
 
     template <class T>
-    void write_attribute_vec(const std::string& dataset_name, const std::string& attr_name, const std::vector<T>& attr);
+    void write_attribute_vec(const std::string& storage_name, const std::string& attr_name, const std::vector<T>& attr);
 
     template <class T>
-    T read_attribute(const std::string& dataset_name, const std::string& attr_name);
+    T read_attribute(const std::string& storage_name, const std::string& attr_name);
 
     template <class T>
-    std::vector<T> read_attribute_vec(const std::string& dataset_name, const std::string& attr_name);
+    std::vector<T> read_attribute_vec(const std::string& storage_name, const std::string& attr_name);
 
 private:
-    // Forward declaration of the implementation class
     class Impl;
     std::unique_ptr<Impl> pImpl;
 };

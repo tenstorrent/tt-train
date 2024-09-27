@@ -51,9 +51,8 @@ void Tensor::backward() {
     topological_sort(m_node_id->get_id(), graph.get_edges(), visited_nodes, sorted_nodes);
 
     const auto& graph_nodes = graph.get_graph_nodes();
-    std::ranges::reverse(sorted_nodes);
     try_init_grad(/* init_ones */ true);
-    for (const auto& node_id : sorted_nodes) {
+    for (const auto& node_id : sorted_nodes | std::views::reverse) {
         graph_nodes[node_id].grad_function();
     }
 }
