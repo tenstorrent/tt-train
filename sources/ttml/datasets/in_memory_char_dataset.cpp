@@ -4,7 +4,7 @@
 
 namespace ttml::datasets {
 
-InMemoryCharDataset::InMemoryCharDataset(const std::vector<int>& tokens, int seq_length) :
+InMemoryCharDataset::InMemoryCharDataset(const std::vector<uint32_t>& tokens, uint32_t seq_length) :
     m_tokens(tokens), m_seq_length(seq_length) {}
 
 [[nodiscard]] size_t InMemoryCharDataset::get_size_impl() const {
@@ -23,8 +23,8 @@ InMemoryCharDataset::InMemoryCharDataset(const std::vector<int>& tokens, int seq
     }
 
     const auto* data_ptr = std::next(m_tokens.data(), static_cast<ptrdiff_t>(index));
-    std::span<const int> input_span(data_ptr, m_seq_length);
-    std::span<const int> target_span(std::next(data_ptr), m_seq_length);
+    std::span<const uint32_t> input_span(data_ptr, m_seq_length);
+    std::span<const uint32_t> target_span(std::next(data_ptr), m_seq_length);
 
     return {input_span, target_span};
 }

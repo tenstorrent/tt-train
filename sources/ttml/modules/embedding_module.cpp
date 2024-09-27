@@ -11,7 +11,7 @@ void Embedding::initialize_tensors(uint32_t num_embeddings, uint32_t embedding_d
     auto* device = &autograd::ctx().get_device();
     m_weight = autograd::create_tensor();
     init::normal_init(
-        m_weight, core::create_shape({1, 1, num_embeddings, embedding_dim}), /* normal params */ {0.F, 1.F});
+        m_weight, core::create_shape({1, 1, num_embeddings, embedding_dim}), /* normal params */ {0.F, 0.02F});
 }
 
 Embedding::Embedding(uint32_t num_embeddings, uint32_t embedding_dim) {
@@ -19,7 +19,7 @@ Embedding::Embedding(uint32_t num_embeddings, uint32_t embedding_dim) {
         throw std::logic_error(
             fmt::format("num_embeddings must be a multiple of TILE_HEIGHT, current num_embeddings {}", num_embeddings));
     }
-    if (embedding_dim % TILE_WIDTH == 0) {
+    if (embedding_dim % TILE_WIDTH != 0) {
         throw std::logic_error(
             fmt::format("embedding_dim must be a multiple of TILE_WIDTH, current embedding_dim {}", embedding_dim));
     }

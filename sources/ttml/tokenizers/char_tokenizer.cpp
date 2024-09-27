@@ -10,8 +10,8 @@ CharTokenizer::CharTokenizer(Vocabulary vocabulary) : m_vocabulary(std::move(voc
     build_reverse_mapping();
 }
 
-std::vector<int> CharTokenizer::encode(const std::string& text) const {
-    std::vector<int> tokens;
+std::vector<uint32_t> CharTokenizer::encode(const std::string& text) const {
+    std::vector<uint32_t> tokens;
     for (char chr : text) {
         auto chr_str = std::string(1, chr);
         auto it = m_vocabulary.find(chr_str);
@@ -24,9 +24,9 @@ std::vector<int> CharTokenizer::encode(const std::string& text) const {
     return tokens;
 }
 
-std::string CharTokenizer::decode(const std::vector<int>& tokens) const {
+std::string CharTokenizer::decode(const std::vector<uint32_t>& tokens) const {
     std::ostringstream oss;
-    for (int token : tokens) {
+    for (uint32_t token : tokens) {
         auto it = m_id_to_char.find(token);
         if (it != m_id_to_char.end()) {
             oss << it->second;
@@ -43,4 +43,7 @@ void CharTokenizer::build_reverse_mapping() {
         m_id_to_char[id] = token;
     }
 }
+
+uint32_t CharTokenizer::get_vocab_size() const { return static_cast<uint32_t>(m_vocabulary.size()); }
+
 }  // namespace ttml::tokenizers

@@ -61,5 +61,7 @@ void ModuleBase::set_run_mode(RunMode mode) {
 [[nodiscard]] RunMode ModuleBase::get_run_mode() const { return m_run_mode; }
 
 void ModuleBase::train() { set_run_mode(RunMode::TRAIN); }
+
 void ModuleBase::eval() { set_run_mode(RunMode::EVAL); }
+
 }  // namespace ttml::autograd

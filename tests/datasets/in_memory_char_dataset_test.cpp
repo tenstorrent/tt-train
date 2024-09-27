@@ -8,10 +8,10 @@ using namespace ttml::datasets;
 class InMemoryCharDatasetTest : public ::testing::Test {
 protected:
     // Example tokens for testing
-    std::vector<int> tokens = {1, 2, 3, 4, 5, 6, 7, 8, 9, 10};
+    std::vector<uint32_t> tokens = {1, 2, 3, 4, 5, 6, 7, 8, 9, 10};
 
     // Sequence length
-    int seq_length = 3;
+    uint32_t seq_length = 3;
 
     // Create an instance of InMemoryCharDataset
     InMemoryCharDataset dataset = InMemoryCharDataset(tokens, seq_length);
@@ -32,11 +32,11 @@ TEST_F(InMemoryCharDatasetTest, GetItemFirstSample) {
     auto sample = dataset.get_item(index);
 
     // Expected input and target spans
-    std::vector<int> expected_input = {1, 2, 3};
-    std::vector<int> expected_target = {2, 3, 4};
+    std::vector<uint32_t> expected_input = {1, 2, 3};
+    std::vector<uint32_t> expected_target = {2, 3, 4};
 
-    ASSERT_EQ(std::vector<int>(sample.first.begin(), sample.first.end()), expected_input);
-    ASSERT_EQ(std::vector<int>(sample.second.begin(), sample.second.end()), expected_target);
+    ASSERT_EQ(std::vector<uint32_t>(sample.first.begin(), sample.first.end()), expected_input);
+    ASSERT_EQ(std::vector<uint32_t>(sample.second.begin(), sample.second.end()), expected_target);
 }
 
 // Test get_item_impl function for the second sample
@@ -46,11 +46,11 @@ TEST_F(InMemoryCharDatasetTest, GetItemSecondSample) {
     auto sample = dataset.get_item(index);
 
     // Expected input and target spans
-    std::vector<int> expected_input = {2, 3, 4};
-    std::vector<int> expected_target = {3, 4, 5};
+    std::vector<uint32_t> expected_input = {2, 3, 4};
+    std::vector<uint32_t> expected_target = {3, 4, 5};
 
-    ASSERT_EQ(std::vector<int>(sample.first.begin(), sample.first.end()), expected_input);
-    ASSERT_EQ(std::vector<int>(sample.second.begin(), sample.second.end()), expected_target);
+    ASSERT_EQ(std::vector<uint32_t>(sample.first.begin(), sample.first.end()), expected_input);
+    ASSERT_EQ(std::vector<uint32_t>(sample.second.begin(), sample.second.end()), expected_target);
 }
 
 // Test get_item_impl function for the last sample
@@ -60,11 +60,11 @@ TEST_F(InMemoryCharDatasetTest, GetItemLastSample) {
     auto sample = dataset.get_item(index);
 
     // Expected input and target spans
-    std::vector<int> expected_input = {7, 8, 9};
-    std::vector<int> expected_target = {8, 9, 10};
+    std::vector<uint32_t> expected_input = {7, 8, 9};
+    std::vector<uint32_t> expected_target = {8, 9, 10};
 
-    ASSERT_EQ(std::vector<int>(sample.first.begin(), sample.first.end()), expected_input);
-    ASSERT_EQ(std::vector<int>(sample.second.begin(), sample.second.end()), expected_target);
+    ASSERT_EQ(std::vector<uint32_t>(sample.first.begin(), sample.first.end()), expected_input);
+    ASSERT_EQ(std::vector<uint32_t>(sample.second.begin(), sample.second.end()), expected_target);
 }
 
 // Test out of range error for get_item_impl function

@@ -7,7 +7,7 @@
 namespace ttml::datasets {
 template <class Derived, class DataType, class TargetType>
 class DatasetBase {
-   public:
+public:
     using DataTypeT = DataType;
     using TargetTypeT = TargetType;
     using Sample = std::pair<DataType, TargetType>;
