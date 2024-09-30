@@ -14,7 +14,7 @@ class GPTMLP : public autograd::ModuleBase {
     std::shared_ptr<DropoutLayer> dropout;
 
 public:
-    explicit GPTMLP(uint32_t embedding_size, float dropout_prob = 0.2);
+    explicit GPTMLP(uint32_t embedding_size, float dropout_prob);
 
     autograd::TensorPtr operator()(autograd::TensorPtr x);
 };
@@ -24,6 +24,7 @@ class GPTBlock : public autograd::ModuleBase {
     std::shared_ptr<LayerNormLayer> ln1;
     std::shared_ptr<LayerNormLayer> ln2;
     std::shared_ptr<MultiHeadAttention> attention;
+    // std::shared_ptr<SingleHeadAttention> attention;
 
 public:
     explicit GPTBlock(uint32_t embedding_size, uint32_t num_heads, float dropout_prob);

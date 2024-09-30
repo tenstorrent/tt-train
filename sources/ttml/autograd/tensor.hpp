@@ -52,4 +52,6 @@ TensorPtr create_tensor(Args &&... args) {
     return std::make_shared<Tensor>(std::forward<Args>(args)...);
 }
 
+void print_tensor_stats(const autograd::TensorPtr &tensor, const std::string &name);
+
 }  // namespace ttml::autograd

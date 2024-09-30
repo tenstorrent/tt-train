@@ -19,7 +19,7 @@ void ModuleBase::register_module(const ModuleBasePtr& module_ptr, const std::str
 }
 
 void ModuleBase::create_name(const std::string& prefix) {
-    m_name = prefix + std::to_string(autograd::ctx().generate_module_id());
+    m_name = fmt::format("{}@{}", prefix, std::to_string(autograd::ctx().generate_module_id()));
 }
 
 const std::string& ModuleBase::get_name() const { return m_name; }
@@ -40,7 +40,7 @@ NamedParameters ModuleBase::parameters() const {
             params.emplace(name_prefix + tensor_name, tensor_ptr);
         }
 
-        for (const auto& [module_name, next_module_ptr] : m_named_modules) {
+        for (const auto& [module_name, next_module_ptr] : module_ptr->m_named_modules) {
             if (!modules_in_queue.contains(next_module_ptr->get_name())) {
                 modules_to_process.emplace(next_module_ptr.get(), name_prefix + module_name + "/");
                 modules_in_queue.insert(next_module_ptr->get_name());

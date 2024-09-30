@@ -96,9 +96,9 @@ class Transformer : public ttml::autograd::ModuleBase {
 
 public:
     Transformer(uint32_t vocab_size, uint32_t max_sequence_length) {
-        uint32_t embedding_size = 64;
-        uint32_t num_heads = 2;
-        float dropout_prob = 0.0;
+        uint32_t embedding_size = 128;
+        uint32_t num_heads = 1;
+        float dropout_prob = 0.F;
         uint32_t num_blocks = 1;
 
         uint32_t vocab_size_divisible = (vocab_size + 31) / 32 * 32;
@@ -107,6 +107,7 @@ public:
         assert(embedding_size % 32 == 0);
         tok_emb = std::make_shared<ttml::modules::Embedding>(vocab_size_divisible, embedding_size);
         pos_emb = std::make_shared<ttml::modules::Embedding>(max_sequence_length, embedding_size);
+        blocks.reserve(num_blocks);
         for (uint32_t block_idx = 0; block_idx < num_blocks; ++block_idx) {
             blocks.push_back(std::make_shared<ttml::modules::GPTBlock>(embedding_size, num_heads, dropout_prob));
         }
@@ -116,7 +117,7 @@ public:
         register_module(tok_emb, "tok_emb");
         register_module(pos_emb, "pos_emb");
         for (uint32_t block_idx = 0; block_idx < num_blocks; ++block_idx) {
-            register_module(blocks[block_idx], "block_" + std::to_string(block_idx));
+            register_module(blocks[block_idx], fmt::format("gpt_block_{}", block_idx));
         }
         register_module(fc, "fc");
     }
@@ -152,11 +153,12 @@ int main() {
     uint32_t sequence_length = 32;
     auto [dataset, tokenizer] = ttml::datasets::create_in_memory_char_dataset(text, sequence_length);
     fmt::print("Dataset size: {}\n", dataset.get_size());
+    fmt::print("Vocab size: {}\n", tokenizer.get_vocab_size());
 
     auto* device = &ttml::autograd::ctx().get_device();
     device->enable_async(true);
     std::function<BatchType(std::vector<DatasetSample> && samples)> collate_fn =
-        [sequence_length, num_tokens = tokenizer.get_vocab_size(), device](std::vector<DatasetSample>&& samples) {
+        [sequence_length, vocab_size = tokenizer.get_vocab_size(), device](std::vector<DatasetSample>&& samples) {
             const uint32_t batch_size = samples.size();
             std::vector<uint32_t> data;
             std::vector<float> targets;
@@ -175,8 +177,8 @@ int main() {
             }
 
             data.reserve((size_t)batch_size * sequence_length);
-            targets.reserve((size_t)batch_size * num_tokens * sequence_length);
-            std::vector<float> one_hot_target(num_tokens);
+            targets.reserve((size_t)batch_size * vocab_size * sequence_length);
+            std::vector<float> one_hot_target(vocab_size);
             for (auto& [features, target_span] : samples) {
                 std::copy(features.begin(), features.end(), std::back_inserter(data));
 
@@ -189,7 +191,7 @@ int main() {
             auto data_tensor = ttml::autograd::create_tensor(ttml::core::from_vector<uint32_t>(
                 data, ttml::core::create_shape({batch_size, 1, 1, sequence_length}), device, Layout::ROW_MAJOR));
             auto targets_tensor = ttml::autograd::create_tensor(ttml::core::from_vector(
-                targets, ttml::core::create_shape({batch_size, 1, sequence_length, num_tokens}), device));
+                targets, ttml::core::create_shape({batch_size, 1, sequence_length, vocab_size}), device));
             auto masks_tensor = ttml::autograd::create_tensor(ttml::core::from_vector(
                 mask, ttml::core::create_shape({batch_size, 1, sequence_length, sequence_length}), device));
             auto positions_tensor = ttml::autograd::create_tensor(ttml::core::from_vector<uint32_t>(
@@ -209,10 +211,10 @@ int main() {
     auto sgd_params = ttml::optimizers::SGDConfig();
     sgd_params.lr = 0.1;
     sgd_params.momentum = 0.9;
-    sgd_params.weight_decay = 0.0001;
+    // sgd_params.weight_decay = 0.0001;
 
     auto optimizer = ttml::optimizers::SGD(model.parameters(), sgd_params);
-    const uint32_t num_epochs = 10;
+    const uint32_t num_epochs = 20;
     for (uint32_t epoch = 0; epoch < num_epochs; ++epoch) {
         for (auto [features, target, masks, positions] : train_dataloader) {
             optimizer.zero_grad();

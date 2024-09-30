@@ -48,7 +48,6 @@ autograd::TensorPtr heads_fusion(const autograd::TensorPtr& x) {
 
     uint32_t batch_size = x_shape[0];
     uint32_t num_heads = x_shape[1];
-    assert(num_heads != 1U);
     uint32_t sequence_length = x_shape[2];
     uint32_t embedding_dim = x_shape[3];
 

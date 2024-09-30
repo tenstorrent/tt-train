@@ -9,6 +9,8 @@
 
 namespace ttml::core {
 
+void print_tensor_stats(const tt::tt_metal::Tensor& tensor, const std::string& name);
+
 tt::tt_metal::Tensor zeros_like(const tt::tt_metal::Tensor& tensor);
 tt::tt_metal::Tensor ones_like(const tt::tt_metal::Tensor& tensor);
 

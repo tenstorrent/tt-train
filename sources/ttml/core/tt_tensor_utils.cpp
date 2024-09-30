@@ -211,4 +211,17 @@ ttnn::Shape create_shape(const ttnn::Shape& shape) {
 }
 
 ttnn::Shape create_shape(const std::array<uint32_t, 4>& args) { return ttnn::Shape{args}; }
+
+void print_tensor_stats(const tt::tt_metal::Tensor& tensor, const std::string& name) {
+    auto tensor_shape = tensor.get_shape();
+    auto tensor_vec = ttml::core::to_vector<float>(tensor);
+    fmt::print(
+        "{}: shape: {} min: {} max: {} mean: {}\n",
+        name,
+        tensor_shape,
+        *std::min_element(tensor_vec.begin(), tensor_vec.end()),
+        *std::max_element(tensor_vec.begin(), tensor_vec.end()),
+        std::accumulate(tensor_vec.begin(), tensor_vec.end(), 0.F) / static_cast<float>(tensor_vec.size()));
+}
+
 }  // namespace ttml::core

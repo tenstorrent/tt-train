@@ -18,10 +18,12 @@ autograd::TensorPtr scaled_dot_product_attention(
         qk_scaled = ttnn::where(mask.value()->get_value(), qk_scaled, /* other */ -1e9F);
     }
     auto attention_weights = ttnn_fixed::softmax(qk_scaled, /* axis */ 3);
+    // TODO: add dropout here
     auto attention_qkv =
         ttnn::matmul(attention_weights, value->get_value(), /* transpose_a */ false, /* transpose_b */ false);
 
-    auto out = ttml::autograd::create_tensor(attention_qkv);
+    auto out = ttml::autograd::create_tensor();
+    out->set_value(attention_qkv);
 
     ttml::autograd::GradFunction grad =
         [scale, query, key, value, qk_t, qk_scaled, attention_weights, attention_qkv, out, mask]() {
