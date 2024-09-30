@@ -96,10 +96,10 @@ class Transformer : public ttml::autograd::ModuleBase {
 
 public:
     Transformer(uint32_t vocab_size, uint32_t max_sequence_length) {
-        uint32_t embedding_size = 512;
-        uint32_t num_heads = 8;
-        float dropout_prob = 0.1;
-        uint32_t num_blocks = 6;
+        uint32_t embedding_size = 128;
+        uint32_t num_heads = 4;
+        float dropout_prob = 0.0;
+        uint32_t num_blocks = 1;
 
         uint32_t vocab_size_divisible = (vocab_size + 31) / 32 * 32;
         assert(vocab_size_divisible % 32 == 0);
@@ -148,7 +148,7 @@ int main() {
         return -1;
     }
 
-    uint32_t sequence_length = 512;
+    uint32_t sequence_length = 32;
     auto [dataset, tokenizer] = ttml::datasets::create_in_memory_char_dataset(text, sequence_length);
     fmt::print("Dataset size: {}\n", dataset.get_size());
 
@@ -206,9 +206,9 @@ int main() {
     auto model = Transformer(tokenizer.get_vocab_size(), sequence_length);
 
     auto sgd_params = ttml::optimizers::SGDConfig();
-    sgd_params.lr = 0.01;
+    sgd_params.lr = 0.1;
     sgd_params.momentum = 0.9;
-    sgd_params.weight_decay = 0.001;
+    sgd_params.weight_decay = 0.0001;
 
     auto optimizer = ttml::optimizers::SGD(model.parameters(), sgd_params);
     for (auto [features, target, masks, positions] : train_dataloader) {
@@ -217,7 +217,7 @@ int main() {
         auto loss = ttml::ops::cross_entropy_loss(target, output);
         auto loss_float = ttml::core::to_vector(loss->get_value())[0];
         loss_meter.update(loss_float, features->get_value().get_shape()[0]);
-        fmt::print("Step: {}, Loss: {}\n", global_step++, loss_meter.average());
+        fmt::print("Step: {}, Loss: {}\n", global_step++, loss_float);
         loss->backward();
         optimizer.step();
         ttml::autograd::ctx().reset_graph();

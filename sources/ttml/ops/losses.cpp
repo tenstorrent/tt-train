@@ -35,8 +35,8 @@ autograd::TensorPtr cross_entropy_loss_without_reduce_(
     out->set_value(loss);
     autograd::GradFunction grad = [target, prediction_tensor, prediction, out]() {
         auto grad = ttnn::subtract(prediction_tensor, target->get_value());
-        grad = ttnn::multiply(grad, target->get_value().get_shape()[-1]);
-        grad = ttnn::multiply(grad, out->get_grad());
+        auto scaler = ttnn::multiply(out->get_grad(), target->get_value().get_shape()[-1]);
+        grad = ttnn::multiply(grad, scaler);
 
         prediction->add_grad(grad);
     };

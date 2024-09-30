@@ -11,7 +11,7 @@ void Embedding::initialize_tensors(uint32_t num_embeddings, uint32_t embedding_d
     auto* device = &autograd::ctx().get_device();
     m_weight = autograd::create_tensor();
     init::normal_init(
-        m_weight, core::create_shape({1, 1, num_embeddings, embedding_dim}), /* normal params */ {0.F, 0.02F});
+        m_weight, core::create_shape({1, 1, num_embeddings, embedding_dim}), /* normal params */ {0.F, 1.F});
 }
 
 Embedding::Embedding(uint32_t num_embeddings, uint32_t embedding_dim) {

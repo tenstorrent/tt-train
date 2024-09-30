@@ -17,7 +17,7 @@ class MultiHeadAttention : public ttml::autograd::ModuleBase {
     std::shared_ptr<DropoutLayer> dropout;
 
 public:
-    explicit MultiHeadAttention(uint32_t embedding_dim, uint32_t num_heads, float dropout_prob = 0.2);
+    explicit MultiHeadAttention(uint32_t embedding_dim, uint32_t num_heads, float dropout_prob);
 
     autograd::TensorPtr operator()(const autograd::TensorPtr& x, const autograd::TensorPtr& mask);
 };
