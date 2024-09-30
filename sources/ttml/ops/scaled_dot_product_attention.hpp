@@ -5,9 +5,9 @@
 namespace ttml::ops {
 
 autograd::TensorPtr scaled_dot_product_attention(
-    autograd::TensorPtr query,
-    autograd::TensorPtr key,
-    autograd::TensorPtr value,
-    std::optional<autograd::TensorPtr> mask = std::nullopt);
+    const autograd::TensorPtr& query,
+    const autograd::TensorPtr& key,
+    const autograd::TensorPtr& value,
+    const std::optional<autograd::TensorPtr>& mask = std::nullopt);
 
 }

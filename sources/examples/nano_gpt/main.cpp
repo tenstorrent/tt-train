@@ -96,8 +96,8 @@ class Transformer : public ttml::autograd::ModuleBase {
 
 public:
     Transformer(uint32_t vocab_size, uint32_t max_sequence_length) {
-        uint32_t embedding_size = 128;
-        uint32_t num_heads = 4;
+        uint32_t embedding_size = 64;
+        uint32_t num_heads = 2;
         float dropout_prob = 0.0;
         uint32_t num_blocks = 1;
 
@@ -138,7 +138,8 @@ public:
 
 int main() {
     const std::string data_folder = "/home/ubuntu/ML-Framework-CPP/sources/examples/nano_gpt/data";
-    const std::string data_path = data_folder + "/shakespeare.txt";
+    // const std::string data_path = data_folder + "/shakespeare.txt";
+    const std::string data_path = data_folder + "/shakespeare_slice.txt";
 
     std::string text;
     try {
@@ -211,16 +212,19 @@ int main() {
     sgd_params.weight_decay = 0.0001;
 
     auto optimizer = ttml::optimizers::SGD(model.parameters(), sgd_params);
-    for (auto [features, target, masks, positions] : train_dataloader) {
-        optimizer.zero_grad();
-        auto output = model(features, positions, masks);
-        auto loss = ttml::ops::cross_entropy_loss(target, output);
-        auto loss_float = ttml::core::to_vector(loss->get_value())[0];
-        loss_meter.update(loss_float, features->get_value().get_shape()[0]);
-        fmt::print("Step: {}, Loss: {}\n", global_step++, loss_float);
-        loss->backward();
-        optimizer.step();
-        ttml::autograd::ctx().reset_graph();
+    const uint32_t num_epochs = 10;
+    for (uint32_t epoch = 0; epoch < num_epochs; ++epoch) {
+        for (auto [features, target, masks, positions] : train_dataloader) {
+            optimizer.zero_grad();
+            auto output = model(features, positions, masks);
+            auto loss = ttml::ops::cross_entropy_loss(target, output);
+            auto loss_float = ttml::core::to_vector(loss->get_value())[0];
+            loss_meter.update(loss_float, features->get_value().get_shape()[0]);
+            fmt::print("Step: {}, Loss: {}\n", global_step++, loss_float);
+            loss->backward();
+            optimizer.step();
+            ttml::autograd::ctx().reset_graph();
+        }
     }
     return 0;
 }

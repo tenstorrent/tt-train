@@ -33,6 +33,7 @@ GPTBlock::GPTBlock(uint32_t embedding_size, uint32_t num_heads, float dropout_pr
     ln1 = std::make_shared<LayerNormLayer>(embedding_size);
     ln2 = std::make_shared<LayerNormLayer>(embedding_size);
     attention = std::make_shared<MultiHeadAttention>(embedding_size, num_heads, dropout_prob);
+    // attention = std::make_shared<SingleHeadAttention>(embedding_size, dropout_prob);
 
     create_name("gpt_block");
     register_module(mlp, "mlp");

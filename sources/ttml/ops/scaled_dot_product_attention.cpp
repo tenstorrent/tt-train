@@ -7,10 +7,10 @@
 namespace ttml::ops {
 
 autograd::TensorPtr scaled_dot_product_attention(
-    autograd::TensorPtr query,
-    autograd::TensorPtr key,
-    autograd::TensorPtr value,
-    std::optional<autograd::TensorPtr> mask) {
+    const autograd::TensorPtr& query,
+    const autograd::TensorPtr& key,
+    const autograd::TensorPtr& value,
+    const std::optional<autograd::TensorPtr>& mask) {
     const float scale = 1.0F / std::sqrtf(static_cast<float>(query->get_value().get_shape()[-1]));
     auto qk_t = ttnn::matmul(query->get_value(), key->get_value(), /* transpose_a */ false, /* transpose_b */ true);
     auto qk_scaled = ttnn::multiply(qk_t, scale);
