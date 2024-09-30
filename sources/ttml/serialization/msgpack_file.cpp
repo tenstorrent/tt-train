@@ -122,7 +122,7 @@ public:
         // Write the buffer to a file
         std::ofstream ofs(filename, std::ios::binary);
         if (ofs.is_open()) {
-            ofs.write(sbuf.data(), sbuf.size());
+            ofs.write(sbuf.data(), static_cast<std::streamsize>(sbuf.size()));
             ofs.close();
         } else {
             throw std::runtime_error("Unable to open file for writing: " + filename);
@@ -140,10 +140,10 @@ public:
         ifs.close();
 
         // Unpack the buffer into msgpack object
-        msgpack::object_handle oh = msgpack::unpack(buffer.data(), buffer.size());
+        msgpack::object_handle handle = msgpack::unpack(buffer.data(), buffer.size());
 
         // Convert the msgpack object to the desired type
-        msgpack::object obj = oh.get();
+        msgpack::object obj = handle.get();
 
         // Clear existing data
         m_data.clear();

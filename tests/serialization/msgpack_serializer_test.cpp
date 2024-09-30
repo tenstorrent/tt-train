@@ -113,6 +113,9 @@ TEST_F(MsgPackFileTest, SerializeDeserializeVectors) {
 }
 
 TEST_F(MsgPackFileTest, MissingKeyReturnsFalse) {
+    ttml::serialization::MsgPackFile serializer;
+    serializer.put("int_key", 42);
+    ASSERT_NO_THROW(serializer.serialize(test_filename));
     ttml::serialization::MsgPackFile deserializer;
     ASSERT_NO_THROW(deserializer.deserialize(test_filename));
 
@@ -157,7 +160,7 @@ TEST_F(MsgPackFileTest, EmptySerializerSerialization) {
     ttml::serialization::MsgPackFile deserializer;
     ASSERT_NO_THROW(deserializer.deserialize(test_filename));
 
-    int int_value;
+    int int_value = 0;
     EXPECT_FALSE(deserializer.get("any_key", int_value));
 }
 
