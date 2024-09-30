@@ -1,3 +1,5 @@
+#pragma once
+
 #include "autograd/tensor.hpp"
 
 namespace ttml::ops {

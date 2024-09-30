@@ -78,7 +78,10 @@ public:
         register_module(fc1, "fc1");
     }
 
-    ttml::autograd::TensorPtr operator()(ttml::autograd::TensorPtr x) const {
+    ttml::autograd::TensorPtr operator()(
+        ttml::autograd::TensorPtr x,
+        [[maybe_unused]] ttml::autograd::TensorPtr positions,
+        [[maybe_unused]] ttml::autograd::TensorPtr masks) const {
         x = (*emb)(x);
         x = (*fc1)(x);
         return x;
@@ -88,13 +91,15 @@ public:
 class Transformer : public ttml::autograd::ModuleBase {
     std::shared_ptr<ttml::modules::Embedding> tok_emb;
     std::shared_ptr<ttml::modules::Embedding> pos_emb;
-    std::shared_ptr<ttml::modules::GPTBlock> block;
+    std::vector<std::shared_ptr<ttml::modules::GPTBlock>> blocks;
     std::shared_ptr<ttml::modules::LinearLayer> fc;
 
 public:
     Transformer(uint32_t vocab_size, uint32_t max_sequence_length) {
-        uint32_t embedding_size = 128;
-        float dropout_prob = 0.2;
+        uint32_t embedding_size = 512;
+        uint32_t num_heads = 8;
+        float dropout_prob = 0.1;
+        uint32_t num_blocks = 6;
 
         uint32_t vocab_size_divisible = (vocab_size + 31) / 32 * 32;
         assert(vocab_size_divisible % 32 == 0);
@@ -102,13 +107,17 @@ public:
         assert(embedding_size % 32 == 0);
         tok_emb = std::make_shared<ttml::modules::Embedding>(vocab_size_divisible, embedding_size);
         pos_emb = std::make_shared<ttml::modules::Embedding>(max_sequence_length, embedding_size);
-        block = std::make_shared<ttml::modules::GPTBlock>(embedding_size, dropout_prob);
+        for (uint32_t block_idx = 0; block_idx < num_blocks; ++block_idx) {
+            blocks.push_back(std::make_shared<ttml::modules::GPTBlock>(embedding_size, num_heads, dropout_prob));
+        }
         fc = std::make_shared<ttml::modules::LinearLayer>(embedding_size, vocab_size);
 
         create_name("transformer");
         register_module(tok_emb, "tok_emb");
         register_module(pos_emb, "pos_emb");
-        register_module(block, "block");
+        for (uint32_t block_idx = 0; block_idx < num_blocks; ++block_idx) {
+            register_module(blocks[block_idx], "block_" + std::to_string(block_idx));
+        }
         register_module(fc, "fc");
     }
 
@@ -118,9 +127,11 @@ public:
         const ttml::autograd::TensorPtr& mask) {
         auto tok_emb_out = (*tok_emb)(x);
         auto pos_emb_out = (*pos_emb)(positions);
-        auto emb_out = ttml::ops::add(tok_emb_out, pos_emb_out);
-        auto block_out = (*block)(emb_out, mask);
-        auto logits = (*fc)(block_out);
+        auto out = ttml::ops::add(tok_emb_out, pos_emb_out);
+        for (auto& block : blocks) {
+            out = (*block)(out, mask);
+        }
+        auto logits = (*fc)(out);
         return logits;
     }
 };
@@ -137,11 +148,12 @@ int main() {
         return -1;
     }
 
-    uint32_t sequence_length = 32;
+    uint32_t sequence_length = 512;
     auto [dataset, tokenizer] = ttml::datasets::create_in_memory_char_dataset(text, sequence_length);
     fmt::print("Dataset size: {}\n", dataset.get_size());
 
     auto* device = &ttml::autograd::ctx().get_device();
+    device->enable_async(true);
     std::function<BatchType(std::vector<DatasetSample> && samples)> collate_fn =
         [sequence_length, num_tokens = tokenizer.get_vocab_size(), device](std::vector<DatasetSample>&& samples) {
             const uint32_t batch_size = samples.size();
@@ -194,8 +206,9 @@ int main() {
     auto model = Transformer(tokenizer.get_vocab_size(), sequence_length);
 
     auto sgd_params = ttml::optimizers::SGDConfig();
-    sgd_params.lr = 0.1;
+    sgd_params.lr = 0.01;
     sgd_params.momentum = 0.9;
+    sgd_params.weight_decay = 0.001;
 
     auto optimizer = ttml::optimizers::SGD(model.parameters(), sgd_params);
     for (auto [features, target, masks, positions] : train_dataloader) {
@@ -204,10 +217,7 @@ int main() {
         auto loss = ttml::ops::cross_entropy_loss(target, output);
         auto loss_float = ttml::core::to_vector(loss->get_value())[0];
         loss_meter.update(loss_float, features->get_value().get_shape()[0]);
-        if (global_step++ % 100 == 0) {
-            fmt::print("Step: {}, Loss: {}\n", global_step, loss_meter.average());
-            loss_meter.reset();
-        }
+        fmt::print("Step: {}, Loss: {}\n", global_step++, loss_meter.average());
         loss->backward();
         optimizer.step();
         ttml::autograd::ctx().reset_graph();

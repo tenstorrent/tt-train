@@ -21,6 +21,7 @@
 #include <ttnn/operations/data_movement/permute/permute.hpp>                                     // NOLINT
 #include <ttnn/operations/data_movement/repeat/repeat.hpp>                                       // NOLINT
 #include <ttnn/operations/data_movement/slice/slice.hpp>                                         // NOLINT
+#include <ttnn/operations/data_movement/transpose/transpose.hpp>                                 // NOLINT
 #include <ttnn/operations/data_movement/untilize/untilize.hpp>                                   // NOLINT
 #include <ttnn/operations/eltwise/binary/binary.hpp>                                             // NOLINT
 #include <ttnn/operations/eltwise/binary_backward/binary_backward.hpp>                           // NOLINT
