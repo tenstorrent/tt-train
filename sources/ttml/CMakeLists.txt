@@ -72,9 +72,7 @@ target_compile_definitions(ttml PUBLIC
     FMT_HEADER_ONLY
 )
 
-find_package(HDF5 REQUIRED)
-
-
+set(HDF5_USE_CXX TRUE)
 target_link_libraries(ttml PUBLIC 
-    HDF5::HDF5
+    hdf5::hdf5 hdf5::hdf5_cpp
 )
