@@ -74,9 +74,6 @@ MSGPACK_API_VERSION_NAMESPACE(MSGPACK_DEFAULT_API_NS) {
 namespace ttml::serialization {
 class MsgPackFile::Impl {
 public:
-    Impl() {}
-    ~Impl() {}
-
     // Methods to store different types
     void put(std::string_view key, int value) { m_data[std::string(key)] = value; }
 
