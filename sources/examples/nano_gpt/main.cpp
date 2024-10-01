@@ -96,10 +96,17 @@ class Transformer : public ttml::autograd::ModuleBase {
 
 public:
     Transformer(uint32_t vocab_size, uint32_t max_sequence_length) {
-        uint32_t embedding_size = 128;
-        uint32_t num_heads = 1;
-        float dropout_prob = 0.F;
+        uint32_t embedding_size = 512;
+        uint32_t num_heads = 8;
+        float dropout_prob = 0.1F;
         uint32_t num_blocks = 1;
+        fmt::print("Transformer configuration:\n");
+        fmt::print("    Vocab size: {}\n", vocab_size);
+        fmt::print("    Max sequence length: {}\n", max_sequence_length);
+        fmt::print("    Embedding size: {}\n", embedding_size);
+        fmt::print("    Num heads: {}\n", num_heads);
+        fmt::print("    Dropout probability: {}\n", dropout_prob);
+        fmt::print("    Num blocks: {}\n", num_blocks);
 
         uint32_t vocab_size_divisible = (vocab_size + 31) / 32 * 32;
         assert(vocab_size_divisible % 32 == 0);
@@ -139,8 +146,7 @@ public:
 
 int main() {
     const std::string data_folder = "/home/ubuntu/ML-Framework-CPP/sources/examples/nano_gpt/data";
-    // const std::string data_path = data_folder + "/shakespeare.txt";
-    const std::string data_path = data_folder + "/shakespeare_slice.txt";
+    const std::string data_path = data_folder + "/shakespeare.txt";
 
     std::string text;
     try {
@@ -150,7 +156,7 @@ int main() {
         return -1;
     }
 
-    uint32_t sequence_length = 32;
+    uint32_t sequence_length = 128;
     auto [dataset, tokenizer] = ttml::datasets::create_in_memory_char_dataset(text, sequence_length);
     fmt::print("Dataset size: {}\n", dataset.get_size());
     fmt::print("Vocab size: {}\n", tokenizer.get_vocab_size());
@@ -209,12 +215,12 @@ int main() {
     auto model = Transformer(tokenizer.get_vocab_size(), sequence_length);
 
     auto sgd_params = ttml::optimizers::SGDConfig();
-    sgd_params.lr = 0.1;
+    sgd_params.lr = 0.01;
     sgd_params.momentum = 0.9;
-    // sgd_params.weight_decay = 0.0001;
+    sgd_params.weight_decay = 0.0001;
 
     auto optimizer = ttml::optimizers::SGD(model.parameters(), sgd_params);
-    const uint32_t num_epochs = 20;
+    const uint32_t num_epochs = 1;
     for (uint32_t epoch = 0; epoch < num_epochs; ++epoch) {
         for (auto [features, target, masks, positions] : train_dataloader) {
             optimizer.zero_grad();

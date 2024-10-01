@@ -89,9 +89,7 @@ int main() {
     auto train_dataloader = DataLoader(training_dataset, batch_size, /* shuffle */ true, collate_fn);
     auto test_dataloader = DataLoader(test_dataset, batch_size, /* shuffle */ false, collate_fn);
 
-    // MNIST model with layer norm / dropout and 2 hidden layers
-    auto model = MNISTModel();
-
+    auto model = create_base_mlp(784, 10);
     // evaluate model before training (sanity check to get reasonable accuracy 1/num_targets)
     float accuracy_before_training = evaluate(test_dataloader, model, num_targets);
     fmt::print("Accuracy before training: {}%\n", accuracy_before_training * 100.F);
