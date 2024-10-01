@@ -75,6 +75,8 @@ namespace ttml::serialization {
 class MsgPackFile::Impl {
 public:
     // Methods to store different types
+    void put(std::string_view key, char value) { m_data[std::string(key)] = value; }
+
     void put(std::string_view key, int value) { m_data[std::string(key)] = value; }
 
     void put(std::string_view key, float value) { m_data[std::string(key)] = value; }
@@ -88,6 +90,13 @@ public:
     void put(std::string_view key, std::string_view value) { m_data[std::string(key)] = std::string(value); }
 
     // Overloads for std::span
+    /*
+
+    void put(std::string_view key, std::span<const char> value) {
+        m_data[std::string(key)] = std::vector<char>(value.begin(), value.end());
+    }
+    */
+
     void put(std::string_view key, std::span<const int> value) {
         m_data[std::string(key)] = std::vector<int>(value.begin(), value.end());
     }
@@ -150,6 +159,8 @@ public:
     }
 
     // Methods to get values
+    bool get(std::string_view key, char& value) const { return get_value(key, value); }
+
     bool get(std::string_view key, int& value) const { return get_value(key, value); }
 
     bool get(std::string_view key, float& value) const { return get_value(key, value); }
@@ -161,6 +172,8 @@ public:
     bool get(std::string_view key, std::string& value) const { return get_value(key, value); }
 
     // Methods to get vectors
+    // bool get(std::string_view key, std::vector<char>& value) const { return get_value(key, value); }
+
     bool get(std::string_view key, std::vector<int>& value) const { return get_value(key, value); }
 
     bool get(std::string_view key, std::vector<float>& value) const { return get_value(key, value); }
@@ -173,11 +186,13 @@ public:
 
 private:
     using ValueType = std::variant<
+        char,
         int,
         float,
         double,
         uint32_t,
         std::string,
+        std::vector<char>,
         std::vector<int>,
         std::vector<float>,
         std::vector<double>,
@@ -211,6 +226,8 @@ MsgPackFile::~MsgPackFile() = default;
 
 MsgPackFile::MsgPackFile(MsgPackFile&&) noexcept = default;
 
+void MsgPackFile::put(std::string_view key, char value) { m_impl->put(key, value); }
+
 void MsgPackFile::put(std::string_view key, int value) { m_impl->put(key, value); }
 
 void MsgPackFile::put(std::string_view key, float value) { m_impl->put(key, value); }
@@ -234,6 +251,8 @@ void MsgPackFile::put(std::string_view key, std::span<const std::string> value) 
 void MsgPackFile::serialize(const std::string& filename) { m_impl->serialize(filename); }
 
 void MsgPackFile::deserialize(const std::string& filename) { m_impl->deserialize(filename); }
+
+bool MsgPackFile::get(std::string_view key, char& value) const { return m_impl->get(key, value); }
 
 bool MsgPackFile::get(std::string_view key, int& value) const { return m_impl->get(key, value); }
 

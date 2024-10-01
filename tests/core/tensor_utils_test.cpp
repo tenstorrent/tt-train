@@ -176,3 +176,25 @@ TEST(TensorUtilsTest, TestIsInitialized) {
     tensor = ttml::core::zeros(shape, device);
     EXPECT_TRUE(ttml::core::is_tensor_initialized(tensor));
 }
+
+TEST(TensorUtilsTest, TestOnesLike) {
+    auto* device = &ttml::autograd::ctx().get_device();
+    auto shape = ttml::core::create_shape({1, 2, 32, 321});
+    auto tensor_zeros = ttml::core::zeros(shape, device);
+    auto tensor_ones = ttml::core::ones_like(tensor_zeros);
+    auto tensor_vec = ttml::core::to_vector(tensor_ones);
+    for (auto& val : tensor_vec) {
+        EXPECT_EQ(val, 1.F);
+    }
+}
+
+TEST(TensorUtilsTest, TestZerosLike) {
+    auto* device = &ttml::autograd::ctx().get_device();
+    auto shape = ttml::core::create_shape({1, 2, 31, 322});
+    auto tensor_ones = ttml::core::ones(shape, device);
+    auto tensor_zeros = ttml::core::zeros_like(tensor_ones);
+    auto tensor_vec = ttml::core::to_vector(tensor_zeros);
+    for (auto& val : tensor_vec) {
+        EXPECT_EQ(val, 0.F);
+    }
+}

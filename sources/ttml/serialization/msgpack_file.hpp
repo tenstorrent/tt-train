@@ -27,6 +27,7 @@ public:
     MsgPackFile& operator=(MsgPackFile&& other) = delete;
 
     // Methods to put different types
+    void put(std::string_view key, char value);
     void put(std::string_view key, int value);
     void put(std::string_view key, float value);
     void put(std::string_view key, double value);
@@ -34,6 +35,7 @@ public:
     void put(std::string_view key, std::string_view value);
 
     // Overloads for std::span
+    // void put(std::string_view key, std::span<const char> value);
     void put(std::string_view key, std::span<const int> value);
     void put(std::string_view key, std::span<const float> value);
     void put(std::string_view key, std::span<const double> value);
@@ -47,6 +49,7 @@ public:
     void deserialize(const std::string& filename);
 
     // Methods to get values
+    bool get(std::string_view key, char& value) const;
     bool get(std::string_view key, int& value) const;
     bool get(std::string_view key, float& value) const;
     bool get(std::string_view key, double& value) const;
@@ -54,6 +57,7 @@ public:
     bool get(std::string_view key, std::string& value) const;
 
     // Methods to get vectors (from spans)
+    // bool get(std::string_view key, std::vector<char>& value) const;
     bool get(std::string_view key, std::vector<int>& value) const;
     bool get(std::string_view key, std::vector<float>& value) const;
     bool get(std::string_view key, std::vector<double>& value) const;
