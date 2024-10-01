@@ -71,3 +71,7 @@ target_link_libraries(ttml PUBLIC
 target_compile_definitions(ttml PUBLIC
     FMT_HEADER_ONLY
 )
+
+#print msgpack_SOURCE_DIR
+message(STATUS "msgpack_SOURCE_DIR: ${msgpack_SOURCE_DIR}")
+target_include_directories(ttml PUBLIC ${msgpack_SOURCE_DIR}/include)

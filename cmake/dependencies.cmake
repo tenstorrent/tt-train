@@ -57,3 +57,6 @@ CPMAddPackage(
   GITHUB_REPOSITORY boost-ext/reflect
   GIT_TAG v1.1.1
 )
+
+
+include(${PROJECT_SOURCE_DIR}/cmake/fetch_msgpack.cmake)
