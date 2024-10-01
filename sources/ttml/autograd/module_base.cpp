@@ -19,7 +19,7 @@ void ModuleBase::register_module(const ModuleBasePtr& module_ptr, const std::str
 }
 
 void ModuleBase::create_name(const std::string& prefix) {
-    m_name = fmt::format("{}@{}", prefix, std::to_string(autograd::ctx().generate_module_id()));
+    m_name = fmt::format("{}@{}", prefix, autograd::ctx().generate_module_id());
 }
 
 const std::string& ModuleBase::get_name() const { return m_name; }

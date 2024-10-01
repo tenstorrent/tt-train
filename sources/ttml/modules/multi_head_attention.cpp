@@ -6,7 +6,6 @@ namespace ttml::modules {
 
 MultiHeadAttention::MultiHeadAttention(uint32_t embedding_dim_, uint32_t num_heads_, float dropout_prob) :
     embedding_dim(embedding_dim_), num_heads(num_heads_) {
-    create_name("multi_head_attention");
     // create layers
     q_linear = std::make_shared<ttml::modules::LinearLayer>(embedding_dim, embedding_dim);
     k_linear = std::make_shared<ttml::modules::LinearLayer>(embedding_dim, embedding_dim);
@@ -15,6 +14,7 @@ MultiHeadAttention::MultiHeadAttention(uint32_t embedding_dim_, uint32_t num_hea
     out_linear = std::make_shared<ttml::modules::LinearLayer>(embedding_dim, embedding_dim);
 
     // register modules
+    create_name("multi_head_attention");
     register_module(q_linear, "q_linear");
     register_module(k_linear, "k_linear");
     register_module(v_linear, "v_linear");

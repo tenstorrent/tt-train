@@ -7,20 +7,20 @@
 namespace ttml::modules {
 
 GPTMLP::GPTMLP(uint32_t embedding_size, float dropout_prob) {
-    create_name("gpt_mlp");
     fc1 = std::make_shared<LinearLayer>(embedding_size, embedding_size * 4);
     fc2 = std::make_shared<LinearLayer>(embedding_size * 4, embedding_size);
     ln1 = std::make_shared<LayerNormLayer>(embedding_size * 4);
     dropout = std::make_shared<DropoutLayer>(dropout_prob);
 
+    create_name("gpt_mlp");
     register_module(fc1, "fc1");
     register_module(fc2, "fc2");
     register_module(ln1, "ln1");
     register_module(dropout, "dropout");
 }
 
-autograd::TensorPtr GPTMLP::operator()(autograd::TensorPtr x) {
-    x = (*fc1)(x);
+autograd::TensorPtr GPTMLP::operator()(const autograd::TensorPtr& input) {
+    auto x = (*fc1)(input);
     x = ops::gelu(x);
     x = (*ln1)(x);
     x = (*fc2)(x);
@@ -41,22 +41,16 @@ GPTBlock::GPTBlock(uint32_t embedding_size, uint32_t num_heads, float dropout_pr
     register_module(attention, "attention");
 }
 
-autograd::TensorPtr GPTBlock::operator()(autograd::TensorPtr x, const autograd::TensorPtr& mask) {
-    auto residual = x;
-    x = (*ln1)(x);
-    // print_tensor_stats(x, "LN1");
+autograd::TensorPtr GPTBlock::operator()(const autograd::TensorPtr& input, const autograd::TensorPtr& mask) {
+    auto residual = input;
+    auto x = (*ln1)(input);
     x = (*attention)(x, mask);
-    // print_tensor_stats(x, "attention");
     x = ops::add(x, residual);
-    // print_tensor_stats(x, "residual");
 
     residual = x;
     x = (*ln2)(x);
-    // print_tensor_stats(x, "LN2");
     x = (*mlp)(x);
-    // print_tensor_stats(x, "MLP");
     x = ops::add(x, residual);
-    // print_tensor_stats(x, "residual");
 
     return x;
 }

@@ -3,7 +3,6 @@
 namespace ttml::modules {
 
 SingleHeadAttention::SingleHeadAttention(uint32_t embedding_dim, float dropout_prob) {
-    create_name("single_head_attention");
     // create layers
     q_linear = std::make_shared<ttml::modules::LinearLayer>(embedding_dim, embedding_dim);
     k_linear = std::make_shared<ttml::modules::LinearLayer>(embedding_dim, embedding_dim);
@@ -12,6 +11,7 @@ SingleHeadAttention::SingleHeadAttention(uint32_t embedding_dim, float dropout_p
     out_linear = std::make_shared<ttml::modules::LinearLayer>(embedding_dim, embedding_dim);
 
     // register modules
+    create_name("single_head_attention");
     register_module(q_linear, "q_linear");
     register_module(k_linear, "k_linear");
     register_module(v_linear, "v_linear");
