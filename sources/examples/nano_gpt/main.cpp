@@ -96,10 +96,10 @@ class Transformer : public ttml::autograd::ModuleBase {
 
 public:
     Transformer(uint32_t vocab_size, uint32_t max_sequence_length) {
-        uint32_t embedding_size = 512;
-        uint32_t num_heads = 8;
-        float dropout_prob = 0.1F;
-        uint32_t num_blocks = 1;
+        uint32_t embedding_size = 256;
+        uint32_t num_heads = 1;
+        float dropout_prob = 0.0F;
+        uint32_t num_blocks = 2;
         fmt::print("Transformer configuration:\n");
         fmt::print("    Vocab size: {}\n", vocab_size);
         fmt::print("    Max sequence length: {}\n", max_sequence_length);
@@ -165,13 +165,13 @@ int main() {
         return -1;
     }
 
-    uint32_t sequence_length = 128;
+    uint32_t sequence_length = 256;
     auto [dataset, tokenizer] = ttml::datasets::create_in_memory_char_dataset(text, sequence_length);
     fmt::print("Dataset size: {}\n", dataset.get_size());
     fmt::print("Vocab size: {}\n", tokenizer.get_vocab_size());
 
     auto* device = &ttml::autograd::ctx().get_device();
-    device->enable_async(true);
+    // device->enable_async(true);
     std::function<BatchType(std::vector<DatasetSample> && samples)> collate_fn =
         [sequence_length, vocab_size = tokenizer.get_vocab_size(), device](std::vector<DatasetSample>&& samples) {
             const uint32_t batch_size = samples.size();
@@ -220,13 +220,17 @@ int main() {
 
     auto train_dataloader = DataLoader(dataset, /* batch_size */ batch_size, /* shuffle */ true, collate_fn);
 
-    // auto model = BigramFCModel(tokenizer.get_vocab_size(), tokenizer.get_vocab_size(), /* hidden_dim */ 128);
+    // auto model = BigramFCModel(tokenizer.get_vocab_size(), tokenizer.get_vocab_size(), /* hidden_dim */ 256);
     auto model = Transformer(tokenizer.get_vocab_size(), sequence_length);
 
     auto sgd_params = ttml::optimizers::SGDConfig();
     sgd_params.lr = 0.1F;
-    sgd_params.momentum = 0.9F;
-    sgd_params.weight_decay = 0.F;
+    sgd_params.momentum = 0.0F;
+    sgd_params.weight_decay = 0.0F;
+    fmt::print("SGD configuration:\n");
+    fmt::print("    Learning rate: {}\n", sgd_params.lr);
+    fmt::print("    Momentum: {}\n", sgd_params.momentum);
+    fmt::print("    Weight decay: {}\n", sgd_params.weight_decay);
 
     auto optimizer = ttml::optimizers::SGD(model.parameters(), sgd_params);
     const uint32_t num_epochs = 1;

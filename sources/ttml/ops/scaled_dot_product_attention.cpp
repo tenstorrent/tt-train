@@ -2,9 +2,25 @@
 
 #include "autograd/auto_context.hpp"
 #include "autograd/graph_utils.hpp"
+#include "core/compute_kernel_config.hpp"
 #include "ttnn_fixed/trivial_ttnn_ops.hpp"
 
 namespace ttml::ops {
+
+tt::tt_metal::Tensor matmul(
+    const tt::tt_metal::Tensor& a, const tt::tt_metal::Tensor& b, bool transpose_a, bool transpose_b) {
+    return ttnn::matmul(
+        a,
+        b,
+        transpose_a,
+        transpose_b,
+        /* memory_config */ std::nullopt,
+        /* dtype */ std::nullopt,
+        /* program_config */ std::nullopt,
+        /* activation */ std::nullopt,
+        /* compute_kernel_config */ core::ComputeKernelConfig::precise(),
+        /* core_grid */ std::nullopt);
+}
 
 autograd::TensorPtr scaled_dot_product_attention(
     const autograd::TensorPtr& query,
@@ -12,39 +28,50 @@ autograd::TensorPtr scaled_dot_product_attention(
     const autograd::TensorPtr& value,
     const std::optional<autograd::TensorPtr>& mask) {
     const float scale = 1.0F / std::sqrtf(static_cast<float>(query->get_value().get_shape()[-1]));
-    auto qk_t = ttnn::matmul(query->get_value(), key->get_value(), /* transpose_a */ false, /* transpose_b */ true);
+    // (B, H, S, E) x (B, H, E, S) -> (B, H, S, S)
+    auto qk_t = matmul(query->get_value(), key->get_value(), /* transpose_a */ false, /* transpose_b */ true);
+    // (B, H, S, S) * scale
     auto qk_scaled = ttnn::multiply(qk_t, scale);
     if (mask.has_value()) {
         qk_scaled = ttnn::where(mask.value()->get_value(), qk_scaled, /* other */ -1e9F);
     }
+    // (B, H, S, S)
     auto attention_weights = ttnn_fixed::softmax(qk_scaled, /* axis */ 3);
     // TODO: add dropout here
-    auto attention_qkv =
-        ttnn::matmul(attention_weights, value->get_value(), /* transpose_a */ false, /* transpose_b */ false);
 
-    auto out = ttml::autograd::create_tensor();
-    out->set_value(attention_qkv);
+    // (B, H, S, S) x (B, H, S, E) -> (B, H, S, E)
+    auto attention_qkv =
+        matmul(attention_weights, value->get_value(), /* transpose_a */ false, /* transpose_b */ false);
+    auto out = ttml::autograd::create_tensor(attention_qkv);
 
     ttml::autograd::GradFunction grad =
         [scale, query, key, value, qk_t, qk_scaled, attention_weights, attention_qkv, out, mask]() {
             auto grad_output = out->get_grad();
-            auto grad_v = ttnn::matmul(attention_weights, grad_output, /* transpose_a */ true, /* transpose_b */ false);
+            // (B, H, S, S) x (B, H, S, E) -> (B, H, S, E)
+            auto grad_v = matmul(attention_weights, grad_output, /* transpose_a */ true, /* transpose_b */ false);
             auto grad_attention_weights =
-                ttnn::matmul(grad_output, value->get_value(), /* transpose_a */ false, /* transpose_b */ true);
+                matmul(grad_output, value->get_value(), /* transpose_a */ false, /* transpose_b */ true);
             auto grad_scaled_dot = ttnn::multiply(
                 attention_weights,
                 ttnn::subtract(
-                    grad_attention_weights, ttnn::sum(ttnn::multiply(attention_weights, grad_attention_weights), 3)));
+                    grad_attention_weights,
+                    ttnn_fixed::sum_over_dim(ttnn::multiply(attention_weights, grad_attention_weights), 3)));
             if (mask.has_value()) {
                 grad_scaled_dot = ttnn::where(mask.value()->get_value(), grad_scaled_dot, /* other */ 0.0F);
             }
 
-            auto grad_q =
-                ttnn::matmul(grad_scaled_dot, key->get_value(), /* transpose_a */ false, /* transpose_b */ false);
+            auto grad_q = matmul(
+                grad_scaled_dot,
+                key->get_value(),
+                /* transpose_a */ false,
+                /* transpose_b */ false);
             grad_q = ttnn::multiply(grad_q, scale);
 
-            auto grad_k =
-                ttnn::matmul(grad_scaled_dot, query->get_value(), /* transpose_a */ true, /* transpose_b */ false);
+            auto grad_k = matmul(
+                grad_scaled_dot,
+                query->get_value(),
+                /* transpose_a */ true,
+                /* transpose_b */ false);
             grad_k = ttnn::multiply(grad_k, scale);
 
             query->add_grad(grad_q);
