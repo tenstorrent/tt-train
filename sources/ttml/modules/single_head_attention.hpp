@@ -13,7 +13,7 @@ class SingleHeadAttention : public ttml::autograd::ModuleBase {
     std::shared_ptr<DropoutLayer> dropout;
 
 public:
-    explicit SingleHeadAttention(uint32_t embedding_dim, float dropout_prob = 0.2);
+    explicit SingleHeadAttention(uint32_t embedding_dim, float dropout_prob);
 
     autograd::TensorPtr operator()(const autograd::TensorPtr& x, const autograd::TensorPtr& mask);
 };
