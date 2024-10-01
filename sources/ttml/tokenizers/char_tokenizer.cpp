@@ -5,8 +5,9 @@
 
 namespace ttml::tokenizers {
 CharTokenizer::CharTokenizer(Vocabulary vocabulary) : m_vocabulary(std::move(vocabulary)) {
-    m_vocabulary["<BEG>"] = static_cast<int>(m_vocabulary.size());
-    m_vocabulary["<END>"] = static_cast<int>(m_vocabulary.size());
+    auto vocab_size = static_cast<uint32_t>(m_vocabulary.size());
+    m_vocabulary[BEGIN_TOKEN] = vocab_size++;
+    m_vocabulary[END_TOKEN] = vocab_size++;
     build_reverse_mapping();
 }
 

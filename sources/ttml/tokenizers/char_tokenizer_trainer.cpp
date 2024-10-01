@@ -13,11 +13,11 @@ CharTokenizer CharTokenizerTrainer::train(const std::string& text, bool add_padd
     std::set<char> unique_chars(text.begin(), text.end());
 
     if (add_padding_token) {
-        vocabulary["<PAD>"] = 0;
+        vocabulary[PAD_TOKEN] = 0U;
     }
 
     for (char chr : unique_chars) {
-        vocabulary[std::string(1, chr)] = static_cast<int>(vocabulary.size());
+        vocabulary[std::string(1, chr)] = static_cast<uint32_t>(vocabulary.size());
     }
 
     return CharTokenizer(vocabulary);

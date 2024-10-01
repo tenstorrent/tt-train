@@ -6,6 +6,10 @@
 
 namespace ttml::tokenizers {
 
+const std::string PAD_TOKEN = "<PAD>";
+const std::string END_TOKEN = "<END>";
+const std::string BEGIN_TOKEN = "<BEG>";
+
 class CharTokenizer : public TokenizerBase {
 public:
     using Vocabulary = std::unordered_map<std::string, uint32_t>;
