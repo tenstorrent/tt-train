@@ -1,6 +1,7 @@
 #include "multi_head_attention.hpp"
 
 #include "ops/multi_head_utils.hpp"
+#include "ops/scaled_dot_product_attention.hpp"
 
 namespace ttml::modules {
 
@@ -33,6 +34,8 @@ ttml::autograd::TensorPtr MultiHeadAttention::operator()(
     auto value_with_heads = ops::heads_creation(value, m_num_heads);
 
     auto attention = ttml::ops::scaled_dot_product_attention(query_with_heads, key_with_heads, value_with_heads, mask);
+    // auto attention =
+    //     ttml::ops::scaled_sigmoid_dot_product_attention(query_with_heads, key_with_heads, value_with_heads, mask);
     attention = ops::heads_fusion(attention);
 
     auto out = (*m_out_linear)(attention);

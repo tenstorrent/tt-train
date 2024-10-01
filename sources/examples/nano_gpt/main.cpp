@@ -96,10 +96,10 @@ class Transformer : public ttml::autograd::ModuleBase {
 
 public:
     Transformer(uint32_t vocab_size, uint32_t max_sequence_length) {
-        uint32_t embedding_size = 256;
+        uint32_t embedding_size = 128;
         uint32_t num_heads = 1;
         float dropout_prob = 0.0F;
-        uint32_t num_blocks = 2;
+        uint32_t num_blocks = 1;
         fmt::print("Transformer configuration:\n");
         fmt::print("    Vocab size: {}\n", vocab_size);
         fmt::print("    Max sequence length: {}\n", max_sequence_length);
@@ -155,7 +155,8 @@ public:
 
 int main() {
     const std::string data_folder = "/home/ubuntu/ML-Framework-CPP/sources/examples/nano_gpt/data";
-    const std::string data_path = data_folder + "/shakespeare.txt";
+    // const std::string data_path = data_folder + "/shakespeare.txt";
+    const std::string data_path = data_folder + "/tiny_shakespeare.txt";
 
     std::string text;
     try {
@@ -165,7 +166,7 @@ int main() {
         return -1;
     }
 
-    uint32_t sequence_length = 256;
+    uint32_t sequence_length = 32;
     auto [dataset, tokenizer] = ttml::datasets::create_in_memory_char_dataset(text, sequence_length);
     fmt::print("Dataset size: {}\n", dataset.get_size());
     fmt::print("Vocab size: {}\n", tokenizer.get_vocab_size());
@@ -233,7 +234,7 @@ int main() {
     fmt::print("    Weight decay: {}\n", sgd_params.weight_decay);
 
     auto optimizer = ttml::optimizers::SGD(model.parameters(), sgd_params);
-    const uint32_t num_epochs = 1;
+    const uint32_t num_epochs = 5;
     for (uint32_t epoch = 0; epoch < num_epochs; ++epoch) {
         for (auto [features, target, masks, positions] : train_dataloader) {
             optimizer.zero_grad();
