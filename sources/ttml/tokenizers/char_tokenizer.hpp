@@ -6,24 +6,34 @@
 
 namespace ttml::tokenizers {
 
+const std::string PAD_TOKEN = "<PAD>";
+const std::string END_TOKEN = "<END>";
+const std::string BEGIN_TOKEN = "<BEG>";
+
 class CharTokenizer : public TokenizerBase {
-   public:
-    using Vocabulary = std::unordered_map<char, int>;
-    using IdtoChars = std::unordered_map<int, char>;
+public:
+    using Vocabulary = std::unordered_map<std::string, uint32_t>;
+    using IdtoChars = std::unordered_map<uint32_t, std::string>;
     // Constructor that initializes the tokenizer with a vocabulary
-    explicit CharTokenizer(const Vocabulary& vocabulary);
+    explicit CharTokenizer(Vocabulary vocabulary);
+
     CharTokenizer(const CharTokenizer&) = default;
+    CharTokenizer& operator=(const CharTokenizer&) = default;
+
     CharTokenizer(CharTokenizer&&) = default;
+    CharTokenizer& operator=(CharTokenizer&&) = default;
 
-    [[nodiscard]] std::vector<int> encode(const std::string& text) const override;
+    [[nodiscard]] std::vector<uint32_t> encode(const std::string& text) const override;
 
-    [[nodiscard]] std::string decode(const std::vector<int>& tokens) const override;
+    [[nodiscard]] std::string decode(const std::vector<uint32_t>& tokens) const override;
 
     [[nodiscard]] const CharTokenizer::Vocabulary& get_vocabulary() const;
 
+    [[nodiscard]] uint32_t get_vocab_size() const;
+
     ~CharTokenizer() override = default;
 
-   private:
+private:
     Vocabulary m_vocabulary;
     IdtoChars m_id_to_char;
 

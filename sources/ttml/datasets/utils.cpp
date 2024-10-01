@@ -5,11 +5,10 @@
 
 namespace ttml::datasets {
 std::tuple<InMemoryCharDataset, tokenizers::CharTokenizer> create_in_memory_char_dataset(
-    const std::string& text, int seq_length) {
-    tokenizers::CharTokenizerTrainer trainer;
-    tokenizers::CharTokenizer tokenizer = trainer.train(text);
+    const std::string& text, uint32_t seq_length) {
+    tokenizers::CharTokenizer tokenizer = tokenizers::CharTokenizerTrainer::train(text);
 
-    std::vector<int> tokenized_text = tokenizer.encode(text);
+    std::vector<uint32_t> tokenized_text = tokenizer.encode(text);
 
     return {InMemoryCharDataset(tokenized_text, seq_length), std::move(tokenizer)};
 }

@@ -72,4 +72,9 @@ void Tensor::set_node(const std::optional<NodeId>& node) {
     }
     m_node_id = node;
 }
+
+void print_tensor_stats(const autograd::TensorPtr& tensor, const std::string& name) {
+    core::print_tensor_stats(tensor->get_value(), name);
+}
+
 }  // namespace ttml::autograd

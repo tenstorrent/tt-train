@@ -29,15 +29,12 @@ autograd::TensorPtr cross_entropy_loss_without_reduce_(
     auto prediction_tensor_clipped = ttnn::clip(prediction_tensor, eps, 1.0F);
     auto loss = ttnn::multiply(target->get_value(), ttnn::log(prediction_tensor_clipped));
     loss = ttnn::neg(loss);
-    loss = ttnn::multiply(loss, loss.get_shape()[-1]);
+    loss = ttnn::sum(loss, -1);
+    auto out = autograd::create_tensor(loss);
 
-    auto out = autograd::create_tensor();
-    out->set_value(loss);
     autograd::GradFunction grad = [target, prediction_tensor, prediction, out]() {
         auto grad = ttnn::subtract(prediction_tensor, target->get_value());
-        grad = ttnn::multiply(grad, target->get_value().get_shape()[-1]);
         grad = ttnn::multiply(grad, out->get_grad());
-
         prediction->add_grad(grad);
     };
 

@@ -10,7 +10,7 @@
 namespace ttml::datasets {
 
 std::tuple<InMemoryCharDataset, tokenizers::CharTokenizer> create_in_memory_char_dataset(
-    const std::string& text, int seq_length);
+    const std::string& text, uint32_t seq_length);
 
 template <typename DatasetType>
 std::vector<DatasetSubset<DatasetType>> random_split(

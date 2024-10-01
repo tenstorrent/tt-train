@@ -19,7 +19,7 @@ Embedding::Embedding(uint32_t num_embeddings, uint32_t embedding_dim) {
         throw std::logic_error(
             fmt::format("num_embeddings must be a multiple of TILE_HEIGHT, current num_embeddings {}", num_embeddings));
     }
-    if (embedding_dim % TILE_WIDTH == 0) {
+    if (embedding_dim % TILE_WIDTH != 0) {
         throw std::logic_error(
             fmt::format("embedding_dim must be a multiple of TILE_WIDTH, current embedding_dim {}", embedding_dim));
     }
