@@ -108,11 +108,20 @@ public:
         fmt::print("    Dropout probability: {}\n", dropout_prob);
         fmt::print("    Num blocks: {}\n", num_blocks);
 
-        uint32_t vocab_size_divisible = (vocab_size + 31) / 32 * 32;
-        assert(vocab_size_divisible % 32 == 0);
-        assert(max_sequence_length % 32 == 0);
-        assert(embedding_size % 32 == 0);
-        tok_emb = std::make_shared<ttml::modules::Embedding>(vocab_size_divisible, embedding_size);
+        uint32_t vocab_size_divisible_by_32 = (vocab_size + 31) / 32 * 32;
+        if (max_sequence_length % 32 != 0) {
+            throw std::logic_error(fmt::format(
+                "Max sequence length should be divisible by 32 due to current limitations in tensor. Provided "
+                "max_sequence_length={}",
+                max_sequence_length));
+        }
+        if (embedding_size % 32 != 0) {
+            throw std::logic_error(fmt::format(
+                "Embedding size should be divisible by 32 due to current limitations in tensor. Provided "
+                "embedding_size={}",
+                embedding_size));
+        }
+        tok_emb = std::make_shared<ttml::modules::Embedding>(vocab_size_divisible_by_32, embedding_size);
         pos_emb = std::make_shared<ttml::modules::Embedding>(max_sequence_length, embedding_size);
         blocks.reserve(num_blocks);
         for (uint32_t block_idx = 0; block_idx < num_blocks; ++block_idx) {
@@ -215,9 +224,9 @@ int main() {
     auto model = Transformer(tokenizer.get_vocab_size(), sequence_length);
 
     auto sgd_params = ttml::optimizers::SGDConfig();
-    sgd_params.lr = 0.01;
-    sgd_params.momentum = 0.9;
-    sgd_params.weight_decay = 0.0001;
+    sgd_params.lr = 0.1F;
+    sgd_params.momentum = 0.9F;
+    sgd_params.weight_decay = 0.F;
 
     auto optimizer = ttml::optimizers::SGD(model.parameters(), sgd_params);
     const uint32_t num_epochs = 1;
