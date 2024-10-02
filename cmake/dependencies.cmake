@@ -60,3 +60,6 @@ CPMAddPackage(
 
 
 include(${PROJECT_SOURCE_DIR}/cmake/fetch_msgpack.cmake)
+
+
+include(${PROJECT_SOURCE_DIR}/cmake/fetch_cli11.cmake)
