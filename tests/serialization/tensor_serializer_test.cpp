@@ -10,6 +10,7 @@
 #include "core/device.hpp"
 #include "core/tt_tensor_utils.hpp"
 #include "core/ttnn_all_includes.hpp"
+#include "modules/multi_layer_perceptron.hpp"
 #include "serialization/msgpack_file.hpp"
 #include "serialization/serialization.hpp"
 
@@ -54,4 +55,21 @@ TEST_F(TensorFileTest, SerializeDeserializeTensor) {
     for (auto& val : read_vec) {
         EXPECT_EQ(val, 1.F);
     }
+}
+
+TEST_F(TensorFileTest, SerializeDeserializeNamedParameters) {
+    ttml::serialization::MsgPackFile serializer;
+    auto* device = &ttml::autograd::ctx().get_device();
+    auto model_params = ttml::modules::MultiLayerPerceptronParameters{
+        .m_input_features = 3, .m_hidden_features = {128, 64, 32}, .m_output_features = 10};
+    ttml::modules::MultiLayerPerceptron mlp_to_write(model_params);
+    ttml::modules::MultiLayerPerceptron mlp_to_read(model_params);
+    // Write tensor to file
+    auto params_to_write = mlp_to_write.parameters();
+    ttml::serialization::write_named_parameters(serializer, "mlp", params_to_write);
+    serializer.serialize(test_filename);
+    ttml::serialization::MsgPackFile deserializer;
+    deserializer.deserialize(test_filename);
+    auto params_to_read = mlp_to_read.parameters();
+    ttml::serialization::read_named_parameters(deserializer, "mlp", params_to_read);
 }

@@ -10,9 +10,10 @@
 
 namespace ttml::serialization {
 
-// trivial type to the std::array of bytes
+// trivial type to the std::string
 template <typename T>
 std::string to_bytes(const T& value) {
+    static_assert(std::is_trivially_copyable<T>::value, "T must be trivially copyable");
     std::string bytes(sizeof(T), '\0');
     std::memcpy(bytes.data(), &value, sizeof(T));
     return bytes;
@@ -30,13 +31,6 @@ void from_bytes(const std::string& bytes, T& value) {
 
 template <typename T>
 void get_enum(MsgPackFile& file, std::string_view name, T& value) {
-    int int_value = 0;
-    file.get(std::string(name), int_value);
-    value = static_cast<T>(int_value);
-}
-
-template <typename T>
-void get_as_bytes(MsgPackFile& file, std::string_view name, T& value) {
     int int_value = 0;
     file.get(std::string(name), int_value);
     value = static_cast<T>(int_value);
@@ -117,7 +111,7 @@ void write_named_parameters(MsgPackFile& file, std::string_view name, const ttml
         write_autograd_tensor(file, std::string(name) + "/" + key, value);
     }
 }
-void read_named_parameters(MsgPackFile& file, std::string_view name, const ttml::autograd::NamedParameters& params) {
+void read_named_parameters(MsgPackFile& file, std::string_view name, ttml::autograd::NamedParameters& params) {
     for (const auto& [key, value] : params) {
         ttml::autograd::TensorPtr tensor;
         read_autograd_tensor(file, std::string(name) + "/" + key, tensor);

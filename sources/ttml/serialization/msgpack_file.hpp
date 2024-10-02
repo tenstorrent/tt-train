@@ -39,7 +39,6 @@ public:
     void put(std::string_view key, const char* value) { put(key, std::string_view(value)); }
 
     // Overloads for std::span
-    // void put(std::string_view key, std::span<const char> value);
     void put(std::string_view key, std::span<const int> value);
     void put(std::string_view key, std::span<const float> value);
     void put(std::string_view key, std::span<const double> value);
@@ -62,7 +61,6 @@ public:
     bool get(std::string_view key, std::string& value) const;
 
     // Methods to get vectors (from spans)
-    // bool get(std::string_view key, std::vector<char>& value) const;
     bool get(std::string_view key, std::vector<int>& value) const;
     bool get(std::string_view key, std::vector<float>& value) const;
     bool get(std::string_view key, std::vector<double>& value) const;
