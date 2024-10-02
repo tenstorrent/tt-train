@@ -45,7 +45,7 @@ void write_ttnn_tensor(MsgPackFile& file, std::string_view name, const tt::tt_me
     file.put(std::string(name) + "/shape", to_bytes(shape));
     file.put(std::string(name) + "/data_type", static_cast<int>(data_type));
     file.put(std::string(name) + "/layout", static_cast<int>(layout));
-    file.put(std::string(name) + "/layout", static_cast<int>(storage_type));
+    file.put(std::string(name) + "/storage_type", static_cast<int>(storage_type));
 
     if (data_type == tt::tt_metal::DataType::BFLOAT16) {
         auto data = ttml::core::to_vector<float>(tensor);
@@ -61,14 +61,14 @@ void read_ttnn_tensor(MsgPackFile& file, std::string_view name, tt::tt_metal::Te
     tt::tt_metal::Layout layout{};
     tt::tt_metal::StorageType storage_type{};
 
-    auto shape = tensor.get_shape();
+    auto shape = core::create_shape({1, 1, 1, 1});
     std::string bytes;
     file.get(std::string(name) + "/shape", bytes);
     from_bytes<ttnn::Shape>(bytes, shape);
 
     get_enum(file, std::string(name) + "/data_type", data_type);
     get_enum(file, std::string(name) + "/layout", layout);
-    get_enum(file, std::string(name) + "/layout", storage_type);
+    get_enum(file, std::string(name) + "/storage_type", storage_type);
 
     if (data_type == tt::tt_metal::DataType::BFLOAT16) {
         std::vector<float> data;
@@ -112,9 +112,8 @@ void write_named_parameters(MsgPackFile& file, std::string_view name, const ttml
     }
 }
 void read_named_parameters(MsgPackFile& file, std::string_view name, ttml::autograd::NamedParameters& params) {
-    for (const auto& [key, value] : params) {
-        ttml::autograd::TensorPtr tensor;
-        read_autograd_tensor(file, std::string(name) + "/" + key, tensor);
+    for (auto& [key, value] : params) {
+        read_autograd_tensor(file, std::string(name) + "/" + key, value);
     }
 }
 
