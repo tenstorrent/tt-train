@@ -58,9 +58,9 @@ int main(int argc, char** argv) {
     int logging_interval = 50;
     size_t num_epochs = 10;
 
-    app.add_option("-b,--batch_size", batch_size, "Batch size")->default_val(128);
-    app.add_option("-l,--logging_interval", logging_interval, "Logging interval")->default_val(50);
-    app.add_option("-b,--num_epochs", num_epochs, "Number of epochs")->default_val(10);
+    app.add_option("-b,--batch_size", batch_size, "Batch size")->default_val(batch_size);
+    app.add_option("-l,--logging_interval", logging_interval, "Logging interval")->default_val(logging_interval);
+    app.add_option("-b,--num_epochs", num_epochs, "Number of epochs")->default_val(num_epochs);
 
     CLI11_PARSE(app, argc, argv);
     // Load MNIST data
