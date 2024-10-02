@@ -2,6 +2,8 @@
 
 #include <CLI/CLI.hpp>
 #include <mnist/mnist_reader.hpp>
+#include <serialization/msgpack_file.hpp>
+#include <serialization/serialization.hpp>
 #include <ttnn/operations/eltwise/ternary/where.hpp>
 #include <ttnn/tensor/tensor_utils.hpp>
 #include <ttnn/tensor/types.hpp>
@@ -56,11 +58,14 @@ int main(int argc, char** argv) {
 
     uint32_t batch_size = 128;
     int logging_interval = 50;
-    size_t num_epochs = 10;
-
+    size_t num_epochs = 4;
+    bool is_eval = false;
+    std::string saved_model_path = "/tmp/mnist_model.msgpack";
     app.add_option("-b,--batch_size", batch_size, "Batch size")->default_val(batch_size);
     app.add_option("-l,--logging_interval", logging_interval, "Logging interval")->default_val(logging_interval);
     app.add_option("-n,--num_epochs", num_epochs, "Number of epochs")->default_val(num_epochs);
+    app.add_option("-s,--model_path", saved_model_path, "Model path")->default_val(saved_model_path);
+    app.add_option("-e,--eval", is_eval, "eval only mode")->default_val(is_eval);
 
     CLI11_PARSE(app, argc, argv);
     // Load MNIST data
@@ -102,9 +107,6 @@ int main(int argc, char** argv) {
     auto test_dataloader = DataLoader(test_dataset, batch_size, /* shuffle */ false, collate_fn);
 
     auto model = create_base_mlp(784, 10);
-    // evaluate model before training (sanity check to get reasonable accuracy 1/num_targets)
-    float accuracy_before_training = evaluate(test_dataloader, model, num_targets);
-    fmt::print("Accuracy before training: {}%\n", accuracy_before_training * 100.F);
 
     const float learning_rate = 0.1F * (batch_size / 128.F);
     const float momentum = 0.9F;
@@ -120,9 +122,26 @@ int main(int argc, char** argv) {
     fmt::print("    Nesterov: {}\n", sgd_config.nesterov);
     auto optimizer = ttml::optimizers::SGD(model.parameters(), sgd_config);
 
+    if (!saved_model_path.empty() && std::filesystem::exists(saved_model_path)) {
+        fmt::print("Loading model from {}\n", saved_model_path);
+        ttml::serialization::MsgPackFile deserializer;
+        deserializer.deserialize(saved_model_path);
+        auto named_parameters = model.parameters();
+        ttml::serialization::read_named_parameters(deserializer, "mlp", named_parameters);
+        for (auto& [key, value] : optimizer.get_theta()) {
+            ttml::serialization::read_ttnn_tensor(deserializer, "optimizer/" + key, value);
+        }
+    }
+
+    // evaluate model before training (sanity check to get reasonable accuracy 1/num_targets)
+    float accuracy_before_training = evaluate(test_dataloader, model, num_targets);
+    fmt::print("Accuracy of the current model training: {}%\n", accuracy_before_training * 100.F);
+    if (is_eval) {
+        return 0;
+    }
+
     LossAverageMeter loss_meter;
     int training_step = 0;
-
     for (size_t epoch = 0; epoch < num_epochs; ++epoch) {
         for (const auto& [data, target] : train_dataloader) {
             optimizer.zero_grad();
@@ -132,6 +151,18 @@ int main(int argc, char** argv) {
             loss_meter.update(loss_float, batch_size);
             if (training_step % logging_interval == 0) {
                 fmt::print("Step: {:5d} | Average Loss: {:.4f}\n", training_step, loss_meter.average());
+                // Save model
+                if (saved_model_path.empty()) {
+                    break;
+                }
+                ttml::serialization::MsgPackFile serializer;
+                auto parameters = model.parameters();
+                ttml::serialization::write_named_parameters(serializer, "mlp", parameters);
+                for (auto& [key, value] : optimizer.get_theta()) {
+                    ttml::serialization::write_ttnn_tensor(serializer, "optimizer/" + key, value);
+                }
+
+                serializer.serialize(saved_model_path);
             }
             loss->backward();
             optimizer.step();

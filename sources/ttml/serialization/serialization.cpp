@@ -24,7 +24,8 @@ void from_bytes(const std::string& bytes, T& value) {
     static_assert(std::is_trivially_copyable<T>::value, "T must be trivially copyable");
 
     if (bytes.size() != sizeof(T)) {
-        throw std::invalid_argument("Invalid byte size for conversion to type T.");
+        throw std::invalid_argument(fmt::format(
+            "Invalid byte size for conversion to type T. Expected: {} Actual: {}", sizeof(T), bytes.size()));
     }
     std::memcpy(&value, bytes.data(), sizeof(T));
 }

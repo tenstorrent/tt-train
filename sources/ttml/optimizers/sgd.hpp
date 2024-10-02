@@ -7,6 +7,8 @@
 
 namespace ttml::optimizers {
 
+using TTTensorDict = std::unordered_map<std::string, tt::tt_metal::Tensor>;
+
 struct SGDConfig {
     float lr{1e-3F};
     float momentum{0.0F};
@@ -23,11 +25,14 @@ public:
 
     void step();
 
+    const TTTensorDict& get_theta() const;
+    TTTensorDict& get_theta();
+
 private:
     size_t steps{0};
     SGDConfig m_config;
     ttml::autograd::NamedParameters m_parameters;
-    std::unordered_map<std::string, tt::tt_metal::Tensor> m_theta;
+    TTTensorDict m_theta;
 };
 
 }  // namespace ttml::optimizers

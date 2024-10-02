@@ -59,4 +59,6 @@ void SGD::step() {
     steps++;
 }
 
+const TTTensorDict& SGD::get_theta() const { return m_theta; }
+TTTensorDict& SGD::get_theta() { return m_theta; }
 }  // namespace ttml::optimizers
