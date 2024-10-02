@@ -30,18 +30,18 @@ autograd::TensorPtr linear_op(
         auto tensor_grad = core::zeros_like(tensor->get_value());
         auto weight_grad = core::zeros_like(weight->get_value());
 
-        auto res = tt::operations::primary::moreh_linear_backward(
+        auto res = ttnn::moreh_linear_backward(
             out->get_grad(),
             tensor->get_value(),
             weight->get_value(),
-            /* are required outputs */ {true, true, true},
+            /* are required outputs */ std::vector<bool>{true, true, true},
             bias->get_value(),
             tensor_grad,
             weight_grad,
             bias_grad,
-            /* input_grad_mem_config */ tt::tt_metal::operation::DEFAULT_OUTPUT_MEMORY_CONFIG,
-            /* weight_grad_mem_config */ tt::tt_metal::operation::DEFAULT_OUTPUT_MEMORY_CONFIG,
-            /* bias_grad_mem_config */ tt::tt_metal::operation::DEFAULT_OUTPUT_MEMORY_CONFIG,
+            /* input_grad_mem_config */ std::nullopt,
+            /* weight_grad_mem_config */ std::nullopt,
+            /* bias_grad_mem_config */ std::nullopt,
             /* compute_kernel_config */ core::ComputeKernelConfig::precise());
 
         tensor->add_grad(res[0].value());

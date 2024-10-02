@@ -71,10 +71,9 @@ autograd::TensorPtr operator/(const autograd::TensorPtr& a, const autograd::Tens
 
     out->set_value(ttnn::divide(a->get_value(), b->get_value()));
     autograd::GradFunction grad = [a, b, out]() {
-        tt::tt_metal::MemoryConfig mem_config;
-        auto res = ttnn::div_bw(out->get_grad(), a->get_value(), b->get_value(), "None", mem_config);
-        a->add_grad(res[0]);
-        b->add_grad(res[1]);
+        auto res = ttnn::div_bw(out->get_grad(), a->get_value(), b->get_value(), "None");
+        a->add_grad(res[0].value());
+        b->add_grad(res[1].value());
     };
     auto links = autograd::get_links(a, b);
     out->set_node(autograd::ctx().add_backward_node(std::move(grad), links));
