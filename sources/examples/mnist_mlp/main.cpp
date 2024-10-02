@@ -60,7 +60,7 @@ int main(int argc, char** argv) {
 
     app.add_option("-b,--batch_size", batch_size, "Batch size")->default_val(batch_size);
     app.add_option("-l,--logging_interval", logging_interval, "Logging interval")->default_val(logging_interval);
-    app.add_option("-b,--num_epochs", num_epochs, "Number of epochs")->default_val(num_epochs);
+    app.add_option("-n,--num_epochs", num_epochs, "Number of epochs")->default_val(num_epochs);
 
     CLI11_PARSE(app, argc, argv);
     // Load MNIST data
