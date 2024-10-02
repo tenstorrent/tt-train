@@ -53,6 +53,8 @@ void write_ttnn_tensor(MsgPackFile& file, std::string_view name, const tt::tt_me
     } else if (data_type == tt::tt_metal::DataType::UINT32) {
         auto data = ttml::core::to_vector<uint32_t>(tensor);
         file.put(std::string(name) + "/data", std::span<const uint32_t>(data.data(), data.size()));
+    } else {
+        throw std::runtime_error(fmt::format("Unsupported data type: {}", static_cast<int>(data_type)));
     }
 }
 
@@ -78,6 +80,8 @@ void read_ttnn_tensor(MsgPackFile& file, std::string_view name, tt::tt_metal::Te
         std::vector<uint32_t> data;
         file.get(std::string(name) + "/data", data);
         tensor = core::from_vector(data, shape, &ttml::autograd::ctx().get_device(), layout);
+    } else {
+        throw std::runtime_error(fmt::format("Unsupported data type: {}", static_cast<int>(data_type)));
     }
 }
 
@@ -85,9 +89,9 @@ void write_autograd_tensor(
     MsgPackFile& file, std::string_view name, const ttml::autograd::TensorPtr& tensor, bool save_grads) {
     write_ttnn_tensor(file, std::string(name) + "/value", tensor->get_value());
     auto& grad = tensor->get_grad();
-    bool really_save_grads = save_grads && grad.tensor_attributes;
-    file.put(std::string(name) + "/save_grads", really_save_grads);
-    if (really_save_grads) {
+    bool should_save_grads = save_grads && core::is_tensor_initialized(grad);
+    file.put(std::string(name) + "/save_grads", should_save_grads);
+    if (should_save_grads) {
         write_ttnn_tensor(file, std::string(name) + "/grad", tensor->get_grad());
     }
 }
