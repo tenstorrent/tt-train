@@ -55,8 +55,8 @@ void SGD::step() {
             }
         }
         tensor_ptr->set_value(ttnn::subtract(tensor_ptr->get_value(), ttnn::multiply(gradients, m_config.lr)));
-        steps++;
     }
+    steps++;
 }
 
 }  // namespace ttml::optimizers

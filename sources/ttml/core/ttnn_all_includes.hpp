@@ -31,6 +31,7 @@
 #include <ttnn/operations/embedding/embedding.hpp>                                               // NOLINT
 #include <ttnn/operations/embedding_backward/embedding_backward.hpp>                             // NOLINT
 #include <ttnn/operations/matmul/matmul.hpp>                                                     // NOLINT
+#include <ttnn/operations/moreh/moreh_matmul/moreh_matmul.hpp>                                   // NOLINT
 #include <ttnn/operations/moreh/moreh_mean/moreh_mean.hpp>                                       // NOLINT
 #include <ttnn/operations/moreh/moreh_mean_backward/moreh_mean_backward.hpp>                     // NOLINT
 #include <ttnn/operations/moreh/moreh_sum/moreh_sum.hpp>                                         // NOLINT

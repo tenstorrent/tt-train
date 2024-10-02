@@ -4,10 +4,13 @@
 #include <optional>
 #include <ttnn/operations/eltwise/unary_backward/unary_backward.hpp>
 #include <ttnn/operations/reduction/generic/generic_reductions.hpp>
+#include <ttnn/tensor/tensor_utils.hpp>
 
 #include "autograd/auto_context.hpp"
 #include "autograd/graph.hpp"
 #include "autograd/graph_utils.hpp"
+#include "autograd/tensor.hpp"
+#include "core/compute_kernel_config.hpp"
 #include "core/tt_tensor_utils.hpp"
 #include "core/ttnn_all_includes.hpp"
 #include "ttnn_fixed/trivial_ttnn_ops.hpp"
@@ -49,7 +52,13 @@ autograd::TensorPtr mean(const autograd::TensorPtr& tensor) {
     auto shape = core::create_shape({1, 1, 1, 1});
     autograd::TensorPtr out = autograd::create_tensor(core::from_vector({0.F}, shape, &autograd::ctx().get_device()));
     ttnn::moreh_mean(
-        tensor->get_value(), std::nullopt, true, std::nullopt, out->get_value(), std::nullopt, std::nullopt);
+        tensor->get_value(),
+        std::nullopt,
+        true,
+        std::nullopt,
+        out->get_value(),
+        std::nullopt,
+        /* device_compute_kernel_config */ core::ComputeKernelConfig::precise());
     autograd::GradFunction grad = [tensor, out]() {
         auto resulting_shape = tensor->get_value().get_shape();
         auto res = ttnn::moreh_mean_backward(

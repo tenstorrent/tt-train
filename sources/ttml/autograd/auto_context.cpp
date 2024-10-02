@@ -24,8 +24,6 @@ std::optional<NodeId> AutoContext::add_backward_node(GradFunction&& grad_functio
 void AutoContext::set_gradient_mode(GradMode mode) { m_grads_mode = mode; }
 GradMode AutoContext::get_gradient_mode() const { return m_grads_mode; }
 
-uint32_t AutoContext::generate_module_id() { return module_counter++; }
-
 void AutoContext::reset_graph() { m_graph.reset(); }
 
 tt::tt_metal::Device& AutoContext::get_device() { return device.get_device(); }

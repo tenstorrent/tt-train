@@ -166,6 +166,18 @@ TEST(TensorUtilsTest, TestOnes_1) {
     }
 }
 
+TEST(TensorUtilsTest, TestZeros) {
+    auto* device = &ttml::autograd::ctx().get_device();
+    auto shape = ttml::core::create_shape({1, 2, 3, 4});
+    auto tensor = ttml::core::ones(shape, device);
+
+    auto zeros_like_tensor = ttml::core::zeros_like(tensor);
+    auto zeros_like_tensor_vec = ttml::core::to_vector(zeros_like_tensor);
+    for (auto& val : zeros_like_tensor_vec) {
+        EXPECT_EQ(val, 0.F);
+    }
+}
+
 TEST(TensorUtilsTest, TestIsInitialized) {
     auto* device = &ttml::autograd::ctx().get_device();
 

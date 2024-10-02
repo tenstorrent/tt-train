@@ -10,7 +10,6 @@ namespace ttml::modules {
 class GPTMLP : public autograd::ModuleBase {
     std::shared_ptr<LinearLayer> fc1;
     std::shared_ptr<LinearLayer> fc2;
-    std::shared_ptr<LayerNormLayer> ln1;
     std::shared_ptr<DropoutLayer> dropout;
 
 public:

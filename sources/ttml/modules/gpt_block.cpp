@@ -9,20 +9,17 @@ namespace ttml::modules {
 GPTMLP::GPTMLP(uint32_t embedding_size, float dropout_prob) {
     fc1 = std::make_shared<LinearLayer>(embedding_size, embedding_size * 4);
     fc2 = std::make_shared<LinearLayer>(embedding_size * 4, embedding_size);
-    ln1 = std::make_shared<LayerNormLayer>(embedding_size * 4);
     dropout = std::make_shared<DropoutLayer>(dropout_prob);
 
     create_name("gpt_mlp");
     register_module(fc1, "fc1");
     register_module(fc2, "fc2");
-    register_module(ln1, "ln1");
     register_module(dropout, "dropout");
 }
 
 autograd::TensorPtr GPTMLP::operator()(const autograd::TensorPtr& input) {
     auto x = (*fc1)(input);
     x = ops::gelu(x);
-    x = (*ln1)(x);
     x = (*fc2)(x);
     x = (*dropout)(x);
     return x;
