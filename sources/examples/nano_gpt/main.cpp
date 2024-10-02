@@ -88,6 +88,7 @@ public:
     }
 };
 
+const int NUM_HEADS = 8;
 class Transformer : public ttml::autograd::ModuleBase {
     std::shared_ptr<ttml::modules::Embedding> tok_emb;
     std::shared_ptr<ttml::modules::Embedding> pos_emb;
@@ -96,10 +97,10 @@ class Transformer : public ttml::autograd::ModuleBase {
 
 public:
     Transformer(uint32_t vocab_size, uint32_t max_sequence_length) {
-        uint32_t embedding_size = 256;
-        uint32_t num_heads = 1;
-        float dropout_prob = 0.0F;
-        uint32_t num_blocks = 1;
+        uint32_t embedding_size = 512;
+        uint32_t num_heads = NUM_HEADS;
+        float dropout_prob = 0.1F;
+        uint32_t num_blocks = 6;
         fmt::print("Transformer configuration:\n");
         fmt::print("    Vocab size: {}\n", vocab_size);
         fmt::print("    Max sequence length: {}\n", max_sequence_length);
@@ -155,8 +156,7 @@ public:
 
 int main() {
     const std::string data_folder = "/home/ubuntu/ML-Framework-CPP/sources/examples/nano_gpt/data";
-    // const std::string data_path = data_folder + "/shakespeare.txt";
-    const std::string data_path = data_folder + "/tiny_shakespeare.txt";
+    const std::string data_path = data_folder + "/shakespeare.txt";
 
     std::string text;
     try {
@@ -166,13 +166,13 @@ int main() {
         return -1;
     }
 
-    uint32_t sequence_length = 32;
+    uint32_t sequence_length = 256;
     auto [dataset, tokenizer] = ttml::datasets::create_in_memory_char_dataset(text, sequence_length);
     fmt::print("Dataset size: {}\n", dataset.get_size());
     fmt::print("Vocab size: {}\n", tokenizer.get_vocab_size());
 
     auto* device = &ttml::autograd::ctx().get_device();
-    // device->enable_async(true);
+    device->enable_async(true);
     std::function<BatchType(std::vector<DatasetSample> && samples)> collate_fn =
         [sequence_length, vocab_size = tokenizer.get_vocab_size(), device](std::vector<DatasetSample>&& samples) {
             const uint32_t batch_size = samples.size();
@@ -182,12 +182,20 @@ int main() {
             std::vector<float> mask;
 
             positions.reserve((size_t)batch_size * sequence_length);
-            mask.reserve((size_t)batch_size * sequence_length * sequence_length);
             for (int sample_idx = 0; sample_idx < batch_size; ++sample_idx) {
                 for (int i = 0; i < sequence_length; ++i) {
                     positions.push_back(i);
-                    for (int j = 0; j < sequence_length; ++j) {
-                        mask.push_back(i >= j ? 1.0F : 0.0F);
+                }
+            }
+
+            const auto num_heads = NUM_HEADS;
+            mask.reserve((size_t)batch_size * sequence_length * sequence_length);
+            for (int sample_idx = 0; sample_idx < batch_size; ++sample_idx) {
+                for (int h = 0; h < num_heads; ++h) {
+                    for (int i = 0; i < sequence_length; ++i) {
+                        for (int j = 0; j < sequence_length; ++j) {
+                            mask.push_back(i >= j ? 1.0F : 0.0F);
+                        }
                     }
                 }
             }
@@ -209,7 +217,7 @@ int main() {
             auto targets_tensor = ttml::autograd::create_tensor(ttml::core::from_vector(
                 targets, ttml::core::create_shape({batch_size, 1, sequence_length, vocab_size}), device));
             auto masks_tensor = ttml::autograd::create_tensor(ttml::core::from_vector(
-                mask, ttml::core::create_shape({batch_size, 1, sequence_length, sequence_length}), device));
+                mask, ttml::core::create_shape({batch_size, num_heads, sequence_length, sequence_length}), device));
             auto positions_tensor = ttml::autograd::create_tensor(ttml::core::from_vector<uint32_t>(
                 positions, ttml::core::create_shape({batch_size, 1, 1, sequence_length}), device, Layout::ROW_MAJOR));
             return std::make_tuple(data_tensor, targets_tensor, masks_tensor, positions_tensor);
@@ -225,16 +233,16 @@ int main() {
     auto model = Transformer(tokenizer.get_vocab_size(), sequence_length);
 
     auto sgd_params = ttml::optimizers::SGDConfig();
-    sgd_params.lr = 0.1F;
+    sgd_params.lr = 0.01F;
     sgd_params.momentum = 0.9F;
-    sgd_params.weight_decay = 0.0F;
+    sgd_params.weight_decay = 0.0001F;
     fmt::print("SGD configuration:\n");
     fmt::print("    Learning rate: {}\n", sgd_params.lr);
     fmt::print("    Momentum: {}\n", sgd_params.momentum);
     fmt::print("    Weight decay: {}\n", sgd_params.weight_decay);
 
     auto optimizer = ttml::optimizers::SGD(model.parameters(), sgd_params);
-    const uint32_t num_epochs = 5;
+    const uint32_t num_epochs = 2;
     for (uint32_t epoch = 0; epoch < num_epochs; ++epoch) {
         for (auto [features, target, masks, positions] : train_dataloader) {
             optimizer.zero_grad();

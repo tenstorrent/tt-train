@@ -12,6 +12,7 @@
 #include "autograd/auto_context.hpp"
 #include "autograd/graph.hpp"
 #include "autograd/graph_utils.hpp"
+#include "core/compute_kernel_config.hpp"
 #include "core/tt_tensor_utils.hpp"
 #include "core/ttnn_all_includes.hpp"
 
@@ -36,7 +37,9 @@ autograd::TensorPtr layernorm(
         /* beta */ beta->get_value(),
         output,
         mean,
-        rstd);
+        rstd,
+        /* memory_config */ std::nullopt,
+        /* compute_kernel_config */ core::ComputeKernelConfig::precise());
 
     auto out = autograd::create_tensor();
     out->set_value(out_tensors[0].value());
@@ -49,7 +52,17 @@ autograd::TensorPtr layernorm(
         auto beta_grad = core::zeros_like(beta->get_value());
 
         auto res = tt::operations::primary::moreh_layernorm_backward(
-            out->get_grad(), tensor->get_value(), mean, rstd, 1, gamma->get_value(), input_grad, gamma_grad, beta_grad);
+            out->get_grad(),
+            tensor->get_value(),
+            mean,
+            rstd,
+            1,
+            gamma->get_value(),
+            input_grad,
+            gamma_grad,
+            beta_grad,
+            /* memory_config */ std::nullopt,
+            core::ComputeKernelConfig::precise());
 
         tensor->add_grad(res[0].value());
         gamma->add_grad(res[1].value());

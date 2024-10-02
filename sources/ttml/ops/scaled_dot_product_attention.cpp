@@ -3,6 +3,7 @@
 #include "autograd/auto_context.hpp"
 #include "autograd/graph_utils.hpp"
 #include "core/compute_kernel_config.hpp"
+#include "core/tt_tensor_utils.hpp"
 #include "ttnn_fixed/trivial_ttnn_ops.hpp"
 
 namespace ttml::ops {
@@ -57,9 +58,8 @@ autograd::TensorPtr scaled_dot_product_attention(
                     grad_attention_weights,
                     ttnn_fixed::sum_over_dim(ttnn::multiply(attention_weights, grad_attention_weights), 3)));
             if (mask.has_value()) {
-                grad_scaled_dot = ttnn::where(mask.value()->get_value(), grad_scaled_dot, /* other */ 0.0F);
+                grad_scaled_dot = ttnn::multiply(grad_scaled_dot, mask.value()->get_value());
             }
-
             auto grad_q = matmul(
                 grad_scaled_dot,
                 key->get_value(),
