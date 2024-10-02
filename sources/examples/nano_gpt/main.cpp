@@ -96,7 +96,7 @@ class Transformer : public ttml::autograd::ModuleBase {
 
 public:
     Transformer(uint32_t vocab_size, uint32_t max_sequence_length) {
-        uint32_t embedding_size = 128;
+        uint32_t embedding_size = 256;
         uint32_t num_heads = 1;
         float dropout_prob = 0.0F;
         uint32_t num_blocks = 1;
@@ -226,7 +226,7 @@ int main() {
 
     auto sgd_params = ttml::optimizers::SGDConfig();
     sgd_params.lr = 0.1F;
-    sgd_params.momentum = 0.0F;
+    sgd_params.momentum = 0.9F;
     sgd_params.weight_decay = 0.0F;
     fmt::print("SGD configuration:\n");
     fmt::print("    Learning rate: {}\n", sgd_params.lr);
