@@ -84,9 +84,10 @@ void read_ttnn_tensor(MsgPackFile& file, std::string_view name, tt::tt_metal::Te
 void write_autograd_tensor(
     MsgPackFile& file, std::string_view name, const ttml::autograd::TensorPtr& tensor, bool save_grads) {
     write_ttnn_tensor(file, std::string(name) + "/value", tensor->get_value());
-    file.put(std::string(name) + "/save_grads", save_grads);
-
-    if (save_grads) {
+    auto& grad = tensor->get_grad();
+    bool really_save_grads = save_grads && grad.tensor_attributes;
+    file.put(std::string(name) + "/save_grads", really_save_grads);
+    if (really_save_grads) {
         write_ttnn_tensor(file, std::string(name) + "/grad", tensor->get_grad());
     }
 }
