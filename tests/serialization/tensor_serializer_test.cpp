@@ -57,11 +57,17 @@ TEST_F(TensorFileTest, SerializeDeserializeTensor) {
     }
 }
 
+bool compare_tensors(const tt::tt_metal::Tensor& tensor1, const tt::tt_metal::Tensor& tensor2) {
+    auto vec1 = ttml::core::to_vector(tensor1);
+    auto vec2 = ttml::core::to_vector(tensor2);
+    return vec1 == vec2;
+}
+
 TEST_F(TensorFileTest, SerializeDeserializeNamedParameters) {
     ttml::serialization::MsgPackFile serializer;
     auto* device = &ttml::autograd::ctx().get_device();
     auto model_params = ttml::modules::MultiLayerPerceptronParameters{
-        .m_input_features = 3, .m_hidden_features = {128, 64, 32}, .m_output_features = 10};
+        .m_input_features = 128, .m_hidden_features = {256}, .m_output_features = 10};
     ttml::modules::MultiLayerPerceptron mlp_to_write(model_params);
     ttml::modules::MultiLayerPerceptron mlp_to_read(model_params);
     // Write tensor to file
@@ -72,4 +78,8 @@ TEST_F(TensorFileTest, SerializeDeserializeNamedParameters) {
     deserializer.deserialize(test_filename);
     auto params_to_read = mlp_to_read.parameters();
     ttml::serialization::read_named_parameters(deserializer, "mlp", params_to_read);
+
+    for (const auto& [key, value] : params_to_read) {
+        EXPECT_TRUE(compare_tensors(value->get_value(), params_to_write.at(key)->get_value()));
+    }
 }

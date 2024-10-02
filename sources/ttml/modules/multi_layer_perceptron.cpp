@@ -18,8 +18,8 @@ MultiLayerPerceptron::MultiLayerPerceptron(const MultiLayerPerceptronParameters&
     add_linear_layer(m_layers, current_input_features, params.m_output_features);
 
     create_name("mlp");
-    for (auto& layer : m_layers) {
-        register_module(layer, layer->get_name());
+    for (size_t i = 0; i < m_layers.size(); ++i) {
+        register_module(m_layers[i], fmt::format("linear_{}", i));
     }
 }
 autograd::TensorPtr MultiLayerPerceptron::operator()(autograd::TensorPtr tensor) {
