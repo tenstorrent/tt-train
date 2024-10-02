@@ -2,6 +2,7 @@
 
 #include "core/tt_tensor_utils.hpp"
 #include "core/ttnn_all_includes.hpp"
+#include "init/cpu_initializers.hpp"
 #include "init/tensor_initializers.hpp"
 
 namespace ttml::modules {
@@ -10,10 +11,11 @@ void LinearLayer::initialize_tensors(uint32_t in_features, uint32_t out_features
     auto* device = &autograd::ctx().get_device();
     auto weight_shape = core::create_shape({1, 1, out_features, in_features});
     m_weight = ttml::autograd::create_tensor();
-    init::xavier_uniform_init(m_weight, weight_shape, init::FanParams{in_features, out_features});
+    const float init_k = std::sqrtf(1.F / static_cast<float>(in_features));
+    init::uniform_init(m_weight, weight_shape, init::UniformRange{-init_k, init_k});
     auto bias_shape = core::create_shape({1, 1, 1, out_features});
     m_bias = ttml::autograd::create_tensor();
-    init::constant_init(m_bias, bias_shape, 0.F);
+    init::uniform_init(m_bias, bias_shape, init::UniformRange{-init_k, init_k});
 }
 
 LinearLayer::LinearLayer(uint32_t in_features, uint32_t out_features) {

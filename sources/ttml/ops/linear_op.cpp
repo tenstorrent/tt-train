@@ -5,6 +5,7 @@
 
 #include "autograd/auto_context.hpp"
 #include "autograd/graph_utils.hpp"
+#include "core/compute_kernel_config.hpp"
 #include "core/tt_tensor_utils.hpp"
 #include "core/ttnn_all_includes.hpp"
 namespace ttml::ops {
@@ -17,7 +18,12 @@ autograd::TensorPtr linear_op(
         weight->get_value(),
         bias->get_value(),
         /* transpose_a */ false,
-        /* tranpose_b */ true));
+        /* tranpose_b */ true,
+        /* memory_config */ std::nullopt,
+        /* dtype */ std::nullopt,
+        /* program_config */ std::nullopt,
+        /* activation */ std::nullopt,
+        /* compute_kernel_config */ core::ComputeKernelConfig::precise()));
 
     autograd::GradFunction grad = [weight, bias, tensor, out]() {
         auto bias_grad = core::zeros_like(bias->get_value());
@@ -32,7 +38,11 @@ autograd::TensorPtr linear_op(
             bias->get_value(),
             tensor_grad,
             weight_grad,
-            bias_grad);
+            bias_grad,
+            /* input_grad_mem_config */ tt::tt_metal::operation::DEFAULT_OUTPUT_MEMORY_CONFIG,
+            /* weight_grad_mem_config */ tt::tt_metal::operation::DEFAULT_OUTPUT_MEMORY_CONFIG,
+            /* bias_grad_mem_config */ tt::tt_metal::operation::DEFAULT_OUTPUT_MEMORY_CONFIG,
+            /* compute_kernel_config */ core::ComputeKernelConfig::precise());
 
         tensor->add_grad(res[0].value());
         weight->add_grad(res[1].value());

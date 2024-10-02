@@ -2,6 +2,7 @@
 
 #include "autograd/auto_context.hpp"
 #include "autograd/graph_utils.hpp"
+#include "core/compute_kernel_config.hpp"
 #include "core/tt_tensor_utils.hpp"
 #include "core/ttnn_all_includes.hpp"
 #include "ops/binary_ops.hpp"
@@ -29,7 +30,7 @@ autograd::TensorPtr cross_entropy_loss_without_reduce_(
     auto prediction_tensor_clipped = ttnn::clip(prediction_tensor, eps, 1.0F);
     auto loss = ttnn::multiply(target->get_value(), ttnn::log(prediction_tensor_clipped));
     loss = ttnn::neg(loss);
-    loss = ttnn::sum(loss, -1);
+    loss = ttnn_fixed::sum_over_dim(loss, 3);
     auto out = autograd::create_tensor(loss);
 
     autograd::GradFunction grad = [target, prediction_tensor, prediction, out]() {
