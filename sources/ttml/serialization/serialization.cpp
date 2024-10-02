@@ -1,7 +1,9 @@
 #include "serialization.hpp"
 
 #include <cstdint>
+#include <ttnn/tensor/types.hpp>
 
+#include "autograd/auto_context.hpp"
 #include "core/tt_tensor_utils.hpp"
 #include "core/ttnn_all_includes.hpp"
 #include "msgpack_file.hpp"
@@ -14,6 +16,30 @@ std::string to_bytes(const T& value) {
     std::string bytes(sizeof(T), '\0');
     std::memcpy(bytes.data(), &value, sizeof(T));
     return bytes;
+}
+
+template <typename T>
+void from_bytes(const std::string& bytes, T& value) {
+    static_assert(std::is_trivially_copyable<T>::value, "T must be trivially copyable");
+
+    if (bytes.size() != sizeof(T)) {
+        throw std::invalid_argument("Invalid byte size for conversion to type T.");
+    }
+    std::memcpy(&value, bytes.data(), sizeof(T));
+}
+
+template <typename T>
+void get_enum(MsgPackFile& file, std::string_view name, T& value) {
+    int int_value = 0;
+    file.get(std::string(name), int_value);
+    value = static_cast<T>(int_value);
+}
+
+template <typename T>
+void get_as_bytes(MsgPackFile& file, std::string_view name, T& value) {
+    int int_value = 0;
+    file.get(std::string(name), int_value);
+    value = static_cast<T>(int_value);
 }
 
 void write_ttnn_tensor(MsgPackFile& file, std::string_view name, const tt::tt_metal::Tensor& tensor) {
@@ -37,16 +63,65 @@ void write_ttnn_tensor(MsgPackFile& file, std::string_view name, const tt::tt_me
 }
 
 void read_ttnn_tensor(MsgPackFile& file, std::string_view name, tt::tt_metal::Tensor& tensor) {
-    ttnn::Shape shape;
-    tt::tt_metal::DataType data_type;
+    tt::tt_metal::DataType data_type{};
+    tt::tt_metal::Layout layout{};
+    tt::tt_metal::StorageType storage_type{};
+
+    auto shape = tensor.get_shape();
+    std::string bytes;
+    file.get(std::string(name) + "/shape", bytes);
+    from_bytes<ttnn::Shape>(bytes, shape);
+
+    get_enum(file, std::string(name) + "/data_type", data_type);
+    get_enum(file, std::string(name) + "/layout", layout);
+    get_enum(file, std::string(name) + "/layout", storage_type);
+
+    if (data_type == tt::tt_metal::DataType::BFLOAT16) {
+        std::vector<float> data;
+        file.get(std::string(name) + "/data", data);
+        tensor = core::from_vector(data, shape, &ttml::autograd::ctx().get_device(), layout);
+    } else if (data_type == tt::tt_metal::DataType::UINT32) {
+        std::vector<uint32_t> data;
+        file.get(std::string(name) + "/data", data);
+        tensor = core::from_vector(data, shape, &ttml::autograd::ctx().get_device(), layout);
+    }
 }
 
 void write_autograd_tensor(
-    MsgPackFile& file, std::string_view name, const ttml::autograd::Tensor& tensor, bool save_grads) {}
+    MsgPackFile& file, std::string_view name, const ttml::autograd::TensorPtr& tensor, bool save_grads) {
+    write_ttnn_tensor(file, std::string(name) + "/value", tensor->get_value());
+    file.put(std::string(name) + "/save_grads", save_grads);
 
-void read_autograd_tensor(MsgPackFile& file, std::string_view name, const ttml::autograd::Tensor& tensor) {}
+    if (save_grads) {
+        write_ttnn_tensor(file, std::string(name) + "/grad", tensor->get_grad());
+    }
+}
 
-void write_named_parameters(MsgPackFile& file, std::string_view name, const ttml::autograd::NamedParameters& params) {}
-void read_named_parameters(MsgPackFile& file, std::string_view name, const ttml::autograd::NamedParameters& params) {}
+void read_autograd_tensor(MsgPackFile& file, std::string_view name, ttml::autograd::TensorPtr& tensor) {
+    tt::tt_metal::Tensor value;
+    bool save_grads = false;
+
+    read_ttnn_tensor(file, std::string(name) + "/value", value);
+    tensor->set_value(value);
+    file.get(std::string(name) + "/save_grads", save_grads);
+
+    if (save_grads) {
+        tt::tt_metal::Tensor grad;
+        read_ttnn_tensor(file, std::string(name) + "/grad", grad);
+        tensor->set_grad(grad);
+    }
+}
+
+void write_named_parameters(MsgPackFile& file, std::string_view name, const ttml::autograd::NamedParameters& params) {
+    for (const auto& [key, value] : params) {
+        write_autograd_tensor(file, std::string(name) + "/" + key, value);
+    }
+}
+void read_named_parameters(MsgPackFile& file, std::string_view name, const ttml::autograd::NamedParameters& params) {
+    for (const auto& [key, value] : params) {
+        ttml::autograd::TensorPtr tensor;
+        read_autograd_tensor(file, std::string(name) + "/" + key, tensor);
+    }
+}
 
 }  // namespace ttml::serialization

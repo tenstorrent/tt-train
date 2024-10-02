@@ -27,12 +27,16 @@ public:
     MsgPackFile& operator=(MsgPackFile&& other) = delete;
 
     // Methods to put different types
+    void put(std::string_view key, bool value);
     void put(std::string_view key, char value);
     void put(std::string_view key, int value);
     void put(std::string_view key, float value);
     void put(std::string_view key, double value);
     void put(std::string_view key, uint32_t value);
     void put(std::string_view key, std::string_view value);
+
+    // added it to prevent implicit casts from const char* to bool
+    void put(std::string_view key, const char* value) { put(key, std::string_view(value)); }
 
     // Overloads for std::span
     // void put(std::string_view key, std::span<const char> value);
@@ -49,6 +53,7 @@ public:
     void deserialize(const std::string& filename);
 
     // Methods to get values
+    bool get(std::string_view key, bool& value) const;
     bool get(std::string_view key, char& value) const;
     bool get(std::string_view key, int& value) const;
     bool get(std::string_view key, float& value) const;

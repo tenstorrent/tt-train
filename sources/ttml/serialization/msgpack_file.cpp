@@ -75,6 +75,8 @@ namespace ttml::serialization {
 class MsgPackFile::Impl {
 public:
     // Methods to store different types
+    void put(std::string_view key, bool value) { m_data[std::string(key)] = value; }
+
     void put(std::string_view key, char value) { m_data[std::string(key)] = value; }
 
     void put(std::string_view key, int value) { m_data[std::string(key)] = value; }
@@ -159,6 +161,8 @@ public:
     }
 
     // Methods to get values
+    bool get(std::string_view key, bool& value) const { return get_value(key, value); }
+
     bool get(std::string_view key, char& value) const { return get_value(key, value); }
 
     bool get(std::string_view key, int& value) const { return get_value(key, value); }
@@ -186,6 +190,7 @@ public:
 
 private:
     using ValueType = std::variant<
+        bool,
         char,
         int,
         float,
@@ -226,6 +231,8 @@ MsgPackFile::~MsgPackFile() = default;
 
 MsgPackFile::MsgPackFile(MsgPackFile&&) noexcept = default;
 
+void MsgPackFile::put(std::string_view key, bool value) { m_impl->put(key, value); }
+
 void MsgPackFile::put(std::string_view key, char value) { m_impl->put(key, value); }
 
 void MsgPackFile::put(std::string_view key, int value) { m_impl->put(key, value); }
@@ -251,6 +258,8 @@ void MsgPackFile::put(std::string_view key, std::span<const std::string> value) 
 void MsgPackFile::serialize(const std::string& filename) { m_impl->serialize(filename); }
 
 void MsgPackFile::deserialize(const std::string& filename) { m_impl->deserialize(filename); }
+
+bool MsgPackFile::get(std::string_view key, bool& value) const { return m_impl->get(key, value); }
 
 bool MsgPackFile::get(std::string_view key, char& value) const { return m_impl->get(key, value); }
 
