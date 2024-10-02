@@ -10,17 +10,15 @@ namespace ttml::ops {
 
 tt::tt_metal::Tensor matmul(
     const tt::tt_metal::Tensor& a, const tt::tt_metal::Tensor& b, bool transpose_a, bool transpose_b) {
-    return ttnn::matmul(
+    return ttnn::moreh_matmul(
         a,
         b,
         transpose_a,
         transpose_b,
-        /* memory_config */ std::nullopt,
-        /* dtype */ std::nullopt,
-        /* program_config */ std::nullopt,
-        /* activation */ std::nullopt,
-        /* compute_kernel_config */ core::ComputeKernelConfig::precise(),
-        /* core_grid */ std::nullopt);
+        /* output */ std::nullopt,
+        /* bias */ std::nullopt,
+        /* output_mem_config */ std::nullopt,
+        /* compute_kernel_config */ core::ComputeKernelConfig::precise());
 }
 
 autograd::TensorPtr scaled_dot_product_attention(

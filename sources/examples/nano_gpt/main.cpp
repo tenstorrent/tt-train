@@ -88,7 +88,7 @@ public:
     }
 };
 
-const int NUM_HEADS = 8;
+const int NUM_HEADS = 6;
 class Transformer : public ttml::autograd::ModuleBase {
     std::shared_ptr<ttml::modules::Embedding> tok_emb;
     std::shared_ptr<ttml::modules::Embedding> pos_emb;
@@ -97,10 +97,10 @@ class Transformer : public ttml::autograd::ModuleBase {
 
 public:
     Transformer(uint32_t vocab_size, uint32_t max_sequence_length) {
-        uint32_t embedding_size = 512;
+        uint32_t embedding_size = 384;
         uint32_t num_heads = NUM_HEADS;
-        float dropout_prob = 0.1F;
-        uint32_t num_blocks = 6;
+        float dropout_prob = 0.0F;
+        uint32_t num_blocks = 2;
         fmt::print("Transformer configuration:\n");
         fmt::print("    Vocab size: {}\n", vocab_size);
         fmt::print("    Max sequence length: {}\n", max_sequence_length);
@@ -172,7 +172,7 @@ int main() {
     fmt::print("Vocab size: {}\n", tokenizer.get_vocab_size());
 
     auto* device = &ttml::autograd::ctx().get_device();
-    device->enable_async(true);
+    // device->enable_async(true);
     std::function<BatchType(std::vector<DatasetSample> && samples)> collate_fn =
         [sequence_length, vocab_size = tokenizer.get_vocab_size(), device](std::vector<DatasetSample>&& samples) {
             const uint32_t batch_size = samples.size();
@@ -189,9 +189,9 @@ int main() {
             }
 
             const auto num_heads = NUM_HEADS;
-            mask.reserve((size_t)batch_size * sequence_length * sequence_length);
+            mask.reserve((size_t)batch_size * sequence_length * sequence_length * num_heads);
             for (int sample_idx = 0; sample_idx < batch_size; ++sample_idx) {
-                for (int h = 0; h < num_heads; ++h) {
+                for (int head = 0; head < num_heads; ++head) {
                     for (int i = 0; i < sequence_length; ++i) {
                         for (int j = 0; j < sequence_length; ++j) {
                             mask.push_back(i >= j ? 1.0F : 0.0F);
@@ -224,6 +224,8 @@ int main() {
         };
 
     uint32_t batch_size = 32;
+    fmt::print("Batch size {}\n", batch_size);
+
     LossAverageMeter loss_meter;
     int global_step = 0;
 
@@ -233,9 +235,9 @@ int main() {
     auto model = Transformer(tokenizer.get_vocab_size(), sequence_length);
 
     auto sgd_params = ttml::optimizers::SGDConfig();
-    sgd_params.lr = 0.01F;
+    sgd_params.lr = 0.1F;
     sgd_params.momentum = 0.9F;
-    sgd_params.weight_decay = 0.0001F;
+    sgd_params.weight_decay = 0.F;
     fmt::print("SGD configuration:\n");
     fmt::print("    Learning rate: {}\n", sgd_params.lr);
     fmt::print("    Momentum: {}\n", sgd_params.momentum);
