@@ -1,5 +1,6 @@
 
 
+#include <CLI/CLI.hpp>
 #include <mnist/mnist_reader.hpp>
 #include <ttnn/operations/eltwise/ternary/where.hpp>
 #include <ttnn/tensor/tensor_utils.hpp>
@@ -49,7 +50,19 @@ float evaluate(DataLoader& test_dataloader, Model& model, size_t num_targets) {
     return num_correct / num_samples;
 };
 
-int main() {
+int main(int argc, char** argv) {
+    CLI::App app{"Mnist Example"};
+    argv = app.ensure_utf8(argv);
+
+    uint32_t batch_size = 128;
+    int logging_interval = 50;
+    size_t num_epochs = 10;
+
+    app.add_option("-b,--batch_size", batch_size, "Batch size")->default_val(batch_size);
+    app.add_option("-l,--logging_interval", logging_interval, "Logging interval")->default_val(logging_interval);
+    app.add_option("-n,--num_epochs", num_epochs, "Number of epochs")->default_val(num_epochs);
+
+    CLI11_PARSE(app, argc, argv);
     // Load MNIST data
     const size_t num_targets = 10;
     const size_t num_features = 784;
@@ -85,7 +98,6 @@ int main() {
             return std::make_pair(data_tensor, targets_tensor);
         };
 
-    const uint32_t batch_size = 128;
     auto train_dataloader = DataLoader(training_dataset, batch_size, /* shuffle */ true, collate_fn);
     auto test_dataloader = DataLoader(test_dataset, batch_size, /* shuffle */ false, collate_fn);
 
@@ -109,10 +121,7 @@ int main() {
     auto optimizer = ttml::optimizers::SGD(model.parameters(), sgd_config);
 
     LossAverageMeter loss_meter;
-    const int logging_interval = 50;
-
     int training_step = 0;
-    const size_t num_epochs = 10;
 
     for (size_t epoch = 0; epoch < num_epochs; ++epoch) {
         for (const auto& [data, target] : train_dataloader) {
