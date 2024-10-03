@@ -39,9 +39,10 @@ NamedParameters ModuleBase::parameters() const {
         }
 
         for (const auto& [module_name, next_module_ptr] : module_ptr->m_named_modules) {
-            if (!modules_in_queue.contains(next_module_ptr->get_name())) {
+            const auto module_name_with_prefix = name_prefix + module_name;
+            if (!modules_in_queue.contains(module_name_with_prefix)) {
                 modules_to_process.emplace(next_module_ptr.get(), name_prefix + module_name + "/");
-                modules_in_queue.insert(next_module_ptr->get_name());
+                modules_in_queue.insert(module_name_with_prefix);
             }
         }
     }
