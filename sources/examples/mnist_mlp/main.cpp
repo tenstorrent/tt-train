@@ -56,20 +56,20 @@ float evaluate(DataLoader &test_dataloader, Model &model, size_t num_targets) {
 };
 
 void save_model_and_optimizer(
-    std::string &saved_model_path,
+    std::string &model_path,
     std::shared_ptr<ttml::modules::MultiLayerPerceptron> &model,
     ttml::optimizers::SGD &optimizer) {
     ttml::serialization::MsgPackFile serializer;
     ttml::serialization::write_module(serializer, model_name, model);
     ttml::serialization::write_sgd_optimizer(serializer, optimizer_name, optimizer);
-    serializer.serialize(saved_model_path);
+    serializer.serialize(model_path);
 }
 void load_model_and_optimizer(
-    std::string &saved_model_path,
+    std::string &model_path,
     std::shared_ptr<ttml::modules::MultiLayerPerceptron> &model,
     ttml::optimizers::SGD &optimizer) {
     ttml::serialization::MsgPackFile deserializer;
-    deserializer.deserialize(saved_model_path);
+    deserializer.deserialize(model_path);
     ttml::serialization::read_module(deserializer, model_name, model);
     ttml::serialization::read_sgd_optimizer(deserializer, optimizer_name, optimizer);
 }
@@ -82,7 +82,7 @@ int main(int argc, char **argv) {
     size_t num_epochs = 4;
     bool is_eval = false;
     int model_save_interval = 100;
-    std::string saved_model_path = "/tmp/mnist_mlp_model.msgpack";
+    std::string model_path = "/tmp/mnist_mlp_model.msgpack";
 
     app.add_option("-b,--batch_size", batch_size, "Batch size")->default_val(batch_size);
     app.add_option("-l,--logging_interval", logging_interval, "Logging interval")->default_val(logging_interval);
@@ -90,7 +90,7 @@ int main(int argc, char **argv) {
         ->default_val(model_save_interval);
 
     app.add_option("-n,--num_epochs", num_epochs, "Number of epochs")->default_val(num_epochs);
-    app.add_option("-s,--model_path", saved_model_path, "Model path")->default_val(saved_model_path);
+    app.add_option("-s,--model_path", model_path, "Model path")->default_val(model_path);
     app.add_option("-e,--eval", is_eval, "eval only mode")->default_val(is_eval);
 
     CLI11_PARSE(app, argc, argv);
@@ -147,9 +147,9 @@ int main(int argc, char **argv) {
     fmt::print("    Weight decay: {}\n", sgd_config.weight_decay);
     fmt::print("    Nesterov: {}\n", sgd_config.nesterov);
     auto optimizer = ttml::optimizers::SGD(model->parameters(), sgd_config);
-    if (!saved_model_path.empty() && std::filesystem::exists(saved_model_path)) {
-        fmt::print("Loading model from {}\n", saved_model_path);
-        load_model_and_optimizer(saved_model_path, model, optimizer);
+    if (!model_path.empty() && std::filesystem::exists(model_path)) {
+        fmt::print("Loading model from {}\n", model_path);
+        load_model_and_optimizer(model_path, model, optimizer);
     }
 
     // evaluate model before training (sanity check to get reasonable accuracy
@@ -172,12 +172,9 @@ int main(int argc, char **argv) {
             if (training_step % logging_interval == 0) {
                 fmt::print("Step: {:5d} | Average Loss: {:.4f}\n", training_step, loss_meter.average());
             }
-            if (training_step % model_save_interval == 0) {
-                if (saved_model_path.empty()) {
-                    break;
-                }
-                fmt::print("Saving model to {}\n", saved_model_path);
-                save_model_and_optimizer(saved_model_path, model, optimizer);
+            if (!model_path.empty() && training_step % model_save_interval == 0) {
+                fmt::print("Saving model to {}\n", model_path);
+                save_model_and_optimizer(model_path, model, optimizer);
             }
 
             loss->backward();
