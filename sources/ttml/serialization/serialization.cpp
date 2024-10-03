@@ -5,11 +5,14 @@
 
 #include "autograd/auto_context.hpp"
 #include "autograd/module_base.hpp"
+#include "core/system_utils.hpp"
 #include "core/tt_tensor_utils.hpp"
 #include "core/ttnn_all_includes.hpp"
 #include "msgpack_file.hpp"
 #include "optimizers/sgd.hpp"
 namespace ttml::serialization {
+
+// demangle type name
 
 // trivial type to the std::string
 template <typename T>
@@ -26,7 +29,10 @@ void from_bytes(const std::string& bytes, T& value) {
 
     if (bytes.size() != sizeof(T)) {
         throw std::invalid_argument(fmt::format(
-            "Invalid byte size for conversion to type T. Expected: {} Actual: {}", sizeof(T), bytes.size()));
+            "Invalid byte size for conversion to type T. Expected: {} Actual: {}, type: {} ",
+            sizeof(T),
+            bytes.size(),
+            core::demangle(typeid(T).name())));
     }
     std::memcpy(&value, bytes.data(), sizeof(T));
 }
@@ -56,7 +62,7 @@ void write_ttnn_tensor(MsgPackFile& file, std::string_view name, const tt::tt_me
         auto data = ttml::core::to_vector<uint32_t>(tensor);
         file.put(std::string(name) + "/data", std::span<const uint32_t>(data.data(), data.size()));
     } else {
-        throw std::runtime_error(fmt::format("Unsupported data type: {}", static_cast<int>(data_type)));
+        throw std::runtime_error(fmt::format("Unsupported data type: {}", magic_enum::enum_name(data_type)));
     }
 }
 
@@ -83,7 +89,7 @@ void read_ttnn_tensor(MsgPackFile& file, std::string_view name, tt::tt_metal::Te
         file.get(std::string(name) + "/data", data);
         tensor = core::from_vector(data, shape, &ttml::autograd::ctx().get_device(), layout);
     } else {
-        throw std::runtime_error(fmt::format("Unsupported data type: {}", static_cast<int>(data_type)));
+        throw std::runtime_error(fmt::format("Unsupported data type: {}", magic_enum::enum_name(data_type)));
     }
 }
 
