@@ -264,7 +264,7 @@ private:
     }
 };
 
-MsgPackFile::MsgPackFile() : m_impl(new Impl()) {
+MsgPackFile::MsgPackFile() : m_impl(std::make_unique<Impl>()) {
 }
 
 MsgPackFile::~MsgPackFile() = default;
