@@ -25,8 +25,9 @@ void topological_sort(
 
 namespace ttml::autograd {
 
-Tensor::Tensor(tt::tt_metal::Tensor m_value, bool require_grad) :
-    m_value(std::move(m_value)), m_require_grad(require_grad) {}
+Tensor::Tensor(tt::tt_metal::Tensor m_value, bool requires_grad) :
+    m_value(std::move(m_value)), m_requires_grad(requires_grad) {
+}
 
 void Tensor::add_grad(const tt::tt_metal::Tensor& grad) {
     try_init_grad();
@@ -58,7 +59,9 @@ void Tensor::backward() {
     }
 }
 
-bool Tensor::is_grad_initialized() const { return core::is_tensor_initialized(get_grad()); }
+bool Tensor::is_grad_initialized() const {
+    return core::is_tensor_initialized(get_grad());
+}
 
 void Tensor::try_init_grad(bool init_ones) {
     if (is_grad_initialized()) {

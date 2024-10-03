@@ -98,7 +98,7 @@ void write_autograd_tensor(
     write_ttnn_tensor(file, std::string(name) + "/value", tensor->get_value());
     auto& grad = tensor->get_grad();
     bool has_grads = save_grads && core::is_tensor_initialized(grad);
-    file.put(std::string(name) + "/require_grads", tensor->get_require_grad());
+    file.put(std::string(name) + "/requires_grads", tensor->get_requires_grad());
     file.put(std::string(name) + "/has_grads", has_grads);
     if (has_grads) {
         write_ttnn_tensor(file, std::string(name) + "/grad", tensor->get_grad());
@@ -108,12 +108,12 @@ void write_autograd_tensor(
 void read_autograd_tensor(MsgPackFile& file, std::string_view name, ttml::autograd::TensorPtr& tensor) {
     tt::tt_metal::Tensor value;
     bool has_grads = false;
-    bool require_grads = false;
+    bool requires_grads = false;
     read_ttnn_tensor(file, std::string(name) + "/value", value);
     tensor->set_value(value);
-    file.get(std::string(name) + "/require_grads", require_grads);
+    file.get(std::string(name) + "/requires_grads", requires_grads);
     file.get(std::string(name) + "/has_grads", has_grads);
-    tensor->set_require_grad(require_grads);
+    tensor->set_requires_grad(requires_grads);
     if (has_grads) {
         tt::tt_metal::Tensor grad;
         read_ttnn_tensor(file, std::string(name) + "/grad", grad);
