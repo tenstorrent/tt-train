@@ -112,13 +112,6 @@ public:
     }
 
     // Overloads for std::span
-    /*
-
-    void put(std::string_view key, std::span<const char> value) {
-        m_data[std::string(key)] = std::vector<char>(value.begin(), value.end());
-    }
-    */
-
     void put(std::string_view key, std::span<const int> value) {
         m_data[std::string(key)] = std::vector<int>(value.begin(), value.end());
     }

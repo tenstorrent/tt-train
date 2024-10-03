@@ -81,10 +81,14 @@ int main(int argc, char **argv) {
     int logging_interval = 50;
     size_t num_epochs = 4;
     bool is_eval = false;
+    int model_save_interval = 100;
     std::string saved_model_path = "/tmp/mnist_mlp_model.msgpack";
 
     app.add_option("-b,--batch_size", batch_size, "Batch size")->default_val(batch_size);
     app.add_option("-l,--logging_interval", logging_interval, "Logging interval")->default_val(logging_interval);
+    app.add_option("-m,--model_save_interval", model_save_interval, "model save interval")
+        ->default_val(model_save_interval);
+
     app.add_option("-n,--num_epochs", num_epochs, "Number of epochs")->default_val(num_epochs);
     app.add_option("-s,--model_path", saved_model_path, "Model path")->default_val(saved_model_path);
     app.add_option("-e,--eval", is_eval, "eval only mode")->default_val(is_eval);
@@ -167,12 +171,15 @@ int main(int argc, char **argv) {
             loss_meter.update(loss_float, batch_size);
             if (training_step % logging_interval == 0) {
                 fmt::print("Step: {:5d} | Average Loss: {:.4f}\n", training_step, loss_meter.average());
+            }
+            if (training_step % model_save_interval == 0) {
                 if (saved_model_path.empty()) {
                     break;
                 }
                 fmt::print("Saving model to {}\n", saved_model_path);
                 save_model_and_optimizer(saved_model_path, model, optimizer);
             }
+
             loss->backward();
             optimizer.step();
             ttml::autograd::ctx().reset_graph();

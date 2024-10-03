@@ -79,6 +79,7 @@ TEST_F(TensorFileTest, SerializeDeserializeNamedParameters) {
     auto params_to_read = mlp_to_read.parameters();
     ttml::serialization::read_named_parameters(deserializer, "mlp", params_to_read);
 
+    EXPECT_EQ(params_to_read.size(), params_to_write.size());
     for (const auto& [key, value] : params_to_read) {
         EXPECT_TRUE(compare_tensors(value->get_value(), params_to_write.at(key)->get_value()));
     }
