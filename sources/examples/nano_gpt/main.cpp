@@ -9,9 +9,11 @@
 #include "datasets/utils.hpp"
 #include "modules/embedding_module.hpp"
 #include "modules/gpt_block.hpp"
+#include "modules/layer_norm_module.hpp"
 #include "modules/linear_module.hpp"
 #include "ops/binary_ops.hpp"
 #include "ops/losses.hpp"
+#include "optimizers/adamw.hpp"
 #include "optimizers/sgd.hpp"
 #include "ttnn_fixed/trivial_ttnn_ops.hpp"
 
@@ -27,19 +29,18 @@ using DataLoader = ttml::datasets::DataLoader<
 
 struct DemoConfig {
     // training
-    uint32_t batch_size = 32;
+    uint32_t batch_size = 64;
     uint32_t sequence_length = 256;
     uint32_t num_epochs = 1;
     uint32_t max_steps = 5000;
-    float dropout_prob = 0.F;
+    float dropout_prob = 0.2F;
     // model
     uint32_t num_heads = 6;
     uint32_t hidden_dim = 384;
-    uint32_t num_blocks = 1;
+    uint32_t num_blocks = 6;
     // optimizer
-    float learning_rate = 0.1F;
-    float momentum = 0.9F;
-    float weight_decay = 0.F;
+    float learning_rate = 3e-4F;
+    float weight_decay = 1e-2F;
 };
 const DemoConfig config;
 
@@ -110,6 +111,7 @@ class Transformer : public ttml::autograd::ModuleBase {
     std::shared_ptr<ttml::modules::Embedding> tok_emb;
     std::shared_ptr<ttml::modules::Embedding> pos_emb;
     std::vector<std::shared_ptr<ttml::modules::GPTBlock>> blocks;
+    std::shared_ptr<ttml::modules::LayerNormLayer> ln_fc;
     std::shared_ptr<ttml::modules::LinearLayer> fc;
 
 public:
@@ -145,6 +147,7 @@ public:
         for (uint32_t block_idx = 0; block_idx < num_blocks; ++block_idx) {
             blocks.push_back(std::make_shared<ttml::modules::GPTBlock>(embedding_size, num_heads, dropout_prob));
         }
+        ln_fc = std::make_shared<ttml::modules::LayerNormLayer>(embedding_size);
         fc = std::make_shared<ttml::modules::LinearLayer>(embedding_size, vocab_size);
 
         create_name("transformer");
@@ -153,6 +156,7 @@ public:
         for (uint32_t block_idx = 0; block_idx < num_blocks; ++block_idx) {
             register_module(blocks[block_idx], fmt::format("gpt_block_{}", block_idx));
         }
+        register_module(ln_fc, "ln_fc");
         register_module(fc, "fc");
     }
 
@@ -166,6 +170,7 @@ public:
         for (auto& block : blocks) {
             out = (*block)(out, mask);
         }
+        out = (*ln_fc)(out);
         auto logits = (*fc)(out);
         return logits;
     }
@@ -240,7 +245,7 @@ int main() {
             return std::make_tuple(data_tensor, targets_tensor, masks_tensor, positions_tensor);
         };
 
-    uint32_t batch_size = 32;
+    uint32_t batch_size = config.batch_size;
     fmt::print("Batch size {}\n", batch_size);
 
     LossAverageMeter loss_meter;
@@ -251,16 +256,14 @@ int main() {
     // auto model = BigramFCModel(tokenizer.get_vocab_size(), tokenizer.get_vocab_size(), /* hidden_dim */ 128);
     auto model = Transformer(tokenizer.get_vocab_size(), sequence_length);
 
-    auto sgd_params = ttml::optimizers::SGDConfig();
-    sgd_params.lr = config.learning_rate;
-    sgd_params.momentum = config.momentum;
-    sgd_params.weight_decay = config.weight_decay;
-    fmt::print("SGD configuration:\n");
-    fmt::print("    Learning rate: {}\n", sgd_params.lr);
-    fmt::print("    Momentum: {}\n", sgd_params.momentum);
-    fmt::print("    Weight decay: {}\n", sgd_params.weight_decay);
+    auto adamw_params = ttml::optimizers::AdamWConfig();
+    adamw_params.lr = config.learning_rate;
+    adamw_params.weight_decay = config.weight_decay;
+    fmt::print("AdamW configuration:\n");
+    fmt::print("    Learning rate: {}\n", adamw_params.lr);
+    fmt::print("    Weight decay: {}\n", adamw_params.weight_decay);
+    auto optimizer = ttml::optimizers::AdamW(model.parameters(), adamw_params);
 
-    auto optimizer = ttml::optimizers::SGD(model.parameters(), sgd_params);
     const uint32_t num_epochs = config.num_epochs;
     std::ofstream loss_file("loss.txt");
     for (uint32_t epoch = 0; epoch < num_epochs; ++epoch) {

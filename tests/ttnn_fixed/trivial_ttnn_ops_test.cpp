@@ -137,6 +137,37 @@ TEST(TrivialTnnFixedTest, TestSumOverBatch_0) {
     EXPECT_EQ(result_shape[3], features);
 }
 
+TEST(TrivialTnnFixedTest, TestDivide) {
+    auto* device = &ttml::autograd::ctx().get_device();
+    const size_t batch_size = 2U;
+    const size_t features = 64U;
+    std::vector<float> lhs(batch_size * features);
+    std::vector<float> rhs(batch_size * features);
+
+    for (int i = 0; i < lhs.size(); ++i) {
+        lhs[i] = static_cast<float>(i);
+        rhs[i] = static_cast<float>(i + 1);
+    }
+
+    auto shape = ttml::core::create_shape({batch_size, 1, 1, features});
+    auto lhs_tensor = ttml::core::from_vector(lhs, shape, device);
+    auto rhs_tensor = ttml::core::from_vector(rhs, shape, device);
+
+    auto result = ttml::ttnn_fixed::divide(lhs_tensor, rhs_tensor);
+    const auto& result_shape = result.get_shape();
+    ASSERT_EQ(result_shape.rank(), 4U);
+    EXPECT_EQ(result_shape[0], batch_size);
+    EXPECT_EQ(result_shape[1], 1U);
+    EXPECT_EQ(result_shape[2], 1U);
+    EXPECT_EQ(result_shape[3], features);
+
+    std::vector<float> resulting_vector = ttml::core::to_vector(result);
+    EXPECT_EQ(resulting_vector.size(), batch_size * features);
+    for (int i = 0; i < resulting_vector.size(); ++i) {
+        EXPECT_NEAR(resulting_vector[i], static_cast<float>(i) / static_cast<float>(i + 1), 1e-2);
+    }
+}
+
 TEST(TrivialTnnFixedTest, TestSumOverBatch_1) {
     auto* device = &ttml::autograd::ctx().get_device();
 
