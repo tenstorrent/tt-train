@@ -91,22 +91,24 @@ void write_autograd_tensor(
     MsgPackFile& file, std::string_view name, const ttml::autograd::TensorPtr& tensor, bool save_grads) {
     write_ttnn_tensor(file, std::string(name) + "/value", tensor->get_value());
     auto& grad = tensor->get_grad();
-    bool should_save_grads = save_grads && core::is_tensor_initialized(grad);
-    file.put(std::string(name) + "/requires_grads", should_save_grads);
-    if (should_save_grads) {
+    bool has_grads = save_grads && core::is_tensor_initialized(grad);
+    file.put(std::string(name) + "/require_grads", tensor->get_require_grad());
+    file.put(std::string(name) + "/has_grads", has_grads);
+    if (has_grads) {
         write_ttnn_tensor(file, std::string(name) + "/grad", tensor->get_grad());
     }
 }
 
 void read_autograd_tensor(MsgPackFile& file, std::string_view name, ttml::autograd::TensorPtr& tensor) {
     tt::tt_metal::Tensor value;
-    bool save_grads = false;
-
+    bool has_grads = false;
+    bool require_grads = false;
     read_ttnn_tensor(file, std::string(name) + "/value", value);
     tensor->set_value(value);
-    file.get(std::string(name) + "/requires_grads", save_grads);
-
-    if (save_grads) {
+    file.get(std::string(name) + "/require_grads", require_grads);
+    file.get(std::string(name) + "/has_grads", has_grads);
+    tensor->set_require_grad(require_grads);
+    if (has_grads) {
         tt::tt_metal::Tensor grad;
         read_ttnn_tensor(file, std::string(name) + "/grad", grad);
         tensor->set_grad(grad);
