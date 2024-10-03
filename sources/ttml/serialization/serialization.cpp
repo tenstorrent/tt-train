@@ -143,14 +143,13 @@ void write_optimizer(MsgPackFile& file, std::string_view name, const ttml::optim
 
 void read_optimizer(MsgPackFile& file, std::string_view name, ttml::optimizers::SGD* optimizer) {
     assert(optimizer);
+    int steps = 0;
+
     auto state_dict = optimizer->get_state_dict();
     for (auto& [key, value] : state_dict) {
         ttml::serialization::read_ttnn_tensor(file, std::string(name) + key, value);
     }
     optimizer->set_state_dict(state_dict);
-
-    int steps = 0;
-
     file.get(std::string(name) + "/steps", steps);
     optimizer->set_steps(steps);
 }
