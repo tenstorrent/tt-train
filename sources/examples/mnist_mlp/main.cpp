@@ -60,8 +60,8 @@ void save_model_and_optimizer(
     std::shared_ptr<ttml::modules::MultiLayerPerceptron> &model,
     ttml::optimizers::SGD &optimizer) {
     ttml::serialization::MsgPackFile serializer;
-    ttml::serialization::write_module(serializer, model_name, model);
-    ttml::serialization::write_sgd_optimizer(serializer, optimizer_name, optimizer);
+    ttml::serialization::write_module(serializer, model_name, model.get());
+    ttml::serialization::write_optimizer(serializer, optimizer_name, &optimizer);
     serializer.serialize(model_path);
 }
 void load_model_and_optimizer(
@@ -70,8 +70,8 @@ void load_model_and_optimizer(
     ttml::optimizers::SGD &optimizer) {
     ttml::serialization::MsgPackFile deserializer;
     deserializer.deserialize(model_path);
-    ttml::serialization::read_module(deserializer, model_name, model);
-    ttml::serialization::read_sgd_optimizer(deserializer, optimizer_name, optimizer);
+    ttml::serialization::read_module(deserializer, model_name, model.get());
+    ttml::serialization::read_optimizer(deserializer, optimizer_name, &optimizer);
 }
 int main(int argc, char **argv) {
     CLI::App app{"Mnist Example"};
