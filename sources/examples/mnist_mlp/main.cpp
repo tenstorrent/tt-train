@@ -106,7 +106,7 @@ int main(int argc, char** argv) {
     float accuracy_before_training = evaluate(test_dataloader, model, num_targets);
     fmt::print("Accuracy before training: {}%\n", accuracy_before_training * 100.F);
 
-    const float learning_rate = 0.1F * (batch_size / 128.F);
+    const float learning_rate = 0.1F * (static_cast<float>(batch_size) / 128.F);
     const float momentum = 0.9F;
     const float weight_decay = 0.F;
     auto sgd_config =
