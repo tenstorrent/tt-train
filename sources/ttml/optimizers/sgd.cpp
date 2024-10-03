@@ -59,6 +59,20 @@ void SGD::step() {
     steps++;
 }
 
-const TTTensorDict& SGD::get_theta() const { return m_theta; }
-TTTensorDict& SGD::get_theta() { return m_theta; }
+TTTensorDict SGD::get_state_dict() const {
+    return m_theta;
+}
+
+void SGD::set_state_dict(TTTensorDict dict) {
+    m_theta = std::move(dict);
+}
+
+size_t SGD::get_steps() const {
+    return steps;
+}
+
+void SGD::set_steps(size_t steps) {
+    this->steps = steps;
+}
+
 }  // namespace ttml::optimizers

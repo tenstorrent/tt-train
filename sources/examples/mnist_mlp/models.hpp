@@ -20,4 +20,4 @@ public:
     ttml::autograd::TensorPtr operator()(ttml::autograd::TensorPtr x);
 };
 
-ttml::modules::MultiLayerPerceptron create_base_mlp(uint32_t num_features, uint32_t num_targets);
+std::shared_ptr<ttml::modules::MultiLayerPerceptron> create_base_mlp(uint32_t num_features, uint32_t num_targets);
