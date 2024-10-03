@@ -18,9 +18,13 @@ void ModuleBase::register_module(const ModuleBasePtr& module_ptr, const std::str
     }
 }
 
-void ModuleBase::create_name(const std::string& name) { m_name = name; }
+void ModuleBase::create_name(const std::string& name) {
+    m_name = name;
+}
 
-const std::string& ModuleBase::get_name() const { return m_name; }
+const std::string& ModuleBase::get_name() const {
+    return m_name;
+}
 
 NamedParameters ModuleBase::parameters() const {
     NamedParameters params;
@@ -39,9 +43,10 @@ NamedParameters ModuleBase::parameters() const {
         }
 
         for (const auto& [module_name, next_module_ptr] : module_ptr->m_named_modules) {
-            if (!modules_in_queue.contains(next_module_ptr->get_name())) {
+            const auto module_name_with_prefix = name_prefix + module_name;
+            if (!modules_in_queue.contains(module_name_with_prefix)) {
                 modules_to_process.emplace(next_module_ptr.get(), name_prefix + module_name + "/");
-                modules_in_queue.insert(next_module_ptr->get_name());
+                modules_in_queue.insert(module_name_with_prefix);
             }
         }
     }
@@ -56,10 +61,16 @@ void ModuleBase::set_run_mode(RunMode mode) {
     }
 }
 
-[[nodiscard]] RunMode ModuleBase::get_run_mode() const { return m_run_mode; }
+[[nodiscard]] RunMode ModuleBase::get_run_mode() const {
+    return m_run_mode;
+}
 
-void ModuleBase::train() { set_run_mode(RunMode::TRAIN); }
+void ModuleBase::train() {
+    set_run_mode(RunMode::TRAIN);
+}
 
-void ModuleBase::eval() { set_run_mode(RunMode::EVAL); }
+void ModuleBase::eval() {
+    set_run_mode(RunMode::EVAL);
+}
 
 }  // namespace ttml::autograd
