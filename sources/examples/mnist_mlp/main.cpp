@@ -81,7 +81,7 @@ int main(int argc, char **argv) {
     int logging_interval = 50;
     size_t num_epochs = 4;
     bool is_eval = false;
-    std::string saved_model_path = "/tmp/mlp_mnist_model.msgpack";
+    std::string saved_model_path = "/tmp/mnist_mlp_model.msgpack";
 
     app.add_option("-b,--batch_size", batch_size, "Batch size")->default_val(batch_size);
     app.add_option("-l,--logging_interval", logging_interval, "Logging interval")->default_val(logging_interval);

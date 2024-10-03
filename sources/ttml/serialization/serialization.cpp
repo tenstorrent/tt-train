@@ -127,7 +127,7 @@ void read_named_parameters(MsgPackFile& file, std::string_view name, ttml::autog
 void write_sgd_optimizer(MsgPackFile& file, std::string_view name, const ttml::optimizers::SGD& optimizer) {
     auto state_dict = optimizer.get_state_dict();
     for (auto& [key, value] : state_dict) {
-        ttml::serialization::read_ttnn_tensor(file, std::string(name) + key, value);
+        ttml::serialization::write_ttnn_tensor(file, std::string(name) + key, value);
     }
     file.put(std::string(name) + "/steps", optimizer.get_steps());
 }
