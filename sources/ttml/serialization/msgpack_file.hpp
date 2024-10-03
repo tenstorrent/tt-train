@@ -37,9 +37,7 @@ public:
     void put(std::string_view key, std::string_view value);
 
     // added it to prevent implicit casts from const char* to bool
-    void put(std::string_view key, const char* value) {
-        put(key, std::string_view(value));
-    }
+    void put(std::string_view key, const char* value);
 
     // Overloads for std::span
     void put(std::string_view key, std::span<const int> value);

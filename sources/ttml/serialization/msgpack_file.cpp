@@ -383,4 +383,7 @@ bool MsgPackFile::get(std::string_view key, std::vector<std::string>& value) con
     return m_impl->get(key, value);
 }
 
+void MsgPackFile::put(std::string_view key, const char* value) {
+    put(key, std::string_view(value));
+}
 }  // namespace ttml::serialization
