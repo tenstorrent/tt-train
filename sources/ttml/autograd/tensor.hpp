@@ -11,7 +11,7 @@ class Tensor : public std::enable_shared_from_this<Tensor> {
 private:
     tt::tt_metal::Tensor m_value;
     tt::tt_metal::Tensor m_grad;
-    bool m_require_grad = true;
+    bool m_requires_grad = true;
     std::optional<NodeId> m_node_id;
 
 public:
@@ -20,21 +20,39 @@ public:
     Tensor(Tensor &&) noexcept = default;
     Tensor &operator=(const Tensor &) = default;
     Tensor &operator=(Tensor &&) noexcept = default;
-    explicit Tensor(tt::tt_metal::Tensor m_value, bool require_grad = true);
+    explicit Tensor(tt::tt_metal::Tensor m_value, bool requires_grad = true);
     ~Tensor() = default;
 
-    void set_value(const tt::tt_metal::Tensor &value) { m_value = value; }
-    void set_grad(const tt::tt_metal::Tensor &grad) { m_grad = grad; }
+    void set_value(const tt::tt_metal::Tensor &value) {
+        m_value = value;
+    }
+    void set_grad(const tt::tt_metal::Tensor &grad) {
+        m_grad = grad;
+    }
     void set_node(const std::optional<NodeId> &node);
-    void clean_node() { m_node_id = std::nullopt; }
+    void clean_node() {
+        m_node_id = std::nullopt;
+    }
     void add_grad(const tt::tt_metal::Tensor &grad);
-    void set_require_grad(bool require_grad) { m_require_grad = require_grad; }
+    void set_requires_grad(bool requires_grad) {
+        m_requires_grad = requires_grad;
+    }
 
-    const tt::tt_metal::Tensor &get_value() const { return m_value; }
-    const tt::tt_metal::Tensor &get_grad() const { return m_grad; }
-    tt::tt_metal::Tensor &get_grad() { return m_grad; }
-    bool get_require_grad() const { return m_require_grad; }
-    const std::optional<NodeId> &get_node() const { return m_node_id; }
+    const tt::tt_metal::Tensor &get_value() const {
+        return m_value;
+    }
+    const tt::tt_metal::Tensor &get_grad() const {
+        return m_grad;
+    }
+    tt::tt_metal::Tensor &get_grad() {
+        return m_grad;
+    }
+    bool get_requires_grad() const {
+        return m_requires_grad;
+    }
+    const std::optional<NodeId> &get_node() const {
+        return m_node_id;
+    }
 
     void backward();
 

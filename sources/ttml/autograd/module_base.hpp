@@ -13,7 +13,7 @@ class ModuleBase;
 using ModuleBasePtr = std::shared_ptr<ModuleBase>;
 using NamedParameters = std::unordered_map<std::string, TensorPtr>;
 
-class ModuleBase : public std::enable_shared_from_this<ModuleBase> {
+class ModuleBase {
 private:
     std::string m_name;
     RunMode m_run_mode = RunMode::TRAIN;

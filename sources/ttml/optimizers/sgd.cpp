@@ -11,7 +11,7 @@ namespace ttml::optimizers {
 SGD::SGD(ttml::autograd::NamedParameters parameters, const SGDConfig& config) :
     m_config(config), m_parameters(std::move(parameters)) {
     for (const auto& [name, tensor_ptr] : m_parameters) {
-        if (tensor_ptr->get_require_grad()) {
+        if (tensor_ptr->get_requires_grad()) {
             m_theta.emplace(name, core::zeros_like(tensor_ptr->get_value()));
         }
     }
@@ -19,7 +19,7 @@ SGD::SGD(ttml::autograd::NamedParameters parameters, const SGDConfig& config) :
 
 void SGD::zero_grad() {
     for (auto& [name, tensor_ptr] : m_parameters) {
-        if (tensor_ptr->get_require_grad() && tensor_ptr->is_grad_initialized()) {
+        if (tensor_ptr->get_requires_grad() && tensor_ptr->is_grad_initialized()) {
             tensor_ptr->set_grad(core::zeros_like(tensor_ptr->get_value()));
         }
     }
@@ -57,6 +57,22 @@ void SGD::step() {
         tensor_ptr->set_value(ttnn::subtract(tensor_ptr->get_value(), ttnn::multiply(gradients, m_config.lr)));
     }
     steps++;
+}
+
+TTTensorDict SGD::get_state_dict() const {
+    return m_theta;
+}
+
+void SGD::set_state_dict(TTTensorDict dict) {
+    m_theta = std::move(dict);
+}
+
+size_t SGD::get_steps() const {
+    return steps;
+}
+
+void SGD::set_steps(size_t steps) {
+    this->steps = steps;
 }
 
 }  // namespace ttml::optimizers

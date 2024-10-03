@@ -14,13 +14,17 @@ void ModuleBase::register_tensor(const TensorPtr& tensor_ptr, const std::string&
 void ModuleBase::register_module(const ModuleBasePtr& module_ptr, const std::string& name) {
     auto [_, is_inserted] = m_named_modules.emplace(name, module_ptr);
     if (!is_inserted) {
-        throw std::logic_error("Names of two modules coincide");
+        throw std::logic_error(fmt::format("Names of two modules coincide: {}", name));
     }
 }
 
-void ModuleBase::create_name(const std::string& name) { m_name = name; }
+void ModuleBase::create_name(const std::string& name) {
+    m_name = name;
+}
 
-const std::string& ModuleBase::get_name() const { return m_name; }
+const std::string& ModuleBase::get_name() const {
+    return m_name;
+}
 
 NamedParameters ModuleBase::parameters() const {
     NamedParameters params;
@@ -57,10 +61,16 @@ void ModuleBase::set_run_mode(RunMode mode) {
     }
 }
 
-[[nodiscard]] RunMode ModuleBase::get_run_mode() const { return m_run_mode; }
+[[nodiscard]] RunMode ModuleBase::get_run_mode() const {
+    return m_run_mode;
+}
 
-void ModuleBase::train() { set_run_mode(RunMode::TRAIN); }
+void ModuleBase::train() {
+    set_run_mode(RunMode::TRAIN);
+}
 
-void ModuleBase::eval() { set_run_mode(RunMode::EVAL); }
+void ModuleBase::eval() {
+    set_run_mode(RunMode::EVAL);
+}
 
 }  // namespace ttml::autograd

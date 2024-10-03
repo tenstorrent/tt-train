@@ -2,6 +2,8 @@
 
 #include <CLI/CLI.hpp>
 #include <mnist/mnist_reader.hpp>
+#include <serialization/msgpack_file.hpp>
+#include <serialization/serialization.hpp>
 #include <ttnn/operations/eltwise/ternary/where.hpp>
 #include <ttnn/tensor/tensor_utils.hpp>
 #include <ttnn/tensor/types.hpp>
@@ -23,16 +25,19 @@ using DatasetSample = std::pair<std::vector<uint8_t>, uint8_t>;
 using BatchType = std::pair<TensorPtr, TensorPtr>;
 using DataLoader = ttml::datasets::DataLoader<
     ttml::datasets::InMemoryDataset<std::vector<uint8_t>, uint8_t>,
-    std::function<BatchType(std::vector<DatasetSample>&& samples)>,
+    std::function<BatchType(std::vector<DatasetSample> &&samples)>,
     BatchType>;
 
+constexpr auto model_name = "mlp";
+constexpr auto optimizer_name = "optimizer";
+
 template <typename Model>
-float evaluate(DataLoader& test_dataloader, Model& model, size_t num_targets) {
-    model.eval();
+float evaluate(DataLoader &test_dataloader, Model &model, size_t num_targets) {
+    model->eval();
     float num_correct = 0;
     float num_samples = 0;
-    for (const auto& [data, target] : test_dataloader) {
-        auto output = model(data);
+    for (const auto &[data, target] : test_dataloader) {
+        auto output = (*model)(data);
         auto output_vec = ttml::core::to_vector(output->get_value());
         auto target_vec = ttml::core::to_vector(target->get_value());
         for (size_t i = 0; i < output_vec.size(); i += num_targets) {
@@ -46,21 +51,47 @@ float evaluate(DataLoader& test_dataloader, Model& model, size_t num_targets) {
             num_samples++;
         }
     }
-    model.train();
+    model->train();
     return num_correct / num_samples;
 };
 
-int main(int argc, char** argv) {
+void save_model_and_optimizer(
+    std::string &model_path,
+    std::shared_ptr<ttml::modules::MultiLayerPerceptron> &model,
+    ttml::optimizers::SGD &optimizer) {
+    ttml::serialization::MsgPackFile serializer;
+    ttml::serialization::write_module(serializer, model_name, model.get());
+    ttml::serialization::write_optimizer(serializer, optimizer_name, &optimizer);
+    serializer.serialize(model_path);
+}
+void load_model_and_optimizer(
+    std::string &model_path,
+    std::shared_ptr<ttml::modules::MultiLayerPerceptron> &model,
+    ttml::optimizers::SGD &optimizer) {
+    ttml::serialization::MsgPackFile deserializer;
+    deserializer.deserialize(model_path);
+    ttml::serialization::read_module(deserializer, model_name, model.get());
+    ttml::serialization::read_optimizer(deserializer, optimizer_name, &optimizer);
+}
+int main(int argc, char **argv) {
     CLI::App app{"Mnist Example"};
     argv = app.ensure_utf8(argv);
 
     uint32_t batch_size = 128;
     int logging_interval = 50;
-    size_t num_epochs = 10;
+    size_t num_epochs = 4;
+    bool is_eval = false;
+    int model_save_interval = 100;
+    std::string model_path = "/tmp/mnist_mlp_model.msgpack";
 
     app.add_option("-b,--batch_size", batch_size, "Batch size")->default_val(batch_size);
     app.add_option("-l,--logging_interval", logging_interval, "Logging interval")->default_val(logging_interval);
+    app.add_option("-m,--model_save_interval", model_save_interval, "model save interval")
+        ->default_val(model_save_interval);
+
     app.add_option("-n,--num_epochs", num_epochs, "Number of epochs")->default_val(num_epochs);
+    app.add_option("-s,--model_path", model_path, "Model path")->default_val(model_path);
+    app.add_option("-e,--eval", is_eval, "eval only mode")->default_val(is_eval);
 
     CLI11_PARSE(app, argc, argv);
     // Load MNIST data
@@ -73,15 +104,15 @@ int main(int argc, char** argv) {
     ttml::datasets::InMemoryDataset<std::vector<uint8_t>, uint8_t> test_dataset(
         dataset.test_images, dataset.test_labels);
 
-    auto* device = &ttml::autograd::ctx().get_device();
+    auto *device = &ttml::autograd::ctx().get_device();
     std::function<BatchType(std::vector<DatasetSample> && samples)> collate_fn =
-        [num_features, num_targets, device](std::vector<DatasetSample>&& samples) {
+        [num_features, num_targets, device](std::vector<DatasetSample> &&samples) {
             const uint32_t batch_size = samples.size();
             std::vector<float> data;
             std::vector<float> targets;
             data.reserve(batch_size * num_features);
             targets.reserve(batch_size * num_targets);
-            for (auto& [features, target] : samples) {
+            for (auto &[features, target] : samples) {
                 std::copy(features.begin(), features.end(), std::back_inserter(data));
 
                 std::vector<float> one_hot_target(num_targets, 0.0F);
@@ -102,9 +133,6 @@ int main(int argc, char** argv) {
     auto test_dataloader = DataLoader(test_dataset, batch_size, /* shuffle */ false, collate_fn);
 
     auto model = create_base_mlp(784, 10);
-    // evaluate model before training (sanity check to get reasonable accuracy 1/num_targets)
-    float accuracy_before_training = evaluate(test_dataloader, model, num_targets);
-    fmt::print("Accuracy before training: {}%\n", accuracy_before_training * 100.F);
 
     const float learning_rate = 0.1F * (static_cast<float>(batch_size) / 128.F);
     const float momentum = 0.9F;
@@ -118,21 +146,37 @@ int main(int argc, char** argv) {
     fmt::print("    Dampening {}\n", sgd_config.dampening);
     fmt::print("    Weight decay: {}\n", sgd_config.weight_decay);
     fmt::print("    Nesterov: {}\n", sgd_config.nesterov);
-    auto optimizer = ttml::optimizers::SGD(model.parameters(), sgd_config);
+    auto optimizer = ttml::optimizers::SGD(model->parameters(), sgd_config);
+    if (!model_path.empty() && std::filesystem::exists(model_path)) {
+        fmt::print("Loading model from {}\n", model_path);
+        load_model_and_optimizer(model_path, model, optimizer);
+    }
+
+    // evaluate model before training (sanity check to get reasonable accuracy
+    // 1/num_targets)
+    float accuracy_before_training = evaluate(test_dataloader, model, num_targets);
+    fmt::print("Accuracy of the current model training: {}%\n", accuracy_before_training * 100.F);
+    if (is_eval) {
+        return 0;
+    }
 
     LossAverageMeter loss_meter;
     int training_step = 0;
-
     for (size_t epoch = 0; epoch < num_epochs; ++epoch) {
-        for (const auto& [data, target] : train_dataloader) {
+        for (const auto &[data, target] : train_dataloader) {
             optimizer.zero_grad();
-            auto output = model(data);
+            auto output = (*model)(data);
             auto loss = ttml::ops::cross_entropy_loss(target, output);
             auto loss_float = ttml::core::to_vector(loss->get_value())[0];
             loss_meter.update(loss_float, batch_size);
             if (training_step % logging_interval == 0) {
                 fmt::print("Step: {:5d} | Average Loss: {:.4f}\n", training_step, loss_meter.average());
             }
+            if (!model_path.empty() && training_step % model_save_interval == 0) {
+                fmt::print("Saving model to {}\n", model_path);
+                save_model_and_optimizer(model_path, model, optimizer);
+            }
+
             loss->backward();
             optimizer.step();
             ttml::autograd::ctx().reset_graph();

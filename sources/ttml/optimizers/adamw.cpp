@@ -9,7 +9,7 @@ namespace ttml::optimizers {
 AdamW::AdamW(autograd::NamedParameters parameters, const AdamWConfig& config) :
     m_config(config), m_parameters(std::move(parameters)) {
     for (const auto& [key, tensor_ptr] : m_parameters) {
-        if (tensor_ptr->get_require_grad()) {
+        if (tensor_ptr->get_requires_grad()) {
             m_first_moment.emplace(key, core::zeros_like(tensor_ptr->get_value()));
             m_second_moment.emplace(key, core::zeros_like(tensor_ptr->get_value()));
         }
@@ -18,7 +18,7 @@ AdamW::AdamW(autograd::NamedParameters parameters, const AdamWConfig& config) :
 
 void AdamW::zero_grad() {
     for (auto& [key, tensor_ptr] : m_parameters) {
-        if (tensor_ptr->get_require_grad() && tensor_ptr->is_grad_initialized()) {
+        if (tensor_ptr->get_requires_grad() && tensor_ptr->is_grad_initialized()) {
             tensor_ptr->set_grad(core::zeros_like(tensor_ptr->get_value()));
         }
     }

@@ -18,10 +18,14 @@ tt::tt_metal::Tensor sum_over_dim(const tt::tt_metal::Tensor& t, uint32_t dim) {
         /*compute_kernel_config */ core::ComputeKernelConfig::precise());
 }
 
-tt::tt_metal::Tensor sum_over_batch(const tt::tt_metal::Tensor& t) { return sum_over_dim(t, /* dim */ 0); }
+tt::tt_metal::Tensor sum_over_batch(const tt::tt_metal::Tensor& t) {
+    return sum_over_dim(t, /* dim */ 0);
+}
 
 // This is a workaround for the lack of working `ttnn::max` implementation.
-tt::tt_metal::Tensor max(const tt::tt_metal::Tensor& t, int dim, bool keepdim) { return ttnn::max(t, dim, keepdim); }
+tt::tt_metal::Tensor max(const tt::tt_metal::Tensor& t, int dim, bool keepdim) {
+    return ttnn::max(t, dim, keepdim);
+}
 
 // Stable softmax implementation
 // ttnn::softmax also exists, but it is not stable (even after max subtraction optimization)

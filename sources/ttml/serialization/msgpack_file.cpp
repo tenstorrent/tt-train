@@ -75,17 +75,41 @@ namespace ttml::serialization {
 class MsgPackFile::Impl {
 public:
     // Methods to store different types
-    void put(std::string_view key, int value) { m_data[std::string(key)] = value; }
+    void put(std::string_view key, bool value) {
+        m_data[std::string(key)] = value;
+    }
 
-    void put(std::string_view key, float value) { m_data[std::string(key)] = value; }
+    void put(std::string_view key, char value) {
+        m_data[std::string(key)] = value;
+    }
 
-    void put(std::string_view key, double value) { m_data[std::string(key)] = value; }
+    void put(std::string_view key, int value) {
+        m_data[std::string(key)] = value;
+    }
 
-    void put(std::string_view key, uint32_t value) { m_data[std::string(key)] = value; }
+    void put(std::string_view key, float value) {
+        m_data[std::string(key)] = value;
+    }
 
-    void put(std::string_view key, const std::string& value) { m_data[std::string(key)] = value; }
+    void put(std::string_view key, double value) {
+        m_data[std::string(key)] = value;
+    }
 
-    void put(std::string_view key, std::string_view value) { m_data[std::string(key)] = std::string(value); }
+    void put(std::string_view key, uint32_t value) {
+        m_data[std::string(key)] = value;
+    }
+
+    void put(std::string_view key, size_t value) {
+        m_data[std::string(key)] = value;
+    }
+
+    void put(std::string_view key, const std::string& value) {
+        m_data[std::string(key)] = value;
+    }
+
+    void put(std::string_view key, std::string_view value) {
+        m_data[std::string(key)] = std::string(value);
+    }
 
     // Overloads for std::span
     void put(std::string_view key, std::span<const int> value) {
@@ -150,34 +174,69 @@ public:
     }
 
     // Methods to get values
-    bool get(std::string_view key, int& value) const { return get_value(key, value); }
+    bool get(std::string_view key, bool& value) const {
+        return get_value(key, value);
+    }
 
-    bool get(std::string_view key, float& value) const { return get_value(key, value); }
+    bool get(std::string_view key, char& value) const {
+        return get_value(key, value);
+    }
 
-    bool get(std::string_view key, double& value) const { return get_value(key, value); }
+    bool get(std::string_view key, int& value) const {
+        return get_value(key, value);
+    }
 
-    bool get(std::string_view key, uint32_t& value) const { return get_value(key, value); }
+    bool get(std::string_view key, float& value) const {
+        return get_value(key, value);
+    }
 
-    bool get(std::string_view key, std::string& value) const { return get_value(key, value); }
+    bool get(std::string_view key, double& value) const {
+        return get_value(key, value);
+    }
 
-    // Methods to get vectors
-    bool get(std::string_view key, std::vector<int>& value) const { return get_value(key, value); }
+    bool get(std::string_view key, uint32_t& value) const {
+        return get_value(key, value);
+    }
 
-    bool get(std::string_view key, std::vector<float>& value) const { return get_value(key, value); }
+    bool get(std::string_view key, size_t& value) const {
+        return get_value(key, value);
+    }
 
-    bool get(std::string_view key, std::vector<double>& value) const { return get_value(key, value); }
+    bool get(std::string_view key, std::string& value) const {
+        return get_value(key, value);
+    }
 
-    bool get(std::string_view key, std::vector<uint32_t>& value) const { return get_value(key, value); }
+    bool get(std::string_view key, std::vector<int>& value) const {
+        return get_value(key, value);
+    }
 
-    bool get(std::string_view key, std::vector<std::string>& value) const { return get_value(key, value); }
+    bool get(std::string_view key, std::vector<float>& value) const {
+        return get_value(key, value);
+    }
+
+    bool get(std::string_view key, std::vector<double>& value) const {
+        return get_value(key, value);
+    }
+
+    bool get(std::string_view key, std::vector<uint32_t>& value) const {
+        return get_value(key, value);
+    }
+
+    bool get(std::string_view key, std::vector<std::string>& value) const {
+        return get_value(key, value);
+    }
 
 private:
     using ValueType = std::variant<
+        bool,
+        char,
         int,
         float,
         double,
         uint32_t,
+        size_t,
         std::string,
+        std::vector<char>,
         std::vector<int>,
         std::vector<float>,
         std::vector<double>,
@@ -205,54 +264,126 @@ private:
     }
 };
 
-MsgPackFile::MsgPackFile() : m_impl(new Impl()) {}
+MsgPackFile::MsgPackFile() : m_impl(std::make_unique<Impl>()) {
+}
 
 MsgPackFile::~MsgPackFile() = default;
 
 MsgPackFile::MsgPackFile(MsgPackFile&&) noexcept = default;
 
-void MsgPackFile::put(std::string_view key, int value) { m_impl->put(key, value); }
+void MsgPackFile::put(std::string_view key, bool value) {
+    m_impl->put(key, value);
+}
 
-void MsgPackFile::put(std::string_view key, float value) { m_impl->put(key, value); }
+void MsgPackFile::put(std::string_view key, char value) {
+    m_impl->put(key, value);
+}
 
-void MsgPackFile::put(std::string_view key, double value) { m_impl->put(key, value); }
+void MsgPackFile::put(std::string_view key, int value) {
+    m_impl->put(key, value);
+}
 
-void MsgPackFile::put(std::string_view key, uint32_t value) { m_impl->put(key, value); }
+void MsgPackFile::put(std::string_view key, float value) {
+    m_impl->put(key, value);
+}
 
-void MsgPackFile::put(std::string_view key, std::string_view value) { m_impl->put(key, value); }
+void MsgPackFile::put(std::string_view key, double value) {
+    m_impl->put(key, value);
+}
 
-void MsgPackFile::put(std::string_view key, std::span<const int> value) { m_impl->put(key, value); }
+void MsgPackFile::put(std::string_view key, uint32_t value) {
+    m_impl->put(key, value);
+}
 
-void MsgPackFile::put(std::string_view key, std::span<const float> value) { m_impl->put(key, value); }
+void MsgPackFile::put(std::string_view key, size_t value) {
+    m_impl->put(key, value);
+}
 
-void MsgPackFile::put(std::string_view key, std::span<const double> value) { m_impl->put(key, value); }
+void MsgPackFile::put(std::string_view key, std::string_view value) {
+    m_impl->put(key, value);
+}
 
-void MsgPackFile::put(std::string_view key, std::span<const uint32_t> value) { m_impl->put(key, value); }
+void MsgPackFile::put(std::string_view key, std::span<const int> value) {
+    m_impl->put(key, value);
+}
 
-void MsgPackFile::put(std::string_view key, std::span<const std::string> value) { m_impl->put(key, value); }
+void MsgPackFile::put(std::string_view key, std::span<const float> value) {
+    m_impl->put(key, value);
+}
 
-void MsgPackFile::serialize(const std::string& filename) { m_impl->serialize(filename); }
+void MsgPackFile::put(std::string_view key, std::span<const double> value) {
+    m_impl->put(key, value);
+}
 
-void MsgPackFile::deserialize(const std::string& filename) { m_impl->deserialize(filename); }
+void MsgPackFile::put(std::string_view key, std::span<const uint32_t> value) {
+    m_impl->put(key, value);
+}
 
-bool MsgPackFile::get(std::string_view key, int& value) const { return m_impl->get(key, value); }
+void MsgPackFile::put(std::string_view key, std::span<const std::string> value) {
+    m_impl->put(key, value);
+}
 
-bool MsgPackFile::get(std::string_view key, float& value) const { return m_impl->get(key, value); }
+void MsgPackFile::serialize(const std::string& filename) {
+    m_impl->serialize(filename);
+}
 
-bool MsgPackFile::get(std::string_view key, double& value) const { return m_impl->get(key, value); }
+void MsgPackFile::deserialize(const std::string& filename) {
+    m_impl->deserialize(filename);
+}
 
-bool MsgPackFile::get(std::string_view key, uint32_t& value) const { return m_impl->get(key, value); }
+bool MsgPackFile::get(std::string_view key, bool& value) const {
+    return m_impl->get(key, value);
+}
 
-bool MsgPackFile::get(std::string_view key, std::string& value) const { return m_impl->get(key, value); }
+bool MsgPackFile::get(std::string_view key, char& value) const {
+    return m_impl->get(key, value);
+}
 
-bool MsgPackFile::get(std::string_view key, std::vector<int>& value) const { return m_impl->get(key, value); }
+bool MsgPackFile::get(std::string_view key, int& value) const {
+    return m_impl->get(key, value);
+}
 
-bool MsgPackFile::get(std::string_view key, std::vector<float>& value) const { return m_impl->get(key, value); }
+bool MsgPackFile::get(std::string_view key, float& value) const {
+    return m_impl->get(key, value);
+}
 
-bool MsgPackFile::get(std::string_view key, std::vector<double>& value) const { return m_impl->get(key, value); }
+bool MsgPackFile::get(std::string_view key, double& value) const {
+    return m_impl->get(key, value);
+}
 
-bool MsgPackFile::get(std::string_view key, std::vector<uint32_t>& value) const { return m_impl->get(key, value); }
+bool MsgPackFile::get(std::string_view key, uint32_t& value) const {
+    return m_impl->get(key, value);
+}
 
-bool MsgPackFile::get(std::string_view key, std::vector<std::string>& value) const { return m_impl->get(key, value); }
+bool MsgPackFile::get(std::string_view key, size_t& value) const {
+    return m_impl->get(key, value);
+}
 
+bool MsgPackFile::get(std::string_view key, std::string& value) const {
+    return m_impl->get(key, value);
+}
+
+bool MsgPackFile::get(std::string_view key, std::vector<int>& value) const {
+    return m_impl->get(key, value);
+}
+
+bool MsgPackFile::get(std::string_view key, std::vector<float>& value) const {
+    return m_impl->get(key, value);
+}
+
+bool MsgPackFile::get(std::string_view key, std::vector<double>& value) const {
+    return m_impl->get(key, value);
+}
+
+bool MsgPackFile::get(std::string_view key, std::vector<uint32_t>& value) const {
+    return m_impl->get(key, value);
+}
+
+bool MsgPackFile::get(std::string_view key, std::vector<std::string>& value) const {
+    return m_impl->get(key, value);
+}
+
+void MsgPackFile::put(std::string_view key, const char* value) {
+    put(key, std::string_view(value));
+}
 }  // namespace ttml::serialization
