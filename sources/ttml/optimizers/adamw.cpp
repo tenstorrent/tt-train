@@ -27,9 +27,9 @@ void AdamW::zero_grad() {
 void AdamW::step() {
     steps++;
     for (auto& [key, first_moment] : m_first_moment) {
-        auto tensor_ptr = m_parameters.at(key);
+        const auto& tensor_ptr = m_parameters.at(key);
 
-        auto gradients = tensor_ptr->get_grad();
+        const auto& gradients = tensor_ptr->get_grad();
         if (m_config.weight_decay != 0.0F) {
             auto weight_decay_update = ttnn::multiply(tensor_ptr->get_value(), m_config.weight_decay * m_config.lr);
             tensor_ptr->set_value(ttnn::subtract(tensor_ptr->get_value(), weight_decay_update));
