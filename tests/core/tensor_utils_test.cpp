@@ -1,15 +1,19 @@
 
 
+#include <gtest/gtest-spi.h>
 #include <gtest/gtest.h>
 
 #include <cstdint>
 #include <memory>
+#include <numeric>
 #include <vector>
 
 #include "autograd/auto_context.hpp"
 #include "core/device.hpp"
 #include "core/tt_tensor_utils.hpp"
 #include "core/ttnn_all_includes.hpp"
+#include "gtest/gtest.h"
+#include "init/cpu_initializers.hpp"
 
 TEST(TensorUtilsTest, TestFloatToFromTensorEven) {
     auto* device = &ttml::autograd::ctx().get_device();

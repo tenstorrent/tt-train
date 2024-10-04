@@ -21,6 +21,18 @@ tt::tt_metal::Tensor ones(const ttnn::Shape& shape, tt::tt_metal::Device* device
 template <class T = float>
 [[nodiscard]] tt::tt_metal::Tensor from_vector(
     const std::vector<T>& buffer, const ttnn::Shape& shape, tt::tt_metal::Device* device, Layout layout = Layout::TILE);
+
+template <class T = float>
+[[nodiscard]] tt::tt_metal::Tensor from_vector_to_cpu(
+    const std::vector<T>& buffer, const ttnn::Shape& shape, tt::tt_metal::Device* device, Layout layout = Layout::TILE);
+
+template <class T = float>
+[[nodiscard]] tt::tt_metal::Tensor populate_and_to_device(
+    tt::tt_metal::Tensor& cpu_tensor,
+    const std::vector<float>& buffer,
+    tt::tt_metal::Device* device,
+    Layout layout = Layout::TILE);
+
 template <class T = float>
 [[nodiscard]] std::vector<T> to_vector(const tt::tt_metal::Tensor& tensor);
 

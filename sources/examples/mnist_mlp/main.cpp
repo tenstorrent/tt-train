@@ -31,6 +31,21 @@ using DataLoader = ttml::datasets::DataLoader<
 constexpr auto model_name = "mlp";
 constexpr auto optimizer_name = "optimizer";
 
+float mem_usage() {
+    std::ifstream status_file("/proc/self/status");
+    std::string line;
+    size_t vmrss = 0;
+
+    while (std::getline(status_file, line)) {
+        if (line.find("VmRSS:") == 0) {
+            sscanf(line.c_str(), "VmRSS: %zu kB", &vmrss);
+            break;
+        }
+    }
+
+    return vmrss / 1024.0F;
+}
+
 template <typename Model>
 float evaluate(DataLoader &test_dataloader, Model &model, size_t num_targets) {
     model->eval();
@@ -82,7 +97,7 @@ int main(int argc, char **argv) {
     size_t num_epochs = 4;
     bool is_eval = false;
     int model_save_interval = 100;
-    std::string model_path = "/tmp/mnist_mlp_model.msgpack";
+    std::string model_path = "/tmp/mnist_mlp2_model.msgpack";
 
     app.add_option("-b,--batch_size", batch_size, "Batch size")->default_val(batch_size);
     app.add_option("-l,--logging_interval", logging_interval, "Logging interval")->default_val(logging_interval);
@@ -122,10 +137,22 @@ int main(int argc, char **argv) {
 
             std::transform(data.begin(), data.end(), data.begin(), [](float pixel) { return pixel / 255.0F - 0.5F; });
 
-            auto data_tensor = ttml::autograd::create_tensor(
-                ttml::core::from_vector(data, ttml::core::create_shape({batch_size, 1, 1, num_features}), device));
-            auto targets_tensor = ttml::autograd::create_tensor(
-                ttml::core::from_vector(targets, ttml::core::create_shape({batch_size, 1, 1, num_targets}), device));
+            static bool first = true;
+            static tt::tt_metal::Tensor data_tensor_tt;
+            static tt::tt_metal::Tensor targets_tensor_tt;
+            if (first) {
+                data_tensor_tt = ttml::core::from_vector_to_cpu(
+                    data, ttml::core::create_shape({batch_size, 1, 1, num_features}), device);
+                targets_tensor_tt = ttml::core::from_vector_to_cpu(
+                    targets, ttml::core::create_shape({batch_size, 1, 1, num_targets}), device);
+                first = false;
+            }
+
+            auto data_tensor_device = ttml::core::populate_and_to_device(data_tensor_tt, data, device);
+            auto targets_tensor_device = ttml::core::populate_and_to_device(targets_tensor_tt, targets, device);
+            auto data_tensor = ttml::autograd::create_tensor(data_tensor_device);
+            auto targets_tensor = ttml::autograd::create_tensor(targets_tensor_device);
+
             return std::make_pair(data_tensor, targets_tensor);
         };
 
@@ -176,7 +203,7 @@ int main(int argc, char **argv) {
                 fmt::print("Saving model to {}\n", model_path);
                 save_model_and_optimizer(model_path, model, optimizer);
             }
-
+            fmt::println("memory usage: {}", mem_usage());
             loss->backward();
             optimizer.step();
             ttml::autograd::ctx().reset_graph();

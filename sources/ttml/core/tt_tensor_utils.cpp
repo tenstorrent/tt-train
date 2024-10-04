@@ -117,9 +117,13 @@ std::vector<T> untile_tensor_to_vec(const tt::tt_metal::Tensor& cpu_tensor) {
 }  // namespace
 namespace ttml::core {
 
-tt::tt_metal::Tensor zeros_like(const tt::tt_metal::Tensor& tensor) { return ttnn::zeros_like(tensor); }
+tt::tt_metal::Tensor zeros_like(const tt::tt_metal::Tensor& tensor) {
+    return ttnn::zeros_like(tensor);
+}
 
-tt::tt_metal::Tensor ones_like(const tt::tt_metal::Tensor& tensor) { return ttnn::ones_like(tensor); }
+tt::tt_metal::Tensor ones_like(const tt::tt_metal::Tensor& tensor) {
+    return ttnn::ones_like(tensor);
+}
 
 tt::tt_metal::Tensor full(const ttnn::Shape& shape, float value, tt::tt_metal::Device* device) {
     auto padded = shape.with_tile_padding();
@@ -173,6 +177,43 @@ tt::tt_metal::Tensor from_vector<float>(
     }
     return output;
 }
+
+template <>
+tt::tt_metal::Tensor from_vector_to_cpu<float>(
+    const std::vector<float>& buffer, const ttnn::Shape& shape, tt::tt_metal::Device* device, Layout layout) {
+    const DataType data_type = DataType::BFLOAT16;
+    MemoryConfig output_mem_config{};
+    size_t volume = tt::tt_metal::compute_volume(shape);
+    if (buffer.size() != volume) {
+        throw std::logic_error(
+            fmt::format("Current buffer size is {} different from shape volume {}", buffer.size(), volume));
+    }
+    auto owned_buffer = create_owned_buffer_from_vector_of_floats(buffer, data_type);
+    // remove possible paddings from the shape (it conflicts with ROW MAJOR)
+    auto unpadded_shape = core::create_shape(shape);
+    auto output = tt::tt_metal::Tensor(OwnedStorage{owned_buffer}, unpadded_shape, data_type, Layout::ROW_MAJOR);
+    return output;
+}
+
+template <>
+tt::tt_metal::Tensor populate_and_to_device<float>(
+    tt::tt_metal::Tensor& cpu_tensor, const std::vector<float>& buffer, tt::tt_metal::Device* device, Layout layout) {
+    MemoryConfig output_mem_config{};
+    auto tensor_buffer = tt::tt_metal::host_buffer::get_as<bfloat16>(cpu_tensor);
+
+    for (int i = 0; i < buffer.size(); i++) {
+        tensor_buffer[i] = bfloat16(buffer[i]);
+    }
+    auto output = cpu_tensor;
+    if (device != nullptr) {
+        if (layout != Layout::ROW_MAJOR) {
+            output = ttnn::to_layout(output, layout, std::nullopt, output_mem_config, device);
+        }
+        output = ttnn::to_device(output, device, output_mem_config);
+    }
+    return output;
+}
+
 template <>
 std::vector<float> to_vector<float>(const tt::tt_metal::Tensor& tensor) {
     auto cpu_tensor = tensor.cpu();
@@ -216,14 +257,18 @@ std::vector<uint32_t> to_vector<uint32_t>(const tt::tt_metal::Tensor& tensor) {
     return final_res;
 }
 
-bool is_tensor_initialized(const tt::tt_metal::Tensor& tensor) { return tensor.tensor_attributes != nullptr; }
+bool is_tensor_initialized(const tt::tt_metal::Tensor& tensor) {
+    return tensor.tensor_attributes != nullptr;
+}
 
 ttnn::Shape create_shape(const ttnn::Shape& shape) {
     auto legacy_shape = tt::tt_metal::LegacyShape({shape[0], shape[1], shape[2], shape[3]});
     return ttnn::Shape(legacy_shape);
 }
 
-ttnn::Shape create_shape(const std::array<uint32_t, 4>& args) { return ttnn::Shape{args}; }
+ttnn::Shape create_shape(const std::array<uint32_t, 4>& args) {
+    return ttnn::Shape{args};
+}
 
 void print_tensor_stats(const tt::tt_metal::Tensor& tensor, const std::string& name) {
     if (tensor.get_dtype() == DataType::BFLOAT16) {
