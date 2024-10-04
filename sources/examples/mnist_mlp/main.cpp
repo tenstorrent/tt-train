@@ -2,6 +2,7 @@
 
 #include <CLI/CLI.hpp>
 #include <mnist/mnist_reader.hpp>
+#include <range/v3/all.hpp>
 #include <serialization/msgpack_file.hpp>
 #include <serialization/serialization.hpp>
 #include <ttnn/operations/eltwise/ternary/where.hpp>
@@ -82,7 +83,7 @@ int main(int argc, char **argv) {
     size_t num_epochs = 4;
     bool is_eval = false;
     int model_save_interval = 100;
-    std::string model_path = "/tmp/mnist_mlp_model.msgpack";
+    std::string model_path = "";
 
     app.add_option("-b,--batch_size", batch_size, "Batch size")->default_val(batch_size);
     app.add_option("-l,--logging_interval", logging_interval, "Logging interval")->default_val(logging_interval);
@@ -108,19 +109,22 @@ int main(int argc, char **argv) {
     std::function<BatchType(std::vector<DatasetSample> && samples)> collate_fn =
         [num_features, num_targets, device](std::vector<DatasetSample> &&samples) {
             const uint32_t batch_size = samples.size();
-            std::vector<float> data;
-            std::vector<float> targets;
-            data.reserve(batch_size * num_features);
-            targets.reserve(batch_size * num_targets);
-            for (auto &[features, target] : samples) {
-                std::copy(features.begin(), features.end(), std::back_inserter(data));
+            std::vector<float> data =
+                samples | ranges::views::transform([](const DatasetSample &sample) { return sample.first; }) |
+                ranges::views::join |
+                ranges::views::transform([](float pixel) -> float { return (pixel / 255.0F) - 0.5F; }) |
+                ranges::to<std::vector<float>>();  // Collect into a vector
 
-                std::vector<float> one_hot_target(num_targets, 0.0F);
-                one_hot_target[target] = 1.0F;
-                std::copy(one_hot_target.begin(), one_hot_target.end(), std::back_inserter(targets));
-            }
-
-            std::transform(data.begin(), data.end(), data.begin(), [](float pixel) { return pixel / 255.0F - 0.5F; });
+            // Process 'targets': One-hot encode targets
+            std::vector<float> targets =
+                samples | ranges::views::transform([num_targets](const DatasetSample &sample) -> std::vector<float> {
+                    std::vector<float> one_hot(num_targets, 0.0F);
+                    if (sample.second < num_targets) {
+                        one_hot[sample.second] = 1.0F;
+                    }
+                    return one_hot;
+                }) |
+                ranges::views::join | ranges::to<std::vector<float>>();
 
             auto data_tensor = ttml::autograd::create_tensor(
                 ttml::core::from_vector(data, ttml::core::create_shape({batch_size, 1, 1, num_features}), device));
