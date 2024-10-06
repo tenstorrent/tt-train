@@ -1,5 +1,3 @@
-
-
 #include <CLI/CLI.hpp>
 #include <mnist/mnist_reader.hpp>
 #include <serialization/msgpack_file.hpp>
