@@ -55,24 +55,22 @@ float evaluate(DataLoader &test_dataloader, Model &model, size_t num_targets) {
     return num_correct / num_samples;
 };
 
-void save_model_and_optimizer(
-    std::string &model_path,
-    std::shared_ptr<ttml::modules::MultiLayerPerceptron> &model,
-    ttml::optimizers::SGD &optimizer) {
+template <typename Model, typename Optimizer>
+void save_model_and_optimizer(std::string &model_path, std::shared_ptr<Model> &model, Optimizer &optimizer) {
     ttml::serialization::MsgPackFile serializer;
     ttml::serialization::write_module(serializer, model_name, model.get());
     ttml::serialization::write_optimizer(serializer, optimizer_name, &optimizer);
     serializer.serialize(model_path);
 }
-void load_model_and_optimizer(
-    std::string &model_path,
-    std::shared_ptr<ttml::modules::MultiLayerPerceptron> &model,
-    ttml::optimizers::SGD &optimizer) {
+
+template <typename Model, typename Optimizer>
+void load_model_and_optimizer(std::string &model_path, std::shared_ptr<Model> &model, Optimizer &optimizer) {
     ttml::serialization::MsgPackFile deserializer;
     deserializer.deserialize(model_path);
     ttml::serialization::read_module(deserializer, model_name, model.get());
     ttml::serialization::read_optimizer(deserializer, optimizer_name, &optimizer);
 }
+
 int main(int argc, char **argv) {
     CLI::App app{"Mnist Example"};
     argv = app.ensure_utf8(argv);
@@ -82,7 +80,7 @@ int main(int argc, char **argv) {
     size_t num_epochs = 4;
     bool is_eval = false;
     int model_save_interval = 100;
-    std::string model_path = "/tmp/mnist_mlp_model.msgpack";
+    std::string model_path = "/tmp/mnist_mlp.msgpack";
 
     app.add_option("-b,--batch_size", batch_size, "Batch size")->default_val(batch_size);
     app.add_option("-l,--logging_interval", logging_interval, "Logging interval")->default_val(logging_interval);

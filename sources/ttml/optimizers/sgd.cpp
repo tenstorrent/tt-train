@@ -12,7 +12,8 @@ SGD::SGD(ttml::autograd::NamedParameters parameters, const SGDConfig& config) :
     m_config(config), m_parameters(std::move(parameters)) {
     for (const auto& [name, tensor_ptr] : m_parameters) {
         if (tensor_ptr->get_requires_grad()) {
-            m_theta.emplace(name, core::zeros_like(tensor_ptr->get_value()));
+            m_theta.emplace(
+                name, autograd::create_tensor(core::zeros_like(tensor_ptr->get_value()), /* requires_grad */ false));
         }
     }
 }
@@ -26,7 +27,8 @@ void SGD::zero_grad() {
 }
 
 void SGD::step() {
-    for (auto& [name, theta] : m_theta) {
+    for (auto& [name, theta_ptr] : m_theta) {
+        auto& theta = theta_ptr->get_value();
         auto tensor_ptr = m_parameters.at(name);
 
         auto gradients = tensor_ptr->get_grad();
@@ -59,11 +61,11 @@ void SGD::step() {
     steps++;
 }
 
-TTTensorDict SGD::get_state_dict() const {
+autograd::NamedParameters SGD::get_state_dict() const {
     return m_theta;
 }
 
-void SGD::set_state_dict(TTTensorDict dict) {
+void SGD::set_state_dict(autograd::NamedParameters dict) {
     m_theta = std::move(dict);
 }
 

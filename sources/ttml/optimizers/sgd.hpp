@@ -3,13 +3,11 @@
 #include <ttnn/tensor/tensor.hpp>
 
 #include "autograd/module_base.hpp"
+#include "autograd/tensor.hpp"
 #include "core/tt_tensor_utils.hpp"
+#include "optimizers/ioptimizer.hpp"
 
 namespace ttml::optimizers {
-
-// TODO: in future we will create unordered_map of variant<Autograd::Tensor, Tensor, Scalar> or something like this for
-// a base type.
-using TTTensorDict = std::unordered_map<std::string, tt::tt_metal::Tensor>;
 
 struct SGDConfig {
     float lr{1e-3F};
@@ -19,28 +17,25 @@ struct SGDConfig {
     bool nesterov{false};
 };
 
-class SGD {
+class SGD : public IOptimizer {
 public:
     explicit SGD(ttml::autograd::NamedParameters parameters, const SGDConfig& config);
 
-    void zero_grad();
+    void zero_grad() override;
 
-    void step();
+    void step() override;
 
-    // I'd like to return copy of the dict like we do in module
-    // but I cannot replace values in side of the ttnn tensor in a easy way, right now we are using get/set state dict
-    // TODO: think about it and move to the autograd::tensors
-    [[nodiscard]] TTTensorDict get_state_dict() const;
-    void set_state_dict(TTTensorDict dict);
+    [[nodiscard]] autograd::NamedParameters get_state_dict() const override;
+    void set_state_dict(autograd::NamedParameters dict) override;
 
-    [[nodiscard]] size_t get_steps() const;
-    void set_steps(size_t steps);
+    [[nodiscard]] size_t get_steps() const override;
+    void set_steps(size_t steps) override;
 
 private:
     size_t steps{0};
     SGDConfig m_config;
     ttml::autograd::NamedParameters m_parameters;
-    TTTensorDict m_theta;
+    ttml::autograd::NamedParameters m_theta;
 };
 
 }  // namespace ttml::optimizers

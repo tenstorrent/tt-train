@@ -23,36 +23,19 @@ public:
     explicit Tensor(tt::tt_metal::Tensor m_value, bool requires_grad = true);
     ~Tensor() = default;
 
-    void set_value(const tt::tt_metal::Tensor &value) {
-        m_value = value;
-    }
-    void set_grad(const tt::tt_metal::Tensor &grad) {
-        m_grad = grad;
-    }
+    void set_value(const tt::tt_metal::Tensor &value);
+    void set_grad(const tt::tt_metal::Tensor &grad);
     void set_node(const std::optional<NodeId> &node);
-    void clean_node() {
-        m_node_id = std::nullopt;
-    }
+    void clean_node();
     void add_grad(const tt::tt_metal::Tensor &grad);
-    void set_requires_grad(bool requires_grad) {
-        m_requires_grad = requires_grad;
-    }
+    void set_requires_grad(bool requires_grad);
 
-    const tt::tt_metal::Tensor &get_value() const {
-        return m_value;
-    }
-    const tt::tt_metal::Tensor &get_grad() const {
-        return m_grad;
-    }
-    tt::tt_metal::Tensor &get_grad() {
-        return m_grad;
-    }
-    bool get_requires_grad() const {
-        return m_requires_grad;
-    }
-    const std::optional<NodeId> &get_node() const {
-        return m_node_id;
-    }
+    tt::tt_metal::Tensor &get_value();
+    const tt::tt_metal::Tensor &get_value() const;
+    const tt::tt_metal::Tensor &get_grad() const;
+    tt::tt_metal::Tensor &get_grad();
+    bool get_requires_grad() const;
+    const std::optional<NodeId> &get_node() const;
 
     void backward();
 

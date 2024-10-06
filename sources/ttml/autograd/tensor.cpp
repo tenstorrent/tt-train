@@ -80,4 +80,44 @@ void print_tensor_stats(const autograd::TensorPtr& tensor, const std::string& na
     core::print_tensor_stats(tensor->get_value(), name);
 }
 
+void Tensor::set_value(const tt::tt_metal::Tensor& value) {
+    m_value = value;
+}
+
+void Tensor::set_grad(const tt::tt_metal::Tensor& grad) {
+    m_grad = grad;
+}
+
+void Tensor::clean_node() {
+    m_node_id = std::nullopt;
+}
+
+void Tensor::set_requires_grad(bool requires_grad) {
+    m_requires_grad = requires_grad;
+}
+
+const tt::tt_metal::Tensor& Tensor::get_value() const {
+    return m_value;
+}
+
+tt::tt_metal::Tensor& Tensor::get_value() {
+    return m_value;
+}
+
+const tt::tt_metal::Tensor& Tensor::get_grad() const {
+    return m_grad;
+}
+
+tt::tt_metal::Tensor& Tensor::get_grad() {
+    return m_grad;
+}
+
+bool Tensor::get_requires_grad() const {
+    return m_requires_grad;
+}
+
+const std::optional<NodeId>& Tensor::get_node() const {
+    return m_node_id;
+}
+
 }  // namespace ttml::autograd
