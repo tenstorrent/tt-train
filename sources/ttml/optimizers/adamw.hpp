@@ -1,7 +1,7 @@
 
 #include "autograd/module_base.hpp"
 #include "core/ttnn_all_includes.hpp"
-#include "ioptimizer.hpp"
+#include "optimizer_base.hpp"
 
 namespace ttml::optimizers {
 
@@ -14,7 +14,7 @@ struct AdamWConfig {
     // TODO: add amsgrad
 };
 
-class AdamW : public IOptimizer {
+class AdamW : public OptimizerBase {
 public:
     AdamW(autograd::NamedParameters parameters, const AdamWConfig& config);
 
@@ -23,7 +23,7 @@ public:
     void step() override;
 
     [[nodiscard]] autograd::NamedParameters get_state_dict() const override;
-    void set_state_dict(autograd::NamedParameters dict) override;
+    void set_state_dict(const autograd::NamedParameters& dict) override;
 
     [[nodiscard]] size_t get_steps() const override;
     void set_steps(size_t steps) override;

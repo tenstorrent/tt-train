@@ -5,7 +5,7 @@
 #include "autograd/module_base.hpp"
 #include "autograd/tensor.hpp"
 #include "core/tt_tensor_utils.hpp"
-#include "optimizers/ioptimizer.hpp"
+#include "optimizers/optimizer_base.hpp"
 
 namespace ttml::optimizers {
 
@@ -17,7 +17,7 @@ struct SGDConfig {
     bool nesterov{false};
 };
 
-class SGD : public IOptimizer {
+class SGD : public OptimizerBase {
 public:
     explicit SGD(ttml::autograd::NamedParameters parameters, const SGDConfig& config);
 
@@ -26,7 +26,7 @@ public:
     void step() override;
 
     [[nodiscard]] autograd::NamedParameters get_state_dict() const override;
-    void set_state_dict(autograd::NamedParameters dict) override;
+    void set_state_dict(const autograd::NamedParameters& dict) override;
 
     [[nodiscard]] size_t get_steps() const override;
     void set_steps(size_t steps) override;

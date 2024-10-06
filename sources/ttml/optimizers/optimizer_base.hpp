@@ -7,21 +7,21 @@
 
 namespace ttml::optimizers {
 
-class IOptimizer {
+class OptimizerBase {
 public:
-    IOptimizer() = default;
-    IOptimizer(const IOptimizer&) = delete;
-    IOptimizer& operator=(const IOptimizer&) = delete;
-    IOptimizer(IOptimizer&&) = delete;
-    IOptimizer& operator=(IOptimizer&&) = delete;
-    virtual ~IOptimizer() = default;
+    OptimizerBase() = default;
+    OptimizerBase(const OptimizerBase&) = delete;
+    OptimizerBase& operator=(const OptimizerBase&) = delete;
+    OptimizerBase(OptimizerBase&&) = delete;
+    OptimizerBase& operator=(OptimizerBase&&) = delete;
+    virtual ~OptimizerBase() = default;
 
     virtual void zero_grad() = 0;
 
     virtual void step() = 0;
 
     [[nodiscard]] virtual autograd::NamedParameters get_state_dict() const = 0;
-    virtual void set_state_dict(autograd::NamedParameters dict) = 0;
+    virtual void set_state_dict(const autograd::NamedParameters& dict) = 0;
 
     [[nodiscard]] virtual size_t get_steps() const = 0;
     virtual void set_steps(size_t steps) = 0;

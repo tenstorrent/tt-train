@@ -65,8 +65,8 @@ autograd::NamedParameters SGD::get_state_dict() const {
     return m_theta;
 }
 
-void SGD::set_state_dict(autograd::NamedParameters dict) {
-    m_theta = std::move(dict);
+void SGD::set_state_dict(const autograd::NamedParameters& dict) {
+    m_theta = dict;
 }
 
 size_t SGD::get_steps() const {

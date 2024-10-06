@@ -9,7 +9,7 @@
 #include "core/tt_tensor_utils.hpp"
 #include "core/ttnn_all_includes.hpp"
 #include "msgpack_file.hpp"
-#include "optimizers/ioptimizer.hpp"
+#include "optimizers/optimizer_base.hpp"
 #include "optimizers/sgd.hpp"
 namespace ttml::serialization {
 
@@ -133,16 +133,16 @@ void read_named_parameters(MsgPackFile& file, std::string_view name, ttml::autog
     }
 }
 
-void write_optimizer(MsgPackFile& file, std::string_view name, const optimizers::IOptimizer* optimizer) {
+void write_optimizer(MsgPackFile& file, std::string_view name, const optimizers::OptimizerBase* optimizer) {
     assert(optimizer);
     auto state_dict = optimizer->get_state_dict();
-    for (auto& [key, value] : state_dict) {
+    for (const auto& [key, value] : state_dict) {
         ttml::serialization::write_autograd_tensor(file, std::string(name) + "/" + key, value);
     }
     file.put(std::string(name) + "/steps", optimizer->get_steps());
 }
 
-void read_optimizer(MsgPackFile& file, std::string_view name, optimizers::IOptimizer* optimizer) {
+void read_optimizer(MsgPackFile& file, std::string_view name, optimizers::OptimizerBase* optimizer) {
     assert(optimizer);
     int steps = 0;
 

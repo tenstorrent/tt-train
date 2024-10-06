@@ -54,7 +54,7 @@ float evaluate(DataLoader &test_dataloader, Model &model, size_t num_targets) {
 };
 
 template <typename Model, typename Optimizer>
-void save_model_and_optimizer(std::string &model_path, std::shared_ptr<Model> &model, Optimizer &optimizer) {
+void save_model_and_optimizer(std::string &model_path, const std::shared_ptr<Model> &model, Optimizer &optimizer) {
     ttml::serialization::MsgPackFile serializer;
     ttml::serialization::write_module(serializer, model_name, model.get());
     ttml::serialization::write_optimizer(serializer, optimizer_name, &optimizer);
@@ -62,7 +62,7 @@ void save_model_and_optimizer(std::string &model_path, std::shared_ptr<Model> &m
 }
 
 template <typename Model, typename Optimizer>
-void load_model_and_optimizer(std::string &model_path, std::shared_ptr<Model> &model, Optimizer &optimizer) {
+void load_model_and_optimizer(std::string &model_path, const std::shared_ptr<Model> &model, Optimizer &optimizer) {
     ttml::serialization::MsgPackFile deserializer;
     deserializer.deserialize(model_path);
     ttml::serialization::read_module(deserializer, model_name, model.get());

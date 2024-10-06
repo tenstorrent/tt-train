@@ -2,7 +2,7 @@
 
 #include "autograd/module_base.hpp"
 #include "core/tt_tensor_utils.hpp"
-#include "optimizers/ioptimizer.hpp"
+#include "optimizers/optimizer_base.hpp"
 #include "ttnn_fixed/trivial_ttnn_ops.hpp"
 
 namespace {
@@ -82,7 +82,7 @@ void AdamW::step() {
     return state_dict;
 }
 
-void AdamW::set_state_dict(autograd::NamedParameters dict) {
+void AdamW::set_state_dict(const autograd::NamedParameters& dict) {
     for (const auto& [key, tensor] : dict) {
         if (key.starts_with(kFirstMoment)) {
             m_first_moment[key.substr(kFirstMoment.size())] = tensor;
