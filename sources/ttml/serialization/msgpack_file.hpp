@@ -53,21 +53,21 @@ public:
     void deserialize(const std::string& filename);
 
     // Methods to get values
-    bool get(std::string_view key, bool& value) const;
-    bool get(std::string_view key, char& value) const;
-    bool get(std::string_view key, int& value) const;
-    bool get(std::string_view key, float& value) const;
-    bool get(std::string_view key, double& value) const;
-    bool get(std::string_view key, uint32_t& value) const;
-    bool get(std::string_view key, size_t& value) const;
-    bool get(std::string_view key, std::string& value) const;
+    void get(std::string_view key, bool& value) const;
+    void get(std::string_view key, char& value) const;
+    void get(std::string_view key, int& value) const;
+    void get(std::string_view key, float& value) const;
+    void get(std::string_view key, double& value) const;
+    void get(std::string_view key, uint32_t& value) const;
+    void get(std::string_view key, size_t& value) const;
+    void get(std::string_view key, std::string& value) const;
 
     // Methods to get vectors (from spans)
-    bool get(std::string_view key, std::vector<int>& value) const;
-    bool get(std::string_view key, std::vector<float>& value) const;
-    bool get(std::string_view key, std::vector<double>& value) const;
-    bool get(std::string_view key, std::vector<uint32_t>& value) const;
-    bool get(std::string_view key, std::vector<std::string>& value) const;
+    void get(std::string_view key, std::vector<int>& value) const;
+    void get(std::string_view key, std::vector<float>& value) const;
+    void get(std::string_view key, std::vector<double>& value) const;
+    void get(std::string_view key, std::vector<uint32_t>& value) const;
+    void get(std::string_view key, std::vector<std::string>& value) const;
 
 private:
     class Impl;

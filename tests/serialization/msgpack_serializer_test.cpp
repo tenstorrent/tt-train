@@ -46,23 +46,23 @@ TEST_F(MsgPackFileTest, SerializeDeserializePrimitives) {
 
     // Get and check data
     int int_value = 0;
-    EXPECT_TRUE(deserializer.get("int_key", int_value));
+    EXPECT_NO_THROW(deserializer.get("int_key", int_value));
     EXPECT_EQ(int_value, 42);
 
     float float_value = 0;
-    EXPECT_TRUE(deserializer.get("float_key", float_value));
+    EXPECT_NO_THROW(deserializer.get("float_key", float_value));
     EXPECT_FLOAT_EQ(float_value, 3.14f);
 
     double double_value = 0;
-    EXPECT_TRUE(deserializer.get("double_key", double_value));
+    EXPECT_NO_THROW(deserializer.get("double_key", double_value));
     EXPECT_DOUBLE_EQ(double_value, 2.71828);
 
     uint32_t uint_value = 0;
-    EXPECT_TRUE(deserializer.get("uint_key", uint_value));
+    EXPECT_NO_THROW(deserializer.get("uint_key", uint_value));
     EXPECT_EQ(uint_value, 123456789U);
 
     std::string string_value;
-    EXPECT_TRUE(deserializer.get("string_key", string_value));
+    EXPECT_NO_THROW(deserializer.get("string_key", string_value));
     EXPECT_EQ(string_value, "Hello, World!");
 }
 
@@ -92,27 +92,27 @@ TEST_F(MsgPackFileTest, SerializeDeserializeVectors) {
 
     // Get and check data
     std::vector<int> int_vec_result;
-    EXPECT_TRUE(deserializer.get("int_vector_key", int_vec_result));
+    EXPECT_NO_THROW(deserializer.get("int_vector_key", int_vec_result));
     EXPECT_EQ(int_vec_result, int_vec);
 
     std::vector<float> float_vec_result;
-    EXPECT_TRUE(deserializer.get("float_vector_key", float_vec_result));
+    EXPECT_NO_THROW(deserializer.get("float_vector_key", float_vec_result));
     EXPECT_EQ(float_vec_result, float_vec);
 
     std::vector<double> double_vec_result;
-    EXPECT_TRUE(deserializer.get("double_vector_key", double_vec_result));
+    EXPECT_NO_THROW(deserializer.get("double_vector_key", double_vec_result));
     EXPECT_EQ(double_vec_result, double_vec);
 
     std::vector<uint32_t> uint_vec_result;
-    EXPECT_TRUE(deserializer.get("uint_vector_key", uint_vec_result));
+    EXPECT_NO_THROW(deserializer.get("uint_vector_key", uint_vec_result));
     EXPECT_EQ(uint_vec_result, uint_vec);
 
     std::vector<std::string> string_vec_result;
-    EXPECT_TRUE(deserializer.get("string_vector_key", string_vec_result));
+    EXPECT_NO_THROW(deserializer.get("string_vector_key", string_vec_result));
     EXPECT_EQ(string_vec_result, string_vec);
 }
 
-TEST_F(MsgPackFileTest, MissingKeyReturnsFalse) {
+TEST_F(MsgPackFileTest, MissingKeyThrows) {
     ttml::serialization::MsgPackFile serializer;
     serializer.put("int_key", 42);
     ASSERT_NO_THROW(serializer.serialize(test_filename));
@@ -120,10 +120,10 @@ TEST_F(MsgPackFileTest, MissingKeyReturnsFalse) {
     ASSERT_NO_THROW(deserializer.deserialize(test_filename));
 
     int int_value = 0;
-    EXPECT_FALSE(deserializer.get("nonexistent_key", int_value));
+    EXPECT_ANY_THROW(deserializer.get("nonexistent_key", int_value));
 }
 
-TEST_F(MsgPackFileTest, TypeMismatchReturnsFalse) {
+TEST_F(MsgPackFileTest, TypeMismatchThrows) {
     ttml::serialization::MsgPackFile serializer;
     serializer.put("int_key", 42);
     serializer.serialize(test_filename);
@@ -132,7 +132,7 @@ TEST_F(MsgPackFileTest, TypeMismatchReturnsFalse) {
     deserializer.deserialize(test_filename);
 
     float float_value = 0.F;
-    EXPECT_FALSE(deserializer.get("int_key", float_value));
+    EXPECT_ANY_THROW(deserializer.get("int_key", float_value));
 }
 
 TEST_F(MsgPackFileTest, OverwriteExistingKey) {
@@ -146,11 +146,11 @@ TEST_F(MsgPackFileTest, OverwriteExistingKey) {
     deserializer.deserialize(test_filename);
 
     std::string string_value;
-    EXPECT_TRUE(deserializer.get("key", string_value));
+    EXPECT_NO_THROW(deserializer.get("key", string_value));
     EXPECT_EQ(string_value, "Overwritten");
 
     int int_value = 0;
-    EXPECT_FALSE(deserializer.get("key", int_value));
+    EXPECT_ANY_THROW(deserializer.get("key", int_value));
 }
 
 TEST_F(MsgPackFileTest, EmptySerializerSerialization) {
@@ -161,7 +161,7 @@ TEST_F(MsgPackFileTest, EmptySerializerSerialization) {
     ASSERT_NO_THROW(deserializer.deserialize(test_filename));
 
     int int_value = 0;
-    EXPECT_FALSE(deserializer.get("any_key", int_value));
+    EXPECT_ANY_THROW(deserializer.get("any_key", int_value));
 }
 
 TEST_F(MsgPackFileTest, LargeDataSerialization) {
@@ -180,7 +180,7 @@ TEST_F(MsgPackFileTest, LargeDataSerialization) {
 
     // Get and check data
     std::vector<int> int_vec_result;
-    EXPECT_TRUE(deserializer.get("large_int_vector", int_vec_result));
+    EXPECT_NO_THROW(deserializer.get("large_int_vector", int_vec_result));
     EXPECT_EQ(int_vec_result.size(), large_int_vec.size());
     EXPECT_EQ(int_vec_result, large_int_vec);
 }
@@ -217,22 +217,22 @@ TEST_F(MsgPackFileTest, MultipleDataTypesSerialization) {
     deserializer.deserialize(test_filename);
 
     int int_value = 0;
-    EXPECT_TRUE(deserializer.get("int_key", int_value));
+    EXPECT_NO_THROW(deserializer.get("int_key", int_value));
     EXPECT_EQ(int_value, 100);
 
     float float_value = 0.F;
-    EXPECT_TRUE(deserializer.get("float_key", float_value));
+    EXPECT_NO_THROW(deserializer.get("float_key", float_value));
     EXPECT_FLOAT_EQ(float_value, 1.23F);
 
     double double_value = 0.0;
-    EXPECT_TRUE(deserializer.get("double_key", double_value));
+    EXPECT_NO_THROW(deserializer.get("double_key", double_value));
     EXPECT_DOUBLE_EQ(double_value, 4.56);
 
     std::string string_value;
-    EXPECT_TRUE(deserializer.get("string_key", string_value));
+    EXPECT_NO_THROW(deserializer.get("string_key", string_value));
     EXPECT_EQ(string_value, "test string");
 
     std::vector<int> int_vec_result;
-    EXPECT_TRUE(deserializer.get("int_vector_key", int_vec_result));
+    EXPECT_NO_THROW(deserializer.get("int_vector_key", int_vec_result));
     EXPECT_EQ(int_vec_result, int_vec);
 }

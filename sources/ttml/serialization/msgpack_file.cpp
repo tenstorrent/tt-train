@@ -1,5 +1,8 @@
 #include "msgpack_file.hpp"
 
+#include <fmt/format.h>
+
+#include <exception>
 #include <fstream>
 #define MSGPACK_NO_BOOST
 #include <fstream>
@@ -32,7 +35,9 @@ MSGPACK_API_VERSION_NAMESPACE(MSGPACK_DEFAULT_API_NS) {
     struct convert<std::variant<Types...>> {
         msgpack::object const& operator()(msgpack::object const& o, std::variant<Types...>& v) const {
             if (o.type != msgpack::type::ARRAY || o.via.array.size != 2) {
-                throw msgpack::type_error();
+                throw std::runtime_error(
+                    "Invalid object type. Expected array of size 2. Where first value is the  type index and second is "
+                    "our object.");
             }
 
             std::size_t index = o.via.array.ptr[0].as<std::size_t>();
@@ -42,7 +47,8 @@ MSGPACK_API_VERSION_NAMESPACE(MSGPACK_DEFAULT_API_NS) {
             // Helper lambda to set the variant based on index
             bool success = set_variant_by_index(index, obj, v);
             if (!success) {
-                throw msgpack::type_error();
+                throw std::runtime_error(fmt::format(
+                    "Cannot convert object to variant. Possible reason: type mismatch. Object index: {}", index));
             }
 
             return o;
@@ -62,7 +68,7 @@ MSGPACK_API_VERSION_NAMESPACE(MSGPACK_DEFAULT_API_NS) {
                     return set_variant_by_index<N + 1>(index, obj, v);
                 }
             } else {
-                return false;
+                throw std::runtime_error(fmt::format("Invalid index for variant type. Index: {}", index));
             }
         }
     };
@@ -254,12 +260,11 @@ private:
                 value = *pval;
                 return true;
             } else {
-                // Type mismatch
-                return false;
+                throw std::runtime_error(fmt::format("Type mismatch for key: {}", key));
             }
         } else {
             // Key not found
-            return false;
+            throw std::runtime_error(fmt::format("Key not found: {}", key));
         }
     }
 };
@@ -331,56 +336,56 @@ void MsgPackFile::deserialize(const std::string& filename) {
     m_impl->deserialize(filename);
 }
 
-bool MsgPackFile::get(std::string_view key, bool& value) const {
-    return m_impl->get(key, value);
+void MsgPackFile::get(std::string_view key, bool& value) const {
+    m_impl->get(key, value);
 }
 
-bool MsgPackFile::get(std::string_view key, char& value) const {
-    return m_impl->get(key, value);
+void MsgPackFile::get(std::string_view key, char& value) const {
+    m_impl->get(key, value);
 }
 
-bool MsgPackFile::get(std::string_view key, int& value) const {
-    return m_impl->get(key, value);
+void MsgPackFile::get(std::string_view key, int& value) const {
+    m_impl->get(key, value);
 }
 
-bool MsgPackFile::get(std::string_view key, float& value) const {
-    return m_impl->get(key, value);
+void MsgPackFile::get(std::string_view key, float& value) const {
+    m_impl->get(key, value);
 }
 
-bool MsgPackFile::get(std::string_view key, double& value) const {
-    return m_impl->get(key, value);
+void MsgPackFile::get(std::string_view key, double& value) const {
+    m_impl->get(key, value);
 }
 
-bool MsgPackFile::get(std::string_view key, uint32_t& value) const {
-    return m_impl->get(key, value);
+void MsgPackFile::get(std::string_view key, uint32_t& value) const {
+    m_impl->get(key, value);
 }
 
-bool MsgPackFile::get(std::string_view key, size_t& value) const {
-    return m_impl->get(key, value);
+void MsgPackFile::get(std::string_view key, size_t& value) const {
+    m_impl->get(key, value);
 }
 
-bool MsgPackFile::get(std::string_view key, std::string& value) const {
-    return m_impl->get(key, value);
+void MsgPackFile::get(std::string_view key, std::string& value) const {
+    m_impl->get(key, value);
 }
 
-bool MsgPackFile::get(std::string_view key, std::vector<int>& value) const {
-    return m_impl->get(key, value);
+void MsgPackFile::get(std::string_view key, std::vector<int>& value) const {
+    m_impl->get(key, value);
 }
 
-bool MsgPackFile::get(std::string_view key, std::vector<float>& value) const {
-    return m_impl->get(key, value);
+void MsgPackFile::get(std::string_view key, std::vector<float>& value) const {
+    m_impl->get(key, value);
 }
 
-bool MsgPackFile::get(std::string_view key, std::vector<double>& value) const {
-    return m_impl->get(key, value);
+void MsgPackFile::get(std::string_view key, std::vector<double>& value) const {
+    m_impl->get(key, value);
 }
 
-bool MsgPackFile::get(std::string_view key, std::vector<uint32_t>& value) const {
-    return m_impl->get(key, value);
+void MsgPackFile::get(std::string_view key, std::vector<uint32_t>& value) const {
+    m_impl->get(key, value);
 }
 
-bool MsgPackFile::get(std::string_view key, std::vector<std::string>& value) const {
-    return m_impl->get(key, value);
+void MsgPackFile::get(std::string_view key, std::vector<std::string>& value) const {
+    m_impl->get(key, value);
 }
 
 void MsgPackFile::put(std::string_view key, const char* value) {
