@@ -190,7 +190,7 @@ int main(int argc, char **argv) {
         loss_meter.reset();
     }
 
-    if (!model_path.empty() && training_step % model_save_interval == 0) {
+    if (!model_path.empty()) {
         fmt::print("Saving model to {}\n", model_path);
         save_model_and_optimizer(model_path, model, optimizer);
     }
