@@ -9,6 +9,7 @@
 #include "core/tt_tensor_utils.hpp"
 #include "core/ttnn_all_includes.hpp"
 #include "msgpack_file.hpp"
+#include "optimizers/optimizer_base.hpp"
 #include "optimizers/sgd.hpp"
 namespace ttml::serialization {
 
@@ -132,22 +133,22 @@ void read_named_parameters(MsgPackFile& file, std::string_view name, ttml::autog
     }
 }
 
-void write_optimizer(MsgPackFile& file, std::string_view name, const ttml::optimizers::SGD* optimizer) {
+void write_optimizer(MsgPackFile& file, std::string_view name, const optimizers::OptimizerBase* optimizer) {
     assert(optimizer);
     auto state_dict = optimizer->get_state_dict();
-    for (auto& [key, value] : state_dict) {
-        ttml::serialization::write_ttnn_tensor(file, std::string(name) + key, value);
+    for (const auto& [key, value] : state_dict) {
+        ttml::serialization::write_autograd_tensor(file, std::string(name) + "/" + key, value);
     }
     file.put(std::string(name) + "/steps", optimizer->get_steps());
 }
 
-void read_optimizer(MsgPackFile& file, std::string_view name, ttml::optimizers::SGD* optimizer) {
+void read_optimizer(MsgPackFile& file, std::string_view name, optimizers::OptimizerBase* optimizer) {
     assert(optimizer);
     int steps = 0;
 
     auto state_dict = optimizer->get_state_dict();
     for (auto& [key, value] : state_dict) {
-        ttml::serialization::read_ttnn_tensor(file, std::string(name) + key, value);
+        ttml::serialization::read_autograd_tensor(file, std::string(name) + "/" + key, value);
     }
     optimizer->set_state_dict(state_dict);
     file.get(std::string(name) + "/steps", steps);
@@ -159,9 +160,11 @@ void write_module(MsgPackFile& file, std::string_view name, const autograd::Modu
     auto named_parameters = module->parameters();
     write_named_parameters(file, name, named_parameters);
 }
+
 void read_module(MsgPackFile& file, std::string_view name, autograd::ModuleBase* module) {
     assert(module);
     auto named_parameters = module->parameters();
     read_named_parameters(file, name, named_parameters);
 }
+
 }  // namespace ttml::serialization

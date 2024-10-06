@@ -7,7 +7,7 @@
 #include "core/ttnn_fwd.hpp"
 
 namespace ttml::optimizers {
-class SGD;
+class OptimizerBase;
 }
 namespace ttml::serialization {
 class MsgPackFile;
@@ -22,11 +22,10 @@ void read_autograd_tensor(MsgPackFile& file, std::string_view name, ttml::autogr
 void write_named_parameters(MsgPackFile& file, std::string_view name, const ttml::autograd::NamedParameters& params);
 void read_named_parameters(MsgPackFile& file, std::string_view name, ttml::autograd::NamedParameters& params);
 
-void write_optimizer(MsgPackFile& file, std::string_view name, const ttml::optimizers::SGD* optimizer);
-void read_optimizer(MsgPackFile& file, std::string_view name, ttml::optimizers::SGD* optimizer);
+void write_optimizer(MsgPackFile& file, std::string_view name, const optimizers::OptimizerBase* optimizer);
+void read_optimizer(MsgPackFile& file, std::string_view name, optimizers::OptimizerBase* optimizer);
 
 void write_module(MsgPackFile& file, std::string_view name, const autograd::ModuleBase* module);
-
 void read_module(MsgPackFile& file, std::string_view name, autograd::ModuleBase* module);
 
 }  // namespace ttml::serialization
