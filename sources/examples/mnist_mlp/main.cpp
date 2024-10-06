@@ -77,7 +77,7 @@ int main(int argc, char **argv) {
 
     uint32_t batch_size = 128;
     int logging_interval = 50;
-    size_t num_epochs = 4;
+    size_t num_epochs = 1;
     bool is_eval = false;
     int model_save_interval = 100;
     std::string model_path = "/tmp/mnist_mlp.msgpack";
@@ -189,4 +189,11 @@ int main(int argc, char **argv) {
             test_accuracy * 100.F);
         loss_meter.reset();
     }
+
+    if (!model_path.empty() && training_step % model_save_interval == 0) {
+        fmt::print("Saving model to {}\n", model_path);
+        save_model_and_optimizer(model_path, model, optimizer);
+    }
+
+    return 0;
 }
