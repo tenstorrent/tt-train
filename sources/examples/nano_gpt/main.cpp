@@ -176,7 +176,6 @@ int main(int argc, char **argv) {
 
     // disable for now, unexpected freezes and crashes
     // device->enable_async(true);
-    device->enable_program_cache();
 
     std::function<BatchType(std::vector<DatasetSample> && samples)> collate_fn =
         [sequence_length, num_heads = config.num_heads, vocab_size = tokenizer.get_vocab_size(), device](
@@ -255,6 +254,7 @@ int main(int argc, char **argv) {
     }
 
     if (is_eval) {
+        device->enable_program_cache();
         fmt::print("\nEvaluation started\n");
         evaluate(model, tokenizer, sequence_length, config.num_heads);
         fmt::print("\nEvaluation finished\n");
