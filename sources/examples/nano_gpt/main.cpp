@@ -41,7 +41,7 @@ struct DemoConfig {
 };
 const DemoConfig config;
 
-uint32_t sample(const std::span<float> logits, float temperature = 1.F) {
+uint32_t sample(std::span<const float> logits, float temperature = 1.F) {
     auto probabilities_vector = std::vector<float>(logits.size());
     auto max_logit = *std::max_element(logits.begin(), logits.end());
     std::transform(logits.begin(), logits.end(), probabilities_vector.begin(), [temperature, max_logit](float logit) {
@@ -52,7 +52,7 @@ uint32_t sample(const std::span<float> logits, float temperature = 1.F) {
 }
 
 template <typename Model, typename Tokenizer>
-void evaluate(
+void generate(
     const std::shared_ptr<Model> &model,
     const Tokenizer &tokenizer,
     uint32_t max_sequence_length,
@@ -256,7 +256,7 @@ int main(int argc, char **argv) {
     if (is_eval) {
         device->enable_program_cache();
         fmt::print("\nEvaluation started\n");
-        evaluate(model, tokenizer, sequence_length, config.num_heads);
+        generate(model, tokenizer, sequence_length, config.num_heads);
         fmt::print("\nEvaluation finished\n");
         return 0;
     }
