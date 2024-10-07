@@ -74,18 +74,20 @@ int main(int argc, char **argv) {
     argv = app.ensure_utf8(argv);
 
     uint32_t seed = 5489U;
-    uint32_t model_save_interval = 5;
+    uint32_t model_save_interval = 500;
+    uint32_t max_steps = config.max_steps;
     uint32_t batch_size = config.batch_size;
     uint32_t sequence_length = config.sequence_length;
     std::string model_path = "/tmp/nano_gpt.msgpack";
     std::string data_path = "/home/ubuntu/ML-Framework-CPP/sources/examples/nano_gpt/data/shakespeare.txt";
 
     app.add_option("-b,--batch_size", batch_size, "Batch size")->default_val(batch_size);
-    app.add_option("-m,--model_save_interval", model_save_interval, "model save interval")
+    app.add_option("-i,--model_save_interval", model_save_interval, "Model save interval")
         ->default_val(model_save_interval);
     app.add_option("-p,--model_path", model_path, "Model path")->default_val(model_path);
     app.add_option("-d,--data_path", data_path, "Data path")->default_val(data_path);
     app.add_option("-s,--seed", seed, "Seed")->default_val(seed);
+    app.add_option("-m,--max_steps", max_steps, "Max steps")->default_val(max_steps);
     CLI11_PARSE(app, argc, argv);
 
     // set seed
@@ -99,7 +101,9 @@ int main(int argc, char **argv) {
         return -1;
     }
 
+    fmt::print("Max steps {}\n", max_steps);
     fmt::print("Batch size {}\n", batch_size);
+    fmt::print("Seed {}\n", ttml::autograd::ctx().get_seed());
 
     auto [dataset, tokenizer] = ttml::datasets::create_in_memory_char_dataset(text, sequence_length);
     fmt::print("Dataset size: {}\n", dataset.get_size());
@@ -208,11 +212,11 @@ int main(int argc, char **argv) {
                 save_model_and_optimizer(model_path, model, optimizer, "transformer", "adamw");
             }
 
-            if (global_step >= config.max_steps) {
+            if (global_step >= max_steps) {
                 break;
             }
         }
-        if (optimizer.get_steps() >= config.max_steps) {
+        if (optimizer.get_steps() >= max_steps) {
             break;
         }
     }
