@@ -104,14 +104,10 @@ void evaluate(
             device));
 
         auto output = (*model)(prompt_tensor, positions_tensor, mask_tensor);
-        fmt::print("Output shape: {}\n", output->get_value().get_shape());
         auto output_vector = ttml::core::to_vector(output->get_value());
 
-        uint32_t predicted_token_id = prompt_tokens_padded_size - 1U;
+        uint32_t predicted_token_id = prompt_tokens.size() - 1U;
         auto logits_ptr = output_vector.data() + predicted_token_id * vocab_size;
-        for (uint32_t idx = 0; idx < vocab_size; ++idx) {
-            fmt::print("Token {} Logits[{}]: {}\n", tokenizer.decode({idx}), idx, logits_ptr[idx]);
-        }
         auto token_ptr = std::max_element(logits_ptr, logits_ptr + vocab_size);
         auto token_id = static_cast<uint32_t>(std::distance(logits_ptr, token_ptr));
         prompt_tokens.push_back(token_id);
