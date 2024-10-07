@@ -1,6 +1,4 @@
 #include <CLI/CLI.hpp>
-#include <serialization/msgpack_file.hpp>
-#include <serialization/serialization.hpp>
 
 #include "autograd/tensor.hpp"
 #include "core/tt_tensor_utils.hpp"
@@ -42,32 +40,6 @@ struct DemoConfig {
     float weight_decay = 1e-2F;
 };
 const DemoConfig config;
-
-template <typename Model, typename Optimizer>
-void save_model_and_optimizer(
-    std::string &model_path,
-    const std::shared_ptr<Model> &model,
-    Optimizer &optimizer,
-    const std::string &model_name,
-    const std::string &optimizer_name) {
-    ttml::serialization::MsgPackFile serializer;
-    ttml::serialization::write_module(serializer, model_name, model.get());
-    ttml::serialization::write_optimizer(serializer, optimizer_name, &optimizer);
-    serializer.serialize(model_path);
-}
-
-template <typename Model, typename Optimizer>
-void load_model_and_optimizer(
-    std::string &model_path,
-    const std::shared_ptr<Model> &model,
-    Optimizer &optimizer,
-    const std::string &model_name,
-    const std::string &optimizer_name) {
-    ttml::serialization::MsgPackFile deserializer;
-    deserializer.deserialize(model_path);
-    ttml::serialization::read_module(deserializer, model_name, model.get());
-    ttml::serialization::read_optimizer(deserializer, optimizer_name, &optimizer);
-}
 
 int main(int argc, char **argv) {
     CLI::App app{"NanoGPT Example"};
@@ -187,8 +159,6 @@ int main(int argc, char **argv) {
     if (!model_path.empty() && std::filesystem::exists(model_path)) {
         fmt::print("Loading model from {}\n", model_path);
         load_model_and_optimizer(model_path, model, optimizer, "transformer", "adamw");
-
-        fmt::print("Optimizer current step: {}\n", optimizer.get_steps());
     }
 
     const uint32_t num_epochs = config.num_epochs;
