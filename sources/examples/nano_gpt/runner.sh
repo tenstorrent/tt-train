@@ -8,6 +8,7 @@ DEFAULT_SEED=5489
 MAX_STEPS=5000
 SLEEP_DURATION=30
 
+$RESET_BOARD
 echo "Running $SCRIPT..."
 for i in {1..5}; do
     $SCRIPT -i $INTERVAL -p transformer.msgpack -s $((DEFAULT_SEED - i)) -m $MAX_STEPS

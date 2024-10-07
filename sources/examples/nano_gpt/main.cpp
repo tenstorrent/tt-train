@@ -41,6 +41,95 @@ struct DemoConfig {
 };
 const DemoConfig config;
 
+uint32_t sample(std::span<const float> logits, float temperature = 1.F) {
+    auto probabilities_vector = std::vector<float>(logits.size());
+    auto max_logit = *std::max_element(logits.begin(), logits.end());
+    std::transform(logits.begin(), logits.end(), probabilities_vector.begin(), [temperature, max_logit](float logit) {
+        return std::exp((logit - max_logit) / temperature);
+    });
+    auto distribution = std::discrete_distribution<uint32_t>(probabilities_vector.begin(), probabilities_vector.end());
+    return distribution(ttml::autograd::ctx().get_generator());
+}
+
+template <typename Model, typename Tokenizer>
+void generate(
+    const std::shared_ptr<Model> &model,
+    const Tokenizer &tokenizer,
+    uint32_t max_sequence_length,
+    uint32_t num_heads,
+    uint32_t tokens_to_generate = 1024U) {
+    model->eval();
+
+    std::string prompt;
+    fmt::print("Enter a prompt: ");
+    std::getline(std::cin, prompt);
+
+    if (prompt.empty()) {
+        prompt = "\n";
+    }
+
+    auto *device = &ttml::autograd::ctx().get_device();
+    auto prompt_tokens = tokenizer.encode(prompt);
+
+    auto pad_token_id = 0U;
+
+    auto vocab_size = tokenizer.get_vocab_size();
+
+    auto positions_vector = std::vector<uint32_t>(max_sequence_length);
+    std::iota(positions_vector.begin(), positions_vector.end(), 0);
+    auto positions_tensor = ttml::autograd::create_tensor(ttml::core::from_vector<uint32_t>(
+        positions_vector, ttml::core::create_shape({1, 1, 1, max_sequence_length}), device, Layout::ROW_MAJOR));
+
+    std::vector<float> mask;
+    mask.reserve(static_cast<size_t>(max_sequence_length * max_sequence_length * num_heads));
+    for (int head = 0; head < num_heads; ++head) {
+        for (int i = 0; i < max_sequence_length; ++i) {
+            for (int j = 0; j < max_sequence_length; ++j) {
+                mask.push_back(i >= j ? 1.0F : 0.0F);
+            }
+        }
+    }
+    auto mask_tensor = ttml::autograd::create_tensor(ttml::core::from_vector(
+        mask, ttml::core::create_shape({1, num_heads, max_sequence_length, max_sequence_length}), device));
+
+    std::vector<uint32_t> prompt_tokens_padded(max_sequence_length, pad_token_id);
+    fmt::print("Generated text:\n");
+    fmt::print("*******************\n");
+    fmt::print("{}", prompt);
+    for (uint32_t token_idx = 0; token_idx < tokens_to_generate; ++token_idx) {
+        uint32_t start_idx = 0;
+        if (prompt_tokens.size() > max_sequence_length) {
+            start_idx = prompt_tokens.size() - max_sequence_length;
+        }
+        for (uint32_t i = start_idx; i < prompt_tokens.size(); ++i) {
+            prompt_tokens_padded[i - start_idx] = prompt_tokens[i];
+        }
+
+        auto prompt_tokens_padded_size = static_cast<uint32_t>(prompt_tokens_padded.size());
+        auto prompt_tensor = ttml::autograd::create_tensor(ttml::core::from_vector<uint32_t>(
+            prompt_tokens_padded,
+            ttml::core::create_shape({1, 1, 1, prompt_tokens_padded_size}),
+            device,
+            Layout::ROW_MAJOR));
+
+        auto output = (*model)(prompt_tensor, positions_tensor, mask_tensor);
+        auto output_vector = ttml::core::to_vector(output->get_value());
+
+        uint32_t predicted_token_id = prompt_tokens.size() - 1U;
+        if (prompt_tokens.size() > max_sequence_length) {
+            predicted_token_id = prompt_tokens_padded_size - 1U;
+        }
+        auto logits_ptr = output_vector.data() + predicted_token_id * vocab_size;
+        auto token_id = sample(std::span<float>(logits_ptr, vocab_size));
+        prompt_tokens.push_back(token_id);
+        fmt::print("{}", tokenizer.decode({token_id}));
+
+        ttml::autograd::ctx().reset_graph();
+    }
+
+    model->train();
+}
+
 int main(int argc, char **argv) {
     CLI::App app{"NanoGPT Example"};
     argv = app.ensure_utf8(argv);
@@ -52,6 +141,7 @@ int main(int argc, char **argv) {
     uint32_t sequence_length = config.sequence_length;
     std::string model_path = "/tmp/nano_gpt.msgpack";
     std::string data_path = "/home/ubuntu/ML-Framework-CPP/sources/examples/nano_gpt/data/shakespeare.txt";
+    bool is_eval = false;
 
     app.add_option("-b,--batch_size", batch_size, "Batch size")->default_val(batch_size);
     app.add_option("-i,--model_save_interval", model_save_interval, "Model save interval")
@@ -60,6 +150,7 @@ int main(int argc, char **argv) {
     app.add_option("-d,--data_path", data_path, "Data path")->default_val(data_path);
     app.add_option("-s,--seed", seed, "Seed")->default_val(seed);
     app.add_option("-m,--max_steps", max_steps, "Max steps")->default_val(max_steps);
+    app.add_flag("-e,--eval", is_eval, "Evaluation mode")->default_val(is_eval);
     CLI11_PARSE(app, argc, argv);
 
     // set seed
@@ -159,6 +250,15 @@ int main(int argc, char **argv) {
     if (!model_path.empty() && std::filesystem::exists(model_path)) {
         fmt::print("Loading model from {}\n", model_path);
         load_model_and_optimizer(model_path, model, optimizer, "transformer", "adamw");
+        fmt::print("Model loaded after {} steps\n", optimizer.get_steps());
+    }
+
+    if (is_eval) {
+        device->enable_program_cache();
+        fmt::print("\nEvaluation started\n");
+        generate(model, tokenizer, sequence_length, config.num_heads);
+        fmt::print("\nEvaluation finished\n");
+        return 0;
     }
 
     const uint32_t num_epochs = config.num_epochs;
