@@ -10,8 +10,7 @@ SLEEP_DURATION=30
 echo "Running $SCRIPT..."
 for i in {1..10}; do
     $SCRIPT -i $INTERVAL -p transformer.msgpack -s $((DEFAULT_SEED - i)) -m $MAX_STEPS
-    steps_done=$((i * MAX_STEPS)) 
-    echo "Done $steps_done iterations" 
+    echo "Sleeping for $SLEEP_DURATION seconds and restarting training..."
     sleep $SLEEP_DURATION
 done
 echo "Done running $SCRIPT"
