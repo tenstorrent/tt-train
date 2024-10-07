@@ -139,6 +139,7 @@ void write_optimizer(MsgPackFile& file, std::string_view name, const optimizers:
     for (const auto& [key, value] : state_dict) {
         ttml::serialization::write_autograd_tensor(file, std::string(name) + "/" + key, value);
     }
+    fmt::print("Writing steps: {}\n", optimizer->get_steps());
     file.put(std::string(name) + "/steps", optimizer->get_steps());
 }
 
@@ -152,6 +153,7 @@ void read_optimizer(MsgPackFile& file, std::string_view name, optimizers::Optimi
     }
     optimizer->set_state_dict(state_dict);
     file.get(std::string(name) + "/steps", steps);
+    fmt::print("Reading steps: {}\n", steps);
     optimizer->set_steps(steps);
 }
 
