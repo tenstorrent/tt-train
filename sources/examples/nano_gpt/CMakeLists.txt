@@ -1,6 +1,6 @@
 project (nano_gpt)
 
-set(SOURCES main.cpp)
+set(SOURCES main.cpp utils.cpp models.cpp)
 
 add_executable(nano_gpt ${SOURCES})
 target_link_libraries(nano_gpt PRIVATE ttml)

@@ -1,5 +1,4 @@
-
-#include <iostream>
+#include <CLI/CLI.hpp>
 
 #include "autograd/tensor.hpp"
 #include "core/tt_tensor_utils.hpp"
@@ -7,15 +6,13 @@
 #include "datasets/dataloader.hpp"
 #include "datasets/in_memory_char_dataset.hpp"
 #include "datasets/utils.hpp"
-#include "modules/embedding_module.hpp"
-#include "modules/gpt_block.hpp"
-#include "modules/layer_norm_module.hpp"
-#include "modules/linear_module.hpp"
+#include "models.hpp"
 #include "ops/binary_ops.hpp"
 #include "ops/losses.hpp"
 #include "optimizers/adamw.hpp"
 #include "optimizers/sgd.hpp"
 #include "ttnn_fixed/trivial_ttnn_ops.hpp"
+#include "utils.hpp"
 
 using ttml::autograd::TensorPtr;
 
@@ -24,7 +21,7 @@ using DatasetSample = std::pair<std::span<const uint32_t>, std::span<const uint3
 using BatchType = std::tuple<TensorPtr, TensorPtr, TensorPtr, TensorPtr>;
 using DataLoader = ttml::datasets::DataLoader<
     ttml::datasets::InMemoryCharDataset,
-    std::function<BatchType(std::vector<DatasetSample>&& samples)>,
+    std::function<BatchType(std::vector<DatasetSample> &&samples)>,
     BatchType>;
 
 struct DemoConfig {
@@ -36,7 +33,7 @@ struct DemoConfig {
     float dropout_prob = 0.2F;
     // model
     uint32_t num_heads = 6;
-    uint32_t hidden_dim = 384;
+    uint32_t embedding_dim = 384;
     uint32_t num_blocks = 6;
     // optimizer
     float learning_rate = 3e-4F;
@@ -44,160 +41,54 @@ struct DemoConfig {
 };
 const DemoConfig config;
 
-class LossAverageMeter {
-    float m_sum = 0.0F;
-    size_t m_count = 0;
+int main(int argc, char **argv) {
+    CLI::App app{"NanoGPT Example"};
+    argv = app.ensure_utf8(argv);
 
-public:
-    void update(float loss, size_t count = 1) {
-        m_sum += loss * static_cast<float>(count);
-        m_count += count;
-    }
+    uint32_t seed = 5489U;
+    uint32_t model_save_interval = 500;
+    uint32_t max_steps = config.max_steps;
+    uint32_t batch_size = config.batch_size;
+    uint32_t sequence_length = config.sequence_length;
+    std::string model_path = "/tmp/nano_gpt.msgpack";
+    std::string data_path = "/home/ubuntu/ML-Framework-CPP/sources/examples/nano_gpt/data/shakespeare.txt";
 
-    [[nodiscard]] float average() const {
-        if (m_count == 0) {
-            return 0.F;
-        }
-        return m_sum / static_cast<float>(m_count);
-    }
+    app.add_option("-b,--batch_size", batch_size, "Batch size")->default_val(batch_size);
+    app.add_option("-i,--model_save_interval", model_save_interval, "Model save interval")
+        ->default_val(model_save_interval);
+    app.add_option("-p,--model_path", model_path, "Model path")->default_val(model_path);
+    app.add_option("-d,--data_path", data_path, "Data path")->default_val(data_path);
+    app.add_option("-s,--seed", seed, "Seed")->default_val(seed);
+    app.add_option("-m,--max_steps", max_steps, "Max steps")->default_val(max_steps);
+    CLI11_PARSE(app, argc, argv);
 
-    void reset() {
-        m_sum = 0.0F;
-        m_count = 0;
-    }
-};
-
-std::string read_file_to_str(const std::string& file_path) {
-    std::ifstream file(file_path);
-    if (!file.is_open()) {
-        throw std::runtime_error("Failed to open file: " + file_path);
-    }
-
-    std::stringstream buffer;
-    buffer << file.rdbuf();
-    return buffer.str();
-}
-
-class BigramFCModel : public ttml::autograd::ModuleBase {
-public:
-    std::shared_ptr<ttml::modules::LinearLayer> fc1;
-    std::shared_ptr<ttml::modules::Embedding> emb;
-
-    BigramFCModel(uint32_t vocab_size, uint32_t num_tokens, uint32_t hidden_dim) {
-        // make vocab_size divisible by 32
-        vocab_size = (vocab_size + 31) / 32 * 32;
-
-        // create layers
-        emb = std::make_shared<ttml::modules::Embedding>(vocab_size, hidden_dim);
-        fc1 = std::make_shared<ttml::modules::LinearLayer>(hidden_dim, num_tokens);
-
-        create_name("bigram_fc_model");
-
-        register_module(emb, "emb");
-        register_module(fc1, "fc1");
-    }
-
-    ttml::autograd::TensorPtr operator()(
-        ttml::autograd::TensorPtr x,
-        [[maybe_unused]] ttml::autograd::TensorPtr positions,
-        [[maybe_unused]] ttml::autograd::TensorPtr masks) const {
-        x = (*emb)(x);
-        x = (*fc1)(x);
-        return x;
-    }
-};
-
-class Transformer : public ttml::autograd::ModuleBase {
-    std::shared_ptr<ttml::modules::Embedding> tok_emb;
-    std::shared_ptr<ttml::modules::Embedding> pos_emb;
-    std::vector<std::shared_ptr<ttml::modules::GPTBlock>> blocks;
-    std::shared_ptr<ttml::modules::LayerNormLayer> ln_fc;
-    std::shared_ptr<ttml::modules::LinearLayer> fc;
-
-public:
-    Transformer(uint32_t vocab_size, uint32_t max_sequence_length) {
-        uint32_t embedding_size = config.hidden_dim;
-        uint32_t num_heads = config.num_heads;
-        float dropout_prob = config.dropout_prob;
-        uint32_t num_blocks = config.num_blocks;
-        fmt::print("Transformer configuration:\n");
-        fmt::print("    Vocab size: {}\n", vocab_size);
-        fmt::print("    Max sequence length: {}\n", max_sequence_length);
-        fmt::print("    Embedding size: {}\n", embedding_size);
-        fmt::print("    Num heads: {}\n", num_heads);
-        fmt::print("    Dropout probability: {}\n", dropout_prob);
-        fmt::print("    Num blocks: {}\n", num_blocks);
-
-        uint32_t vocab_size_divisible_by_32 = (vocab_size + 31) / 32 * 32;
-        if (max_sequence_length % 32 != 0) {
-            throw std::logic_error(fmt::format(
-                "Max sequence length should be divisible by 32 due to current limitations in tensor. Provided "
-                "max_sequence_length={}",
-                max_sequence_length));
-        }
-        if (embedding_size % 32 != 0) {
-            throw std::logic_error(fmt::format(
-                "Embedding size should be divisible by 32 due to current limitations in tensor. Provided "
-                "embedding_size={}",
-                embedding_size));
-        }
-        tok_emb = std::make_shared<ttml::modules::Embedding>(vocab_size_divisible_by_32, embedding_size);
-        pos_emb = std::make_shared<ttml::modules::Embedding>(max_sequence_length, embedding_size);
-        blocks.reserve(num_blocks);
-        for (uint32_t block_idx = 0; block_idx < num_blocks; ++block_idx) {
-            blocks.push_back(std::make_shared<ttml::modules::GPTBlock>(embedding_size, num_heads, dropout_prob));
-        }
-        ln_fc = std::make_shared<ttml::modules::LayerNormLayer>(embedding_size);
-        fc = std::make_shared<ttml::modules::LinearLayer>(embedding_size, vocab_size);
-
-        create_name("transformer");
-        register_module(tok_emb, "tok_emb");
-        register_module(pos_emb, "pos_emb");
-        for (uint32_t block_idx = 0; block_idx < num_blocks; ++block_idx) {
-            register_module(blocks[block_idx], fmt::format("gpt_block_{}", block_idx));
-        }
-        register_module(ln_fc, "ln_fc");
-        register_module(fc, "fc");
-    }
-
-    ttml::autograd::TensorPtr operator()(
-        const ttml::autograd::TensorPtr& x,
-        const ttml::autograd::TensorPtr& positions,
-        const ttml::autograd::TensorPtr& mask) {
-        auto tok_emb_out = (*tok_emb)(x);
-        auto pos_emb_out = (*pos_emb)(positions);
-        auto out = ttml::ops::add(tok_emb_out, pos_emb_out);
-        for (auto& block : blocks) {
-            out = (*block)(out, mask);
-        }
-        out = (*ln_fc)(out);
-        auto logits = (*fc)(out);
-        return logits;
-    }
-};
-
-int main() {
-    const std::string data_folder = "/home/ubuntu/ML-Framework-CPP/sources/examples/nano_gpt/data";
-    const std::string data_path = data_folder + "/shakespeare.txt";
+    // set seed
+    ttml::autograd::ctx().set_seed(seed);
 
     std::string text;
     try {
         text = read_file_to_str(data_path);
-    } catch (const std::exception& e) {
+    } catch (const std::exception &e) {
         std::cerr << e.what() << std::endl;
         return -1;
     }
 
-    uint32_t sequence_length = config.sequence_length;
+    fmt::print("Max steps {}\n", max_steps);
+    fmt::print("Batch size {}\n", batch_size);
+    fmt::print("Seed {}\n", ttml::autograd::ctx().get_seed());
+
     auto [dataset, tokenizer] = ttml::datasets::create_in_memory_char_dataset(text, sequence_length);
     fmt::print("Dataset size: {}\n", dataset.get_size());
     fmt::print("Vocab size: {}\n", tokenizer.get_vocab_size());
 
-    auto* device = &ttml::autograd::ctx().get_device();
+    auto *device = &ttml::autograd::ctx().get_device();
+
+    // disable for now, unexpected freezes and crashes
     // device->enable_async(true);
+
     std::function<BatchType(std::vector<DatasetSample> && samples)> collate_fn =
         [sequence_length, num_heads = config.num_heads, vocab_size = tokenizer.get_vocab_size(), device](
-            std::vector<DatasetSample>&& samples) {
+            std::vector<DatasetSample> &&samples) {
             const uint32_t batch_size = samples.size();
             std::vector<uint32_t> data;
             std::vector<float> targets;
@@ -225,7 +116,7 @@ int main() {
             data.reserve((size_t)batch_size * sequence_length);
             targets.reserve((size_t)batch_size * vocab_size * sequence_length);
             std::vector<float> one_hot_target(vocab_size);
-            for (auto& [features, target_span] : samples) {
+            for (auto &[features, target_span] : samples) {
                 std::copy(features.begin(), features.end(), std::back_inserter(data));
 
                 for (auto target : target_span) {
@@ -245,16 +136,17 @@ int main() {
             return std::make_tuple(data_tensor, targets_tensor, masks_tensor, positions_tensor);
         };
 
-    uint32_t batch_size = config.batch_size;
-    fmt::print("Batch size {}\n", batch_size);
-
     LossAverageMeter loss_meter;
-    int global_step = 0;
-
     auto train_dataloader = DataLoader(dataset, /* batch_size */ batch_size, /* shuffle */ true, collate_fn);
 
-    // auto model = BigramFCModel(tokenizer.get_vocab_size(), tokenizer.get_vocab_size(), /* hidden_dim */ 128);
-    auto model = Transformer(tokenizer.get_vocab_size(), sequence_length);
+    auto transformer_config = TransformerConfig();
+    transformer_config.num_heads = config.num_heads;
+    transformer_config.embedding_dim = config.embedding_dim;
+    transformer_config.dropout_prob = config.dropout_prob;
+    transformer_config.num_blocks = config.num_blocks;
+    transformer_config.vocab_size = tokenizer.get_vocab_size();
+    transformer_config.max_sequence_length = sequence_length;
+    auto model = std::make_shared<Transformer>(transformer_config);
 
     auto adamw_params = ttml::optimizers::AdamWConfig();
     adamw_params.lr = config.learning_rate;
@@ -262,30 +154,47 @@ int main() {
     fmt::print("AdamW configuration:\n");
     fmt::print("    Learning rate: {}\n", adamw_params.lr);
     fmt::print("    Weight decay: {}\n", adamw_params.weight_decay);
-    auto optimizer = ttml::optimizers::AdamW(model.parameters(), adamw_params);
+    auto optimizer = ttml::optimizers::AdamW(model->parameters(), adamw_params);
+
+    if (!model_path.empty() && std::filesystem::exists(model_path)) {
+        fmt::print("Loading model from {}\n", model_path);
+        load_model_and_optimizer(model_path, model, optimizer, "transformer", "adamw");
+    }
 
     const uint32_t num_epochs = config.num_epochs;
     std::ofstream loss_file("loss.txt");
     for (uint32_t epoch = 0; epoch < num_epochs; ++epoch) {
         for (auto [features, target, masks, positions] : train_dataloader) {
             optimizer.zero_grad();
-            auto output = model(features, positions, masks);
+            auto output = (*model)(features, positions, masks);
             auto loss = ttml::ops::cross_entropy_loss(target, output);
             auto loss_float = ttml::core::to_vector(loss->get_value())[0];
             loss_meter.update(loss_float, features->get_value().get_shape()[0]);
-            fmt::print("Step: {}, Loss: {}\n", global_step++, loss_float);
-            loss_file << fmt::format("Step: {}, Loss: {}", global_step, loss_float) << std::endl;
             loss->backward();
             optimizer.step();
             ttml::autograd::ctx().reset_graph();
-            if (global_step >= config.max_steps) {
+
+            auto global_step = optimizer.get_steps();
+            fmt::print("Step: {}, Loss: {}\n", global_step, loss_float);
+            loss_file << fmt::format("Step: {}, Loss: {}", global_step, loss_float) << std::endl;
+
+            if (!model_path.empty() && global_step % model_save_interval == 0) {
+                save_model_and_optimizer(model_path, model, optimizer, "transformer", "adamw");
+            }
+
+            if (global_step >= max_steps) {
                 break;
             }
         }
-        if (global_step >= config.max_steps) {
+        if (optimizer.get_steps() >= max_steps) {
             break;
         }
     }
+
+    if (!model_path.empty()) {
+        save_model_and_optimizer(model_path, model, optimizer, "transformer", "adamw");
+    }
+
     loss_file.close();
     return 0;
 }
