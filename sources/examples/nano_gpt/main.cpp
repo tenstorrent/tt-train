@@ -41,9 +41,23 @@ struct DemoConfig {
 };
 const DemoConfig config;
 
+uint32_t sample(const std::span<float> logits, float temperature = 1.F) {
+    auto probabilities_vector = std::vector<float>(logits.size());
+    auto max_logit = *std::max_element(logits.begin(), logits.end());
+    std::transform(logits.begin(), logits.end(), probabilities_vector.begin(), [temperature, max_logit](float logit) {
+        return std::exp((logit - max_logit) / temperature);
+    });
+    auto distribution = std::discrete_distribution<uint32_t>(probabilities_vector.begin(), probabilities_vector.end());
+    return distribution(ttml::autograd::ctx().get_generator());
+}
+
 template <typename Model, typename Tokenizer>
 void evaluate(
-    const std::shared_ptr<Model> &model, const Tokenizer &tokenizer, uint32_t max_sequence_length, uint32_t num_heads) {
+    const std::shared_ptr<Model> &model,
+    const Tokenizer &tokenizer,
+    uint32_t max_sequence_length,
+    uint32_t num_heads,
+    uint32_t tokens_to_generate = 1024U) {
     model->eval();
 
     std::string prompt;
@@ -60,17 +74,35 @@ void evaluate(
     auto pad_token_id = 0U;
 
     auto vocab_size = tokenizer.get_vocab_size();
-    auto tokens_to_generate = 1024U;
-    for (uint32_t token_idx = 0; token_idx < tokens_to_generate; ++token_idx) {
-        auto prompt_tokens_padded = prompt_tokens;
-        while (prompt_tokens_padded.size() < max_sequence_length) {
-            prompt_tokens_padded.push_back(pad_token_id);
-        }
 
-        if (prompt_tokens_padded.size() > max_sequence_length) {
-            prompt_tokens_padded.erase(
-                prompt_tokens_padded.begin(),
-                prompt_tokens_padded.begin() + (prompt_tokens_padded.size() - max_sequence_length));
+    auto positions_vector = std::vector<uint32_t>(max_sequence_length);
+    std::iota(positions_vector.begin(), positions_vector.end(), 0);
+    auto positions_tensor = ttml::autograd::create_tensor(ttml::core::from_vector<uint32_t>(
+        positions_vector, ttml::core::create_shape({1, 1, 1, max_sequence_length}), device, Layout::ROW_MAJOR));
+
+    std::vector<float> mask;
+    mask.reserve(static_cast<size_t>(max_sequence_length * max_sequence_length * num_heads));
+    for (int head = 0; head < num_heads; ++head) {
+        for (int i = 0; i < max_sequence_length; ++i) {
+            for (int j = 0; j < max_sequence_length; ++j) {
+                mask.push_back(i >= j ? 1.0F : 0.0F);
+            }
+        }
+    }
+    auto mask_tensor = ttml::autograd::create_tensor(ttml::core::from_vector(
+        mask, ttml::core::create_shape({1, num_heads, max_sequence_length, max_sequence_length}), device));
+
+    std::vector<uint32_t> prompt_tokens_padded(max_sequence_length, pad_token_id);
+    fmt::print("Generated text:\n");
+    fmt::print("*******************\n");
+    fmt::print("{}", prompt);
+    for (uint32_t token_idx = 0; token_idx < tokens_to_generate; ++token_idx) {
+        uint32_t start_idx = 0;
+        if (prompt_tokens.size() > max_sequence_length) {
+            start_idx = prompt_tokens.size() - max_sequence_length;
+        }
+        for (uint32_t i = start_idx; i < prompt_tokens.size(); ++i) {
+            prompt_tokens_padded[i - start_idx] = prompt_tokens[i];
         }
 
         auto prompt_tokens_padded_size = static_cast<uint32_t>(prompt_tokens_padded.size());
@@ -80,42 +112,19 @@ void evaluate(
             device,
             Layout::ROW_MAJOR));
 
-        auto positions_vector = std::vector<uint32_t>(prompt_tokens_padded.size());
-        std::iota(positions_vector.begin(), positions_vector.end(), 0);
-        auto positions_tensor = ttml::autograd::create_tensor(ttml::core::from_vector<uint32_t>(
-            positions_vector,
-            ttml::core::create_shape({1, 1, 1, prompt_tokens_padded_size}),
-            device,
-            Layout::ROW_MAJOR));
-
-        std::vector<float> mask;
-        mask.reserve(static_cast<size_t>(prompt_tokens_padded_size * prompt_tokens_padded_size * num_heads));
-        for (int head = 0; head < num_heads; ++head) {
-            for (int i = 0; i < prompt_tokens_padded_size; ++i) {
-                for (int j = 0; j < prompt_tokens_padded_size; ++j) {
-                    mask.push_back(i >= j ? 1.0F : 0.0F);
-                }
-            }
-        }
-
-        auto mask_tensor = ttml::autograd::create_tensor(ttml::core::from_vector(
-            mask,
-            ttml::core::create_shape({1, num_heads, prompt_tokens_padded_size, prompt_tokens_padded_size}),
-            device));
-
         auto output = (*model)(prompt_tensor, positions_tensor, mask_tensor);
         auto output_vector = ttml::core::to_vector(output->get_value());
 
         uint32_t predicted_token_id = prompt_tokens.size() - 1U;
+        if (prompt_tokens.size() > max_sequence_length) {
+            predicted_token_id = prompt_tokens_padded_size - 1U;
+        }
         auto logits_ptr = output_vector.data() + predicted_token_id * vocab_size;
-        auto token_ptr = std::max_element(logits_ptr, logits_ptr + vocab_size);
-        auto token_id = static_cast<uint32_t>(std::distance(logits_ptr, token_ptr));
+        auto token_id = sample(std::span<float>(logits_ptr, vocab_size));
         prompt_tokens.push_back(token_id);
+        fmt::print("{}", tokenizer.decode({token_id}));
 
-        auto str = tokenizer.decode(prompt_tokens);
-        fmt::print("*******************\n");
-        fmt::print("Generated text: {}\n", str);
-        fmt::print("*******************\n");
+        ttml::autograd::ctx().reset_graph();
     }
 
     model->train();
@@ -167,6 +176,7 @@ int main(int argc, char **argv) {
 
     // disable for now, unexpected freezes and crashes
     // device->enable_async(true);
+    device->enable_program_cache();
 
     std::function<BatchType(std::vector<DatasetSample> && samples)> collate_fn =
         [sequence_length, num_heads = config.num_heads, vocab_size = tokenizer.get_vocab_size(), device](
@@ -245,9 +255,9 @@ int main(int argc, char **argv) {
     }
 
     if (is_eval) {
-        fmt::print("Evaluation started\n");
+        fmt::print("\nEvaluation started\n");
         evaluate(model, tokenizer, sequence_length, config.num_heads);
-        fmt::print("Evaluation finished\n");
+        fmt::print("\nEvaluation finished\n");
         return 0;
     }
 
