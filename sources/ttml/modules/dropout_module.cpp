@@ -5,10 +5,12 @@
 
 namespace ttml::modules {
 
-DropoutLayer::DropoutLayer(float probability) : m_prob(probability) { create_name("dropout"); }
+DropoutLayer::DropoutLayer(float probability) : m_prob(probability) {
+    create_name("dropout");
+}
 
 [[nodiscard]] autograd::TensorPtr DropoutLayer::operator()(const autograd::TensorPtr& tensor) {
-    if (this->get_run_mode() == autograd::RunMode::EVAL) {
+    if (m_prob == 0.F || this->get_run_mode() == autograd::RunMode::EVAL) {
         return tensor;
     }
 
