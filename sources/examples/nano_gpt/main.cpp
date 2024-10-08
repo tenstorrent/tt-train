@@ -282,6 +282,8 @@ int main(int argc, char **argv) {
                 save_model_and_optimizer(model_path, model, optimizer, "transformer", "adamw");
             }
 
+            device->push_work([]() { tt::tt_metal::EnqueueProgramCommand::cached_program_command_sequences.clear(); });
+
             if (global_step >= max_steps) {
                 break;
             }
