@@ -29,7 +29,10 @@ void SGD::zero_grad() {
 void SGD::step() {
     for (auto& [name, theta_ptr] : m_theta) {
         auto& theta = theta_ptr->get_value();
-        auto tensor_ptr = m_parameters.at(name);
+        const auto& tensor_ptr = m_parameters.at(name);
+        if (!tensor_ptr->is_grad_initialized()) {
+            continue;
+        }
 
         auto gradients = tensor_ptr->get_grad();
         if (m_config.weight_decay != 0.0F) {
