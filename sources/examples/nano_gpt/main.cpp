@@ -36,8 +36,8 @@ struct DemoConfig {
     uint32_t embedding_dim = 768;  // 384
     uint32_t num_blocks = 12;      // 6
     // optimizer
-    float learning_rate = 3e-4F;
-    float weight_decay = 1e-2F;
+    float learning_rate = 1e-4F;  // 3e-4
+    float weight_decay = 1e-3F;   // 1e-2
 };
 const DemoConfig config;
 

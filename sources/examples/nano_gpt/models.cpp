@@ -33,6 +33,7 @@ Transformer::Transformer(const TransformerConfig& config) {
     }
     tok_emb = std::make_shared<ttml::modules::Embedding>(vocab_size_divisible_by_32, embedding_dim);
     pos_emb = std::make_shared<ttml::modules::Embedding>(max_sequence_length, embedding_dim);
+    dropout = std::make_shared<ttml::modules::DropoutLayer>(dropout_prob);
     blocks.reserve(num_blocks);
     for (uint32_t block_idx = 0; block_idx < num_blocks; ++block_idx) {
         blocks.push_back(std::make_shared<ttml::modules::GPTBlock>(embedding_dim, num_heads, dropout_prob));
@@ -43,6 +44,7 @@ Transformer::Transformer(const TransformerConfig& config) {
     create_name("transformer");
     register_module(tok_emb, "tok_emb");
     register_module(pos_emb, "pos_emb");
+    register_module(dropout, "dropout");
     for (uint32_t block_idx = 0; block_idx < num_blocks; ++block_idx) {
         register_module(blocks[block_idx], fmt::format("gpt_block_{}", block_idx));
     }
@@ -56,6 +58,7 @@ ttml::autograd::TensorPtr Transformer::operator()(
     auto tok_emb_out = (*tok_emb)(x);
     auto pos_emb_out = (*pos_emb)(positions);
     auto out = ttml::ops::add(tok_emb_out, pos_emb_out);
+    out = (*dropout)(out);
     for (auto& block : blocks) {
         out = (*block)(out, mask);
     }

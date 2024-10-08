@@ -2,6 +2,7 @@
 #include <memory>
 
 #include "autograd/module_base.hpp"
+#include "modules/dropout_module.hpp"
 #include "modules/embedding_module.hpp"
 #include "modules/gpt_block.hpp"
 #include "modules/layer_norm_module.hpp"
@@ -19,6 +20,7 @@ struct TransformerConfig {
 class Transformer : public ttml::autograd::ModuleBase {
     std::shared_ptr<ttml::modules::Embedding> tok_emb;
     std::shared_ptr<ttml::modules::Embedding> pos_emb;
+    std::shared_ptr<ttml::modules::DropoutLayer> dropout;
     std::vector<std::shared_ptr<ttml::modules::GPTBlock>> blocks;
     std::shared_ptr<ttml::modules::LayerNormLayer> ln_fc;
     std::shared_ptr<ttml::modules::LinearLayer> fc;
