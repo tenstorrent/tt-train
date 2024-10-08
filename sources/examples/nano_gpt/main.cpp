@@ -27,14 +27,14 @@ using DataLoader = ttml::datasets::DataLoader<
 struct DemoConfig {
     // training
     uint32_t batch_size = 64;
-    uint32_t sequence_length = 256;
+    uint32_t sequence_length = 1024;  // 256
     uint32_t num_epochs = 1;
     uint32_t max_steps = 5000;
     float dropout_prob = 0.2F;
     // model
-    uint32_t num_heads = 6;
-    uint32_t embedding_dim = 384;
-    uint32_t num_blocks = 6;
+    uint32_t num_heads = 12;       // 6
+    uint32_t embedding_dim = 768;  // 384
+    uint32_t num_blocks = 12;      // 6
     // optimizer
     float learning_rate = 3e-4F;
     float weight_decay = 1e-2F;

@@ -11,7 +11,7 @@ SLEEP_DURATION=30
 $RESET_BOARD
 echo "Running $SCRIPT..."
 for i in {1..5}; do
-    $SCRIPT -i $INTERVAL -p transformer.msgpack -s $((DEFAULT_SEED - i)) -m $MAX_STEPS
+    $SCRIPT -i $INTERVAL -p transformer_gpt2.msgpack -s $((DEFAULT_SEED - i)) -m $MAX_STEPS
     $RESET_BOARD
     echo "Sleeping for $SLEEP_DURATION seconds and restarting training..."
     sleep $SLEEP_DURATION
