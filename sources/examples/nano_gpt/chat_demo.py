@@ -96,8 +96,11 @@ def main():
             message_placeholder = st.empty()
             full_response = ""
             for chunk in stream_executable(st.session_state.process, prompt):
+                if chunk == '\n':
+                    full_response += "  "
                 full_response += chunk
                 message_placeholder.markdown(full_response + "▌")
+            
             message_placeholder.markdown(full_response)
 
         # Add assistant response to chat history
