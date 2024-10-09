@@ -38,6 +38,9 @@ void AdamW::step() {
     m_steps++;
     for (auto& [key, first_moment_ptr] : m_first_moment) {
         const auto& tensor_ptr = m_parameters.at(key);
+        if (!tensor_ptr->is_grad_initialized()) {
+            continue;
+        }
         auto& second_moment_ptr = m_second_moment.at(key);
         auto& first_moment = first_moment_ptr->get_value();
         auto& second_moment = second_moment_ptr->get_value();

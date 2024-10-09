@@ -1,7 +1,5 @@
 #include <CLI/CLI.hpp>
 #include <mnist/mnist_reader.hpp>
-#include <serialization/msgpack_file.hpp>
-#include <serialization/serialization.hpp>
 #include <ttnn/operations/eltwise/ternary/where.hpp>
 #include <ttnn/tensor/tensor_utils.hpp>
 #include <ttnn/tensor/types.hpp>
@@ -52,22 +50,6 @@ float evaluate(DataLoader &test_dataloader, Model &model, size_t num_targets) {
     model->train();
     return num_correct / num_samples;
 };
-
-template <typename Model, typename Optimizer>
-void save_model_and_optimizer(std::string &model_path, const std::shared_ptr<Model> &model, Optimizer &optimizer) {
-    ttml::serialization::MsgPackFile serializer;
-    ttml::serialization::write_module(serializer, model_name, model.get());
-    ttml::serialization::write_optimizer(serializer, optimizer_name, &optimizer);
-    serializer.serialize(model_path);
-}
-
-template <typename Model, typename Optimizer>
-void load_model_and_optimizer(std::string &model_path, const std::shared_ptr<Model> &model, Optimizer &optimizer) {
-    ttml::serialization::MsgPackFile deserializer;
-    deserializer.deserialize(model_path);
-    ttml::serialization::read_module(deserializer, model_name, model.get());
-    ttml::serialization::read_optimizer(deserializer, optimizer_name, &optimizer);
-}
 
 int main(int argc, char **argv) {
     CLI::App app{"Mnist Example"};
@@ -145,7 +127,7 @@ int main(int argc, char **argv) {
     auto optimizer = ttml::optimizers::SGD(model->parameters(), sgd_config);
     if (!model_path.empty() && std::filesystem::exists(model_path)) {
         fmt::print("Loading model from {}\n", model_path);
-        load_model_and_optimizer(model_path, model, optimizer);
+        load_model_and_optimizer(model_path, model, optimizer, model_name, optimizer_name);
     }
 
     // evaluate model before training (sanity check to get reasonable accuracy
@@ -170,7 +152,7 @@ int main(int argc, char **argv) {
             }
             if (!model_path.empty() && training_step % model_save_interval == 0) {
                 fmt::print("Saving model to {}\n", model_path);
-                save_model_and_optimizer(model_path, model, optimizer);
+                save_model_and_optimizer(model_path, model, optimizer, model_name, optimizer_name);
             }
 
             loss->backward();
@@ -190,7 +172,7 @@ int main(int argc, char **argv) {
 
     if (!model_path.empty()) {
         fmt::print("Saving model to {}\n", model_path);
-        save_model_and_optimizer(model_path, model, optimizer);
+        save_model_and_optimizer(model_path, model, optimizer, model_name, optimizer_name);
     }
 
     return 0;
