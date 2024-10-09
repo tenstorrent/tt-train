@@ -28,6 +28,4 @@ template <class T = float>
 
 [[nodiscard]] ttnn::Shape create_shape(const std::array<uint32_t, 4>& args);
 
-[[nodiscard]] ttnn::Shape create_shape(const ttnn::Shape& shape);
-
 }  // namespace ttml::core

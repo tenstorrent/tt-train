@@ -58,6 +58,31 @@ CPMAddPackage(
   GIT_TAG v1.1.1
 )
 
+############################################################################################################################
+# fmt : https://github.com/fmtlib/fmt
+############################################################################################################################
+
+CPMAddPackage(
+  NAME fmt
+  GITHUB_REPOSITORY fmtlib/fmt
+  GIT_TAG 11.0.1
+)
+
+if (fmt_ADDED)
+  target_link_libraries(fmt PUBLIC ${LIBC++} ${LIBC++ABI})
+  target_compile_options(fmt PUBLIC -stdlib=libc++)
+endif()
+
+############################################################################################################################
+# magic_enum : https://github.com/Neargye/magic_enum
+############################################################################################################################
+
+CPMAddPackage(
+  NAME magic_enum
+  GITHUB_REPOSITORY Neargye/magic_enum
+  GIT_TAG v0.9.6
+)
+
 
 include(${PROJECT_SOURCE_DIR}/cmake/fetch_msgpack.cmake)
 

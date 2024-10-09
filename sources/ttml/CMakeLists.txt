@@ -2,9 +2,6 @@ project (ttml)
 
 file(GLOB_RECURSE SOURCES LIST_DIRECTORIES true *.hpp *.cpp) # I am a bad person
 
-#set(SOURCES)
-
-
 add_library(ttml STATIC ${SOURCES})
 
 add_library(stdlib INTERFACE)
@@ -28,7 +25,6 @@ target_include_directories(ttml SYSTEM PUBLIC
     $ENV{TT_METAL_HOME}
     $ENV{TT_METAL_HOME}/tt_metal
     $ENV{TT_METAL_HOME}/tt_metal/third_party/umd
-    $ENV{TT_METAL_HOME}/tt_metal/third_party/fmt
     $ENV{TT_METAL_HOME}/tt_metal/hw/inc/wormhole
     $ENV{TT_METAL_HOME}/tt_metal/hw/inc/wormhole/wormhole_b0_defines
     $ENV{TT_METAL_HOME}/tt_metal/hw/inc/
@@ -62,6 +58,8 @@ target_link_libraries(ttml PUBLIC
     pthread
     Python::Python
     $ENV{TT_METAL_HOME}/build/lib/_ttnn.so
+    fmt
+    magic_enum
 )
 
 target_link_libraries(ttml PUBLIC 
