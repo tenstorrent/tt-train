@@ -123,9 +123,9 @@ void generate(
         auto token_id = sample(std::span<float>(logits_ptr, vocab_size));
         prompt_tokens.push_back(token_id);
         fmt::print("{}", tokenizer.decode({token_id}));
-
         ttml::autograd::ctx().reset_graph();
     }
+    fmt::print("\n*******************\n");
 
     model->train();
 }
@@ -256,7 +256,9 @@ int main(int argc, char **argv) {
     if (is_eval) {
         device->enable_program_cache();
         fmt::print("\nEvaluation started\n");
-        generate(model, tokenizer, sequence_length, config.num_heads);
+        for (;;) {
+            generate(model, tokenizer, sequence_length, config.num_heads);
+        }
         fmt::print("\nEvaluation finished\n");
         return 0;
     }
