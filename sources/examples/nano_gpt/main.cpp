@@ -284,11 +284,6 @@ int main(int argc, char **argv) {
                 save_model_and_optimizer(model_path, model, optimizer, "transformer", "adamw");
             }
 
-            // This is temporary fix for the issue with the cached program command sequences, which are not cleared and
-            // grow extremely fast (40+ GB per 1000 iterations). Once this is resolved in tt-metal we can remove this
-            // line.
-            device->push_work([]() { tt::tt_metal::EnqueueProgramCommand::cached_program_command_sequences.clear(); });
-
             if (global_step >= max_steps) {
                 break;
             }
