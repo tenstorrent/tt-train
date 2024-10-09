@@ -10,7 +10,7 @@ namespace ttml::init {
 void uniform_init(ttml::autograd::TensorPtr& t, const ttnn::Shape& shape, UniformRange range) {
     auto* device = &autograd::ctx().get_device();
     assert(device);
-    size_t volume = tt::tt_metal::compute_volume(shape);
+    size_t volume = shape.logical_shape().volume();
     std::vector<float> vec(volume);
     uniform_init(vec, range);
 
@@ -20,7 +20,7 @@ void uniform_init(ttml::autograd::TensorPtr& t, const ttnn::Shape& shape, Unifor
 void normal_init(ttml::autograd::TensorPtr& t, const ttnn::Shape& shape, NormalParams params) {
     auto* device = &autograd::ctx().get_device();
     assert(device);
-    size_t volume = tt::tt_metal::compute_volume(shape);
+    size_t volume = shape.logical_shape().volume();
     std::vector<float> vec(volume);
     normal_init(vec, params);
     t->set_value(ttml::core::from_vector(vec, shape, device));
@@ -34,7 +34,7 @@ void constant_init(ttml::autograd::TensorPtr& t, const ttnn::Shape& shape, float
 void xavier_uniform_init(ttml::autograd::TensorPtr& t, const ttnn::Shape& shape, FanParams params) {
     auto* device = &autograd::ctx().get_device();
     assert(device);
-    size_t volume = tt::tt_metal::compute_volume(shape);
+    size_t volume = shape.logical_shape().volume();
     std::vector<float> vec(volume);
     xavier_uniform_init(vec, params);
 
@@ -44,7 +44,7 @@ void xavier_uniform_init(ttml::autograd::TensorPtr& t, const ttnn::Shape& shape,
 void xavier_normal_init(ttml::autograd::TensorPtr& t, const ttnn::Shape& shape, FanParams params) {
     auto* device = &autograd::ctx().get_device();
     assert(device);
-    size_t volume = tt::tt_metal::compute_volume(shape);
+    size_t volume = shape.logical_shape().volume();
     std::vector<float> vec(volume);
     xavier_normal_init(vec, params);
 
@@ -54,7 +54,7 @@ void xavier_normal_init(ttml::autograd::TensorPtr& t, const ttnn::Shape& shape, 
 void kaiming_uniform_init(ttml::autograd::TensorPtr& t, const ttnn::Shape& shape, int fan_in) {
     auto* device = &autograd::ctx().get_device();
     assert(device);
-    size_t volume = tt::tt_metal::compute_volume(shape);
+    size_t volume = shape.logical_shape().volume();
     std::vector<float> vec(volume);
     kaiming_uniform_init(vec, fan_in);
 
@@ -64,7 +64,7 @@ void kaiming_uniform_init(ttml::autograd::TensorPtr& t, const ttnn::Shape& shape
 void kaiming_normal_init(ttml::autograd::TensorPtr& t, const ttnn::Shape& shape, int fan_out) {
     auto* device = &autograd::ctx().get_device();
     assert(device);
-    size_t volume = tt::tt_metal::compute_volume(shape);
+    size_t volume = shape.logical_shape().volume();
     std::vector<float> vec(volume);
     kaiming_normal_init(vec, fan_out);
 

@@ -4,9 +4,11 @@ namespace tt::tt_metal {
 struct Tensor;
 class CommandQueue;
 struct MemoryConfig;
-class Device;
 class DeviceMesh;
 class LegacyShape;
+inline namespace v0 {
+class Device;
+}  // namespace v0
 }  // namespace tt::tt_metal
 
 namespace ttnn {

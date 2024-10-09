@@ -117,9 +117,13 @@ std::vector<T> untile_tensor_to_vec(const tt::tt_metal::Tensor& cpu_tensor) {
 }  // namespace
 namespace ttml::core {
 
-tt::tt_metal::Tensor zeros_like(const tt::tt_metal::Tensor& tensor) { return ttnn::zeros_like(tensor); }
+tt::tt_metal::Tensor zeros_like(const tt::tt_metal::Tensor& tensor) {
+    return ttnn::zeros_like(tensor);
+}
 
-tt::tt_metal::Tensor ones_like(const tt::tt_metal::Tensor& tensor) { return ttnn::ones_like(tensor); }
+tt::tt_metal::Tensor ones_like(const tt::tt_metal::Tensor& tensor) {
+    return ttnn::ones_like(tensor);
+}
 
 tt::tt_metal::Tensor full(const ttnn::Shape& shape, float value, tt::tt_metal::Device* device) {
     auto padded = shape.with_tile_padding();
@@ -156,15 +160,16 @@ tt::tt_metal::Tensor from_vector<float>(
     const std::vector<float>& buffer, const ttnn::Shape& shape, tt::tt_metal::Device* device, Layout layout) {
     const DataType data_type = DataType::BFLOAT16;
     MemoryConfig output_mem_config{};
-    size_t volume = tt::tt_metal::compute_volume(shape);
+    auto logical_shape = shape.logical_shape();
+    size_t volume = logical_shape.volume();
     if (buffer.size() != volume) {
         throw std::logic_error(
             fmt::format("Current buffer size is {} different from shape volume {}", buffer.size(), volume));
     }
     auto owned_buffer = create_owned_buffer_from_vector_of_floats(buffer, data_type);
     // remove possible paddings from the shape (it conflicts with ROW MAJOR)
-    auto unpadded_shape = core::create_shape(shape);
-    auto output = tt::tt_metal::Tensor(OwnedStorage{owned_buffer}, unpadded_shape, data_type, Layout::ROW_MAJOR);
+    auto output =
+        tt::tt_metal::Tensor(OwnedStorage{owned_buffer}, logical_shape.as_vector(), data_type, Layout::ROW_MAJOR);
     if (device != nullptr) {
         if (layout != Layout::ROW_MAJOR) {
             output = ttnn::to_layout(output, layout, std::nullopt, output_mem_config, device);
@@ -187,7 +192,8 @@ template <>
 tt::tt_metal::Tensor from_vector<uint32_t>(
     const std::vector<uint32_t>& buffer, const ttnn::Shape& shape, tt::tt_metal::Device* device, Layout layout) {
     MemoryConfig output_mem_config{};
-    size_t volume = tt::tt_metal::compute_volume(shape);
+    auto logical_shape = shape.logical_shape();
+    auto volume = logical_shape.volume();
     if (buffer.size() != volume) {
         throw std::logic_error(
             fmt::format("Current buffer size is {} different from shape volume {}", buffer.size(), volume));
@@ -195,8 +201,8 @@ tt::tt_metal::Tensor from_vector<uint32_t>(
 
     // remove possible paddings from the shape (it conflicts with ROW MAJOR)
     std::vector<uint32_t> buffer_copy = buffer;
-    auto unpadded_shape = core::create_shape(shape);
-    auto output = ttml_create_owned_tensor(std::move(buffer_copy), unpadded_shape, DataType::UINT32, Layout::ROW_MAJOR);
+    auto output = ttml_create_owned_tensor(
+        std::move(buffer_copy), logical_shape.as_vector(), DataType::UINT32, Layout::ROW_MAJOR);
     if (device != nullptr) {
         if (layout != Layout::ROW_MAJOR) {
             output = ttnn::to_layout(output, layout, std::nullopt, output_mem_config, device);
@@ -216,14 +222,13 @@ std::vector<uint32_t> to_vector<uint32_t>(const tt::tt_metal::Tensor& tensor) {
     return final_res;
 }
 
-bool is_tensor_initialized(const tt::tt_metal::Tensor& tensor) { return tensor.tensor_attributes != nullptr; }
-
-ttnn::Shape create_shape(const ttnn::Shape& shape) {
-    auto legacy_shape = tt::tt_metal::LegacyShape({shape[0], shape[1], shape[2], shape[3]});
-    return ttnn::Shape(legacy_shape);
+bool is_tensor_initialized(const tt::tt_metal::Tensor& tensor) {
+    return tensor.tensor_attributes != nullptr;
 }
 
-ttnn::Shape create_shape(const std::array<uint32_t, 4>& args) { return ttnn::Shape{args}; }
+ttnn::Shape create_shape(const std::array<uint32_t, 4>& args) {
+    return ttnn::Shape{args};
+}
 
 void print_tensor_stats(const tt::tt_metal::Tensor& tensor, const std::string& name) {
     if (tensor.get_dtype() == DataType::BFLOAT16) {
