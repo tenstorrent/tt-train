@@ -144,7 +144,7 @@ int main(int argc, char **argv) {
         for (const auto &[data, target] : train_dataloader) {
             optimizer.zero_grad();
             auto output = (*model)(data);
-            auto loss = ttml::ops::cross_entropy_loss(target, output);
+            auto loss = ttml::ops::cross_entropy_loss(output, target);
             auto loss_float = ttml::core::to_vector(loss->get_value())[0];
             loss_meter.update(loss_float, batch_size);
             if (training_step % logging_interval == 0) {

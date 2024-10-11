@@ -76,7 +76,7 @@ int main() {
         for (const auto& [data, targets] : train_dataloader) {
             optimizer.zero_grad();
             auto output = model(data);
-            auto loss = ttml::ops::mse_loss(targets, output);
+            auto loss = ttml::ops::mse_loss(output, targets);
             auto loss_float = ttml::core::to_vector(loss->get_value())[0];
             fmt::print("Step: {} Loss: {}\n", training_step++, loss_float);
             loss->backward();

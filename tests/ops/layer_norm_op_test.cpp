@@ -81,7 +81,7 @@ TEST(LayerNormOpTest, LayerNormOp_backward) {
 
     auto result = ops::layernorm(tensor, gamma, beta);
     auto target = autograd::create_tensor(core::zeros_like(tensor->get_value()));
-    result = ops::mse_loss(target, result);
+    result = ops::mse_loss(result, target);
     result->backward();
 
     auto tensor_grad = core::to_vector(tensor->get_grad());

@@ -269,7 +269,7 @@ int main(int argc, char **argv) {
         for (auto [features, target, masks, positions] : train_dataloader) {
             optimizer.zero_grad();
             auto output = (*model)(features, positions, masks);
-            auto loss = ttml::ops::cross_entropy_loss(target, output);
+            auto loss = ttml::ops::cross_entropy_loss(output, target);
             auto loss_float = ttml::core::to_vector(loss->get_value())[0];
             loss_meter.update(loss_float, features->get_value().get_shape()[0]);
             loss->backward();
