@@ -14,7 +14,7 @@ clang-tidy sources/examples/sample_app/main.cpp -p debug
 
 
 # TT-Metal
-init_tt_metal.sh is used to setup metal env variables.
+`init_tt_metal.sh` is used to setup metal env variables.
 Do not forget to call:
 ```
 git submodule update --init --recursive
