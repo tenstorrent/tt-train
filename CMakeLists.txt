@@ -42,7 +42,6 @@ message(STATUS "c++ Standard: ${CMAKE_CXX_STANDARD}")
 
 include(cmake/dependencies.cmake)
 
-# print $ENV{TT_METAL_HOME}
 message($ENV{TT_METAL_HOME})
 
 message(STATUS "TT_METAL_HOME: $ENV{TT_METAL_HOME}")

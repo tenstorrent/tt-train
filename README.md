@@ -17,7 +17,7 @@ source ./init_repo.sh
 You have two options for building the project:
 
 ## 1. VSCode
-* Install the CMake extension for VSCode.
+* Install the CMake and direnv extensions for VSCode.
 * Use UI to build all targets.
 
 ## 2. Terminal
