@@ -39,3 +39,5 @@ build/
 .cache/
 
 Testing/
+
+.envrc
