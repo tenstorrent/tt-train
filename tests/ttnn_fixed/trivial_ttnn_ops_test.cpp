@@ -3,9 +3,11 @@
 #include <gtest/gtest.h>
 
 #include <memory>
+#include <ttnn/operations/core/compute_kernel/compute_kernel_config.hpp>
 #include <vector>
 
 #include "autograd/auto_context.hpp"
+#include "core/compute_kernel_config.hpp"
 #include "core/device.hpp"
 #include "core/tt_tensor_utils.hpp"
 #include "core/ttnn_all_includes.hpp"
@@ -81,6 +83,34 @@ TEST(TrivialTnnFixedTest, TestStableSoftmax_AllNegative) {
     EXPECT_NEAR(tensor_data[1], -99.F, 1e-2);
 
     auto res = ttml::ttnn_fixed::softmax(tensor, /* dim */ 3);
+    auto res_vector = ttml::core::to_vector(res);
+    EXPECT_NEAR(res_vector[0], 0.2689F, 2e-2);
+    EXPECT_NEAR(res_vector[1], 0.7311F, 2e-2);
+}
+
+TEST(TrivialTnnFixedTest, TestOriginalStableSoftmax_AllNegative) {
+    auto* device = &ttml::autograd::ctx().get_device();
+
+    const size_t batch_size = 1U;
+    const size_t features = 2U;
+    std::vector<float> data(batch_size * features);
+    for (int i = 0; i < data.size(); ++i) {
+        data[i] = -100.F + static_cast<float>(i);
+    }
+    auto shape = ttml::core::create_shape({batch_size, 1, 1, features});
+    auto tensor = ttml::core::from_vector(data, shape, device);
+    auto tensor_data = ttml::core::to_vector(tensor);
+    EXPECT_NEAR(tensor_data[0], -100.F, 1e-2);
+    EXPECT_NEAR(tensor_data[1], -99.F, 1e-2);
+    auto compute_kernel_config = ttml::core::ComputeKernelConfig::precise();
+    // setting it false because it become totally broken with fp32_dest_acc_en = true
+    compute_kernel_config.fp32_dest_acc_en = false;
+    auto res = ttnn::softmax(
+        tensor,
+        /* dim */ 3,
+        /*memory_config */ std::nullopt,
+        ttml::core::ComputeKernelConfig::precise(),
+        /*stable*/ true);
     auto res_vector = ttml::core::to_vector(res);
     EXPECT_NEAR(res_vector[0], 0.2689F, 2e-2);
     EXPECT_NEAR(res_vector[1], 0.7311F, 2e-2);
