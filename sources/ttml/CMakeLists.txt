@@ -70,16 +70,13 @@ target_compile_definitions(ttml PUBLIC
     FMT_HEADER_ONLY
 )
 
-
 target_link_libraries(ttml PUBLIC 
-xtensor
-xtl
+    xtensor
+    xtl
 )
 
 message(STATUS "xtensor_SOURCE_DIR: ${xtensor_SOURCE_DIR}")
 message(STATUS "xtl_SOURCE_DIR: ${xtl_SOURCE_DIR}")
-#target_include_directories(ttml PUBLIC ${xtl_SOURCE_DIR}/include)
-
 
 message(STATUS "msgpack_SOURCE_DIR: ${msgpack_SOURCE_DIR}")
 target_include_directories(ttml PUBLIC ${msgpack_SOURCE_DIR}/include)
