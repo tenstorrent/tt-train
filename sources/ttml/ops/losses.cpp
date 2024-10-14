@@ -12,7 +12,7 @@
 namespace ttml::ops {
 
 autograd::TensorPtr mse_loss(
-    const autograd::TensorPtr& target, const autograd::TensorPtr& prediction, ReduceType reduce) {
+    const autograd::TensorPtr& prediction, const autograd::TensorPtr& target, ReduceType reduce) {
     auto difference = ops::sub(target, prediction);  // TODO: @rfurko-tt use "ttnn::squared_difference"
     auto squared_difference =
         ops::mul(difference, difference);  // TODO: need to add backward "ttnn::squared_difference_bw" might be faster
@@ -24,7 +24,7 @@ autograd::TensorPtr mse_loss(
 }
 
 autograd::TensorPtr cross_entropy_loss_without_reduce_(
-    const autograd::TensorPtr& target, const autograd::TensorPtr& prediction) {
+    const autograd::TensorPtr& prediction, const autograd::TensorPtr& target) {
     const float eps = 1e-6F;
     auto prediction_tensor = ttnn_fixed::softmax(prediction->get_value(), 3);
     auto prediction_tensor_clipped = ttnn::clip(prediction_tensor, eps, 1.0F);
@@ -46,8 +46,8 @@ autograd::TensorPtr cross_entropy_loss_without_reduce_(
 }
 
 autograd::TensorPtr cross_entropy_loss(
-    const autograd::TensorPtr& target, const autograd::TensorPtr& prediction, ReduceType reduce) {
-    auto loss = cross_entropy_loss_without_reduce_(target, prediction);
+    const autograd::TensorPtr& prediction, const autograd::TensorPtr& target, ReduceType reduce) {
+    auto loss = cross_entropy_loss_without_reduce_(prediction, target);
     if (reduce == ReduceType::MEAN) {
         return ops::mean(loss);
     } else {

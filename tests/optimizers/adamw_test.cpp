@@ -52,7 +52,7 @@ TEST_F(AdamWFullTest, AdamWTest) {
     for (size_t step = 0; step < steps; ++step) {
         optimizer.zero_grad();
         auto prediction = model(data_tensor);
-        auto loss = ttml::ops::mse_loss(targets_tensor, prediction);
+        auto loss = ttml::ops::mse_loss(prediction, targets_tensor);
         auto loss_value = ttml::core::to_vector(loss->get_value())[0];
         losses.emplace_back(loss_value);
         loss->backward();

@@ -84,7 +84,7 @@ int main() {
     ttnn::graph::GraphProcessor graph_processor(mode);
     graph_processor.begin_graph_capture(mode);
     auto output = model(batch);
-    auto loss = ttml::ops::cross_entropy_loss(target, output);
+    auto loss = ttml::ops::cross_entropy_loss(output, target);
     auto forward_trace = graph_processor.end_graph_capture();
     auto forward_peak_l1_memory_usage = ttnn::graph::extract_peak_L1_memory_usage(forward_trace);
     auto forward_peak_DRAM_memory_usage = extract_peak_DRAM_memory_usage(forward_trace);

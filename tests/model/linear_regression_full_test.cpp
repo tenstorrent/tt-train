@@ -9,7 +9,9 @@
 
 class LinearRegressionFullTest : public ::testing::Test {
 protected:
-    void TearDown() override { ttml::autograd::ctx().reset_graph(); }
+    void TearDown() override {
+        ttml::autograd::ctx().reset_graph();
+    }
 };
 
 TEST_F(LinearRegressionFullTest, TestLinearRegressionFull) {
@@ -43,7 +45,7 @@ TEST_F(LinearRegressionFullTest, TestLinearRegressionFull) {
     for (size_t step = 0; step < steps; ++step) {
         optimizer.zero_grad();
         auto prediction = model(data_tensor);
-        auto loss = ttml::ops::mse_loss(targets_tensor, prediction);
+        auto loss = ttml::ops::mse_loss(prediction, targets_tensor);
         loss->backward();
         optimizer.step();
         ttml::autograd::ctx().reset_graph();
