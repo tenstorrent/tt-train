@@ -87,6 +87,7 @@ int main(int argc, char **argv) {
         dataset.test_images, dataset.test_labels);
 
     auto *device = &ttml::autograd::ctx().get_device();
+    device->enable_program_cache();
     std::function<BatchType(std::vector<DatasetSample> && samples)> collate_fn =
         [num_features, num_targets, device](std::vector<DatasetSample> &&samples) {
             const uint32_t batch_size = samples.size();
@@ -154,15 +155,16 @@ int main(int argc, char **argv) {
             if (training_step % logging_interval == 0) {
                 fmt::print("Step: {:5d} | Average Loss: {:.4f}\n", training_step, loss_meter.average());
             }
-            if (!model_path.empty() && training_step % model_save_interval == 0) {
-                fmt::print("Saving model to {}\n", model_path);
-                save_model_and_optimizer(model_path, model, optimizer, model_name, optimizer_name);
-            }
 
             loss->backward();
             optimizer.step();
             ttml::autograd::ctx().reset_graph();
             training_step++;
+        }
+
+        if (!model_path.empty()) {
+            fmt::print("Saving model to {}\n", model_path);
+            save_model_and_optimizer(model_path, model, optimizer, model_name, optimizer_name);
         }
 
         const float test_accuracy = evaluate(test_dataloader, model, num_targets);
