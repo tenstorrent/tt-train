@@ -7,7 +7,7 @@ if ! grep -q "eval \"\$(direnv hook bash)\"" ~/.bashrc; then
 fi
 touch .envrc
 echo export  ARCH_NAME=wormhole_b0 >> .envrc
-echo export  TT_METAL_HOME=${PWD}/tt-metal >> .envrc
-echo export  PYTHONPATH=${PWD}/tt-metal >> .envrc
+echo export  TT_METAL_HOME=${PWD}/3rd_party/tt-metal >> .envrc
+echo export  PYTHONPATH=${PWD}/3rd_party/tt-metal >> .envrc
 echo export  TT_METAL_ENV=dev >> .envrc
 direnv allow .
