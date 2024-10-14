@@ -109,7 +109,7 @@ TEST(TrivialTnnFixedTest, TestOriginalStableSoftmax_AllNegative) {
         tensor,
         /* dim */ 3,
         /*memory_config */ std::nullopt,
-        ttml::core::ComputeKernelConfig::precise(),
+        compute_kernel_config,
         /*stable*/ true);
     auto res_vector = ttml::core::to_vector(res);
     EXPECT_NEAR(res_vector[0], 0.2689F, 2e-2);
