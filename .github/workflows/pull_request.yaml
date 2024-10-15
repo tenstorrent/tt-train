@@ -26,7 +26,7 @@ jobs:
 
   clang-tidy:
     runs-on: ubuntu-latest
-    # container: ghcr.io/tenstorrent/tt-metal/tt-metalium/ubuntu-22.04-amd64:latest
+    container: ghcr.io/tenstorrent/tt-metal/tt-metalium/ubuntu-22.04-amd64:latest
     permissions:
       pull-requests: write
       # OPTIONAL: auto-closing conversations requires the `contents` permission
