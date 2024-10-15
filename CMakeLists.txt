@@ -70,6 +70,3 @@ add_subdirectory(sources)
 include(CTest)
 enable_testing()
 add_subdirectory(tests)
-
-
-

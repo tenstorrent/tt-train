@@ -73,5 +73,5 @@ target_link_libraries(tokenizers_cpp PUBLIC ${LIBC++} ${LIBC++ABI})
 target_compile_options(tokenizers_cpp PUBLIC -stdlib=libc++)
 
 target_link_libraries(ttml PUBLIC 
-tokenizers_cpp
+    tokenizers_cpp
 )
