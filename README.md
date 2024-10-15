@@ -6,11 +6,12 @@
 ```
 git submodule update --init --recursive
 ```
-2. Run setup script to configure env variables, direnv, clang-tidy and clang-format.
+2. Install CMake 3.30
+3. Run setup script to configure env variables, direnv, clang-tidy and clang-format.
 ```
 source ./init_repo.sh
 ```
-3. Navigate to `tt-metal` folder and follow repository instructions to build it
+4. Navigate to `tt-metal` folder and follow repository instructions to build it
 
 
 # Building the project:
