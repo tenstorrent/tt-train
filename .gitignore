@@ -40,4 +40,6 @@ build/
 
 Testing/
 
+venv/
+
 .envrc
