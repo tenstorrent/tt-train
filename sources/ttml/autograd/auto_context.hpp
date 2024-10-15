@@ -1,3 +1,7 @@
+// SPDX-FileCopyrightText: (c) 2024 Tenstorrent AI ULC
+//
+// SPDX-License-Identifier: Apache-2.0
+
 #pragma once
 
 #include <random>
@@ -49,5 +53,7 @@ private:
     core::Device device{0};
 };
 
-inline auto& ctx() { return AutoContext::get_instance(); }
+inline auto& ctx() {
+    return AutoContext::get_instance();
+}
 }  // namespace ttml::autograd

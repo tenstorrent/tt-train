@@ -1,3 +1,7 @@
+// SPDX-FileCopyrightText: (c) 2024 Tenstorrent AI ULC
+//
+// SPDX-License-Identifier: Apache-2.0
+
 #pragma once
 #include <algorithm>
 #include <random>
@@ -45,7 +49,8 @@ public:
     class Iterator {
     public:
         Iterator(DataLoader& data_loader, size_t start_index) :
-            m_data_loader(&data_loader), m_current_index(start_index) {}
+            m_data_loader(&data_loader), m_current_index(start_index) {
+        }
 
         Iterator& operator++() {
             m_current_index += m_data_loader->m_batch_size;
@@ -53,9 +58,13 @@ public:
             return *this;
         }
 
-        BatchType operator*() const { return m_data_loader->fetch_batch(m_current_index); }
+        BatchType operator*() const {
+            return m_data_loader->fetch_batch(m_current_index);
+        }
 
-        bool operator!=(const Iterator& other) const { return m_current_index != other.m_current_index; }
+        bool operator!=(const Iterator& other) const {
+            return m_current_index != other.m_current_index;
+        }
 
     private:
         core::not_null<DataLoader*> m_data_loader;
@@ -67,7 +76,9 @@ public:
         return Iterator(*this, 0);
     }
 
-    Iterator end() { return Iterator(*this, m_indices.size()); }
+    Iterator end() {
+        return Iterator(*this, m_indices.size());
+    }
 
 private:
     core::not_null<DatasetType*> m_dataset;

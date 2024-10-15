@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: (c) 2024 Tenstorrent AI ULC
+#
+# SPDX-License-Identifier: Apache-2.0
+
 # Description: Initialize the repository with the necessary configurations
 git config --local core.hooksPath .githooks/
 chmod +x .githooks/pre-commit

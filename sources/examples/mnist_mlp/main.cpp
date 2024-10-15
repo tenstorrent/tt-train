@@ -1,3 +1,7 @@
+// SPDX-FileCopyrightText: (c) 2024 Tenstorrent AI ULC
+//
+// SPDX-License-Identifier: Apache-2.0
+
 #include <CLI/CLI.hpp>
 #include <mnist/mnist_reader.hpp>
 #include <ttnn/operations/eltwise/ternary/where.hpp>
