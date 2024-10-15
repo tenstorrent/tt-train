@@ -1,3 +1,5 @@
+name: Build Tests
+
 on:
   workflow_call:
   workflow_dispatch:
@@ -15,6 +17,9 @@ jobs:
         with:
           submodules: recursive
           lfs: true
+      - name: LFS pull
+        run: |          
+          git submodule foreach --recursive git lfs pull
       - name: Build Metal
         run: | 
           cd 3rd_party/tt-metal
