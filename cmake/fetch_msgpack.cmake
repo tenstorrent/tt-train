@@ -23,5 +23,4 @@ set(MSGPACK_ENABLE_STATIC OFF CACHE INTERNAL "")
 set(MSGPACK_CXX20 ON CACHE INTERNAL "")
 set(MSGPACK_NO_BOOST ON CACHE BOOL "Disable Boost in msgpack" FORCE)
 
-FetchContent_MakeAvailable(msgpack)    
-
+FetchContent_MakeAvailable(msgpack)

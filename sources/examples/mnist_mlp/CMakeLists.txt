@@ -12,4 +12,4 @@ include_directories(${mnist_dataset_SOURCE_DIR}/include)
 # Add executable and link libraries
 add_executable(mnist_mlp ${SOURCES})
 target_link_libraries(mnist_mlp PRIVATE ttml)
-target_compile_definitions(mnist_mlp PRIVATE MNIST_DATA_LOCATION="${mnist_dataset_SOURCE_DIR}/")    
+target_compile_definitions(mnist_mlp PRIVATE MNIST_DATA_LOCATION="${mnist_dataset_SOURCE_DIR}/")
