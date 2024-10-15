@@ -8,8 +8,8 @@ on:
 jobs:
   run-tests:
     runs-on: ["n150"]
-    env:      
-      ARCH_NAME: wormhole_b0  
+    env:
+      ARCH_NAME: wormhole_b0
       TT_METAL_HOME: ${{ github.workspace }}/3rd_party/tt-metal
       PYTHONPATH: ${{ github.workspace }}/3rd_party/tt-metal
     steps:
@@ -18,34 +18,34 @@ jobs:
           submodules: recursive
           lfs: true
       - name: LFS pull
-        run: |          
+        run: |
           git submodule foreach --recursive git lfs pull
       - name: Install deps (cmake)
         run: |
           ./scripts/install_cmake_3_30.sh
       - name: Build Metal
-        run: | 
+        run: |
           cd 3rd_party/tt-metal
           ./build_metal.sh -b Release
           cd ../../
       - name: Build
         run: |
           cmake -DCMAKE_BUILD_TYPE=Release -B build -GNinja
-          cmake --build build --config Release --clean-first 
+          cmake --build build --config Release --clean-first
       - name: Test
         run: |
           cd build
-          ctest --no-tests=error --output-on-failure    
-          
+          ctest --no-tests=error --output-on-failure
+
   # Status check requires job with exact same name
   # This approach allows to further extend this workflow to allow for a multijob run
   validate-pr:
     if: ${{ always() }}
-    runs-on: ubuntu-latest    
+    runs-on: ubuntu-latest
     needs: [run-tests]
     steps:
       - run: |
-          test_result="${{ needs.run-tests.result}}"                    
+          test_result="${{ needs.run-tests.result}}"
           if [[ $test_result == "success" ]] ; then
             exit 0
           else
