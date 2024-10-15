@@ -2,6 +2,8 @@
 #
 # SPDX-License-Identifier: Apache-2.0
 
+# Initialize submodules
+git submodule update --init --recursive
 # Run setup script to configure env variables, direnv, clang-tidy and clang-format
 chmod +x init_repo.sh
 source ./init_repo.sh
