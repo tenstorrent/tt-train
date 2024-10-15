@@ -1,0 +1,15 @@
+on:
+  workflow_call:
+  workflow_dispatch:
+  merge_group:
+
+jobs:
+  run-tests:
+    runs-on: ["n150"]
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+      - name: Check Checkout
+        run: |
+          echo "Success!"
