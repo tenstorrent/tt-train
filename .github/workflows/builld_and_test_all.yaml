@@ -20,9 +20,6 @@ jobs:
       - name: LFS pull
         run: |
           git submodule foreach --recursive git lfs pull
-      - name: Install deps (cmake)
-        run: |
-          ./scripts/install_cmake_3_30.sh
       - name: Build Metal
         run: |
           cd 3rd_party/tt-metal
