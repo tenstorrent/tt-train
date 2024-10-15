@@ -10,14 +10,16 @@
 using namespace ttml::datasets;
 
 class RandomSplitTest : public ::testing::Test {
-   protected:
+protected:
     void SetUp() override {
         data = {{1.0, 2.0}, {3.0, 4.0}, {5.0, 6.0}, {7.0, 8.0}};
         targets = {0, 1, 0, 1};
         dataset = std::make_unique<InMemoryDataset<std::vector<float>, int>>(data, targets);
     }
 
-    void TearDown() override { dataset = nullptr; }
+    void TearDown() override {
+        dataset = nullptr;
+    }
 
     std::vector<std::vector<float>> data;
     std::vector<int> targets;

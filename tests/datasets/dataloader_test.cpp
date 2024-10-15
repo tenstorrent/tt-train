@@ -11,7 +11,7 @@
 
 using InMemoryDatasetFloatVecInt = ttml::datasets::InMemoryDataset<std::vector<float>, int>;
 class DataLoaderTest : public ::testing::Test {
-   protected:
+protected:
     void SetUp() override {
         data = {{1.0, 2.0, 3.0}, {4.0, 5.0, 6.0}, {7.0, 8.0, 9.0}, {10.0, 11.0, 12.0}};
 
@@ -20,7 +20,9 @@ class DataLoaderTest : public ::testing::Test {
         dataset = std::make_unique<InMemoryDatasetFloatVecInt>(data, targets);
     }
 
-    void TearDown() override { dataset = nullptr; }
+    void TearDown() override {
+        dataset = nullptr;
+    }
 
     std::vector<std::vector<float>> data;
     std::vector<int> targets;

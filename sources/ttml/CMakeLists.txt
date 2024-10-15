@@ -19,7 +19,7 @@ target_include_directories(ttml SYSTEM PUBLIC
     $ENV{TT_METAL_HOME}/ttnn/cpp/ttnn/deprecated
     $ENV{TT_METAL_HOME}/tt_metal/third_party/magic_enum
     ${reflect_SOURCE_DIR}
-    ${flatbuffers_include_dir} 
+    ${flatbuffers_include_dir}
     ${nng_include_dir}
 
 )
@@ -46,7 +46,7 @@ target_link_libraries(ttml PUBLIC
     magic_enum
 )
 
-target_link_libraries(ttml PUBLIC 
+target_link_libraries(ttml PUBLIC
     yaml-cpp::yaml-cpp
 )
 
@@ -54,7 +54,7 @@ target_compile_definitions(ttml PUBLIC
     FMT_HEADER_ONLY
 )
 
-target_link_libraries(ttml PUBLIC 
+target_link_libraries(ttml PUBLIC
     xtensor
     xtl
 )
@@ -72,6 +72,6 @@ target_include_directories(ttml PUBLIC ${TOKENZIER_CPP_PATH}/include)
 target_link_libraries(tokenizers_cpp PUBLIC ${LIBC++} ${LIBC++ABI})
 target_compile_options(tokenizers_cpp PUBLIC -stdlib=libc++)
 
-target_link_libraries(ttml PUBLIC 
+target_link_libraries(ttml PUBLIC
     tokenizers_cpp
 )
