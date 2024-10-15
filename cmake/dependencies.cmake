@@ -23,10 +23,6 @@ CPMAddPackage(
     "YAML_BUILD_SHARED_LIBS OFF"
 )
 
-if (yaml-cpp_ADDED)
-  target_link_libraries(yaml-cpp PUBLIC ${LIBC++} ${LIBC++ABI})
-  target_compile_options(yaml-cpp PUBLIC -stdlib=libc++)
-endif()
 
 ############################################################################################################################
 # googletest
@@ -40,13 +36,6 @@ CPMAddPackage(
   OPTIONS "INSTALL_GTEST OFF"
 )
 
-if (googletest_ADDED)
-    target_compile_options(gtest PRIVATE -Wno-implicit-int-float-conversion)
-    target_link_libraries(gtest PUBLIC ${LIBC++} ${LIBC++ABI})
-    target_compile_options(gtest PUBLIC -stdlib=libc++)
-    target_link_libraries(gtest_main PUBLIC ${LIBC++} ${LIBC++ABI})
-    target_compile_options(gtest_main PUBLIC -stdlib=libc++)
-endif()
 
 ############################################################################################################################
 # boost-ext reflect : https://github.com/boost-ext/reflect
@@ -67,11 +56,6 @@ CPMAddPackage(
   GITHUB_REPOSITORY fmtlib/fmt
   GIT_TAG 11.0.1
 )
-
-if (fmt_ADDED)
-  target_link_libraries(fmt PUBLIC ${LIBC++} ${LIBC++ABI})
-  target_compile_options(fmt PUBLIC -stdlib=libc++)
-endif()
 
 ############################################################################################################################
 # magic_enum : https://github.com/Neargye/magic_enum
