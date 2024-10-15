@@ -5,6 +5,8 @@
 # Run setup script to configure env variables, direnv, clang-tidy and clang-format
 chmod +x init_repo.sh
 source ./init_repo.sh
+# Direnv allow
+direnv allow .
 # Build metal library
 cd 3rd_party/tt-metal
 chmod +x build_metal.sh
