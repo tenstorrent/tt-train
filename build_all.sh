@@ -7,6 +7,7 @@ chmod +x init_repo.sh
 source ./init_repo.sh
 # Build metal library
 cd 3rd_party/tt-metal
+chmod +x build_metal.sh
 ./build_metal.sh -b Release
 cd ../..
 # Build project
