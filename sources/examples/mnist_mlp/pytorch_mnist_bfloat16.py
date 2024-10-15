@@ -51,7 +51,7 @@ class MLP(nn.Module):
         self.fc1 = nn.Linear(784, 128)
         self.fc2 = nn.Linear(128, 10)
         self.act = nn.ReLU()
-    
+
     def forward(self, x):
         x = x.view(-1, 784)
         x = self.act(self.fc1(x))

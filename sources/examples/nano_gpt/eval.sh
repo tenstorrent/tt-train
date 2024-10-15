@@ -6,4 +6,4 @@ RESET_BOARD="tt-smi -r 0"
 SEED=5489
 
 $RESET_BOARD
-$SCRIPT -p transformer.msgpack -s $SEED -e 
+$SCRIPT -p transformer.msgpack -s $SEED -e

@@ -2,11 +2,11 @@
 
 
 # Install
-1. Initialize and update submodules 
+1. Initialize and update submodules
 ```
 git submodule update --init --recursive
 ```
-2. Run setup script to configure env variables, direnv, clang-tidy and clang-format. 
+2. Run setup script to configure env variables, direnv, clang-tidy and clang-format.
 ```
 source ./init_repo.sh
 ```
