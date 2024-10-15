@@ -4,22 +4,6 @@ file(GLOB_RECURSE SOURCES LIST_DIRECTORIES true *.hpp *.cpp) # I am a bad person
 
 add_library(ttml STATIC ${SOURCES})
 
-add_library(stdlib INTERFACE)
-
-if(CMAKE_CXX_COMPILER_ID MATCHES "Clang" )
-    find_library(LIBC++ c++)
-    find_library(LIBC++ABI c++abi)
-    if(NOT LIBC++ OR NOT LIBC++ABI)
-        message(FATAL_ERROR "libc++ or libc++abi not found. Make sure you have libc++ and libc++abi installed and in your PATH")
-    endif()
-
-    target_link_libraries(ttml PUBLIC ${LIBC++} ${LIBC++ABI})
-    target_compile_options(ttml PUBLIC -stdlib=libc++)
-else()
-    target_link_libraries(ttml PUBLIC stdc++)
-    target_compile_options(ttml PUBLIC -fsized-deallocation)
-endif()
-
 target_include_directories(ttml SYSTEM PUBLIC
     # Metalium
     $ENV{TT_METAL_HOME}
@@ -82,3 +66,12 @@ message(STATUS "msgpack_SOURCE_DIR: ${msgpack_SOURCE_DIR}")
 target_include_directories(ttml PUBLIC ${msgpack_SOURCE_DIR}/include)
 message(STATUS "cli11_SOURCE_DIR: ${CLI11_SOURCE_DIR}")
 target_include_directories(ttml PUBLIC ${CLI11_SOURCE_DIR}/include)
+
+target_include_directories(ttml PUBLIC ${TOKENZIER_CPP_PATH}/include)
+
+target_link_libraries(tokenizers_cpp PUBLIC ${LIBC++} ${LIBC++ABI})
+target_compile_options(tokenizers_cpp PUBLIC -stdlib=libc++)
+
+target_link_libraries(ttml PUBLIC 
+tokenizers_cpp
+)

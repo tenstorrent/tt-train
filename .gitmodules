@@ -1,3 +1,6 @@
 [submodule "tt-metal"]
 	path = 3rd_party/tt-metal
 	url = https://github.com/tenstorrent/tt-metal
+[submodule "tokenizers-cpp"]
+	path = 3rd_party/tokenizers-cpp
+	url = git@github.com:mlc-ai/tokenizers-cpp.git

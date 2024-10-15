@@ -37,6 +37,17 @@ set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS ON)
 
+if(CMAKE_CXX_COMPILER_ID MATCHES "Clang" )
+    find_library(LIBC++ c++)
+    find_library(LIBC++ABI c++abi)
+    if(NOT LIBC++ OR NOT LIBC++ABI)
+        message(FATAL_ERROR "libc++ or libc++abi not found. Make sure you have libc++ and libc++abi installed and in your PATH")
+    endif()
+# making it global settings for now
+    add_compile_options(-stdlib=libc++)
+    add_link_options(-stdlib=libc++)
+endif()
+
 
 message(STATUS "c++ Standard: ${CMAKE_CXX_STANDARD}")
 
@@ -48,11 +59,17 @@ message(STATUS "TT_METAL_HOME: $ENV{TT_METAL_HOME}")
 
 message($ENV{TT_METAL_HOME}/tt_metal/third_party/src/firmware/riscv/$ENV{ARCH_NAME})
 
-
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
+
+# 3rd party projects
+add_subdirectory(3rd_party/tokenizers-cpp)
+
+# ttml projects
 
 add_subdirectory(sources)
 include(CTest)
 enable_testing()
 add_subdirectory(tests)
+
+
 
