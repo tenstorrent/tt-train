@@ -1,3 +1,7 @@
+// SPDX-FileCopyrightText: (c) 2024 Tenstorrent AI ULC
+//
+// SPDX-License-Identifier: Apache-2.0
+
 #pragma once
 
 #include <cassert>
@@ -20,7 +24,9 @@ public:
     DatasetBase& operator=(DatasetBase&&) = default;
     ~DatasetBase() = default;
 
-    [[nodiscard]] size_t get_size() const { return static_cast<const Derived*>(this)->get_size_impl(); }
+    [[nodiscard]] size_t get_size() const {
+        return static_cast<const Derived*>(this)->get_size_impl();
+    }
 
     [[nodiscard]] Sample get_item(size_t index) const {
         return static_cast<const Derived*>(this)->get_item_impl(index);

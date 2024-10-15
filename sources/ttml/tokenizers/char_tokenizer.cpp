@@ -1,3 +1,7 @@
+// SPDX-FileCopyrightText: (c) 2024 Tenstorrent AI ULC
+//
+// SPDX-License-Identifier: Apache-2.0
+
 #include "char_tokenizer.hpp"
 
 #include <sstream>
@@ -37,7 +41,9 @@ std::string CharTokenizer::decode(const std::vector<uint32_t>& tokens) const {
     }
     return oss.str();
 }
-const CharTokenizer::Vocabulary& CharTokenizer::get_vocabulary() const { return m_vocabulary; }
+const CharTokenizer::Vocabulary& CharTokenizer::get_vocabulary() const {
+    return m_vocabulary;
+}
 
 void CharTokenizer::build_reverse_mapping() {
     for (const auto& [token, id] : m_vocabulary) {
@@ -45,6 +51,8 @@ void CharTokenizer::build_reverse_mapping() {
     }
 }
 
-uint32_t CharTokenizer::get_vocab_size() const { return static_cast<uint32_t>(m_vocabulary.size()); }
+uint32_t CharTokenizer::get_vocab_size() const {
+    return static_cast<uint32_t>(m_vocabulary.size());
+}
 
 }  // namespace ttml::tokenizers

@@ -1,3 +1,7 @@
+// SPDX-FileCopyrightText: (c) 2024 Tenstorrent AI ULC
+//
+// SPDX-License-Identifier: Apache-2.0
+
 #include "in_memory_char_dataset.hpp"
 
 #include <cstddef>
@@ -5,7 +9,8 @@
 namespace ttml::datasets {
 
 InMemoryCharDataset::InMemoryCharDataset(const std::vector<uint32_t>& tokens, uint32_t seq_length) :
-    m_tokens(tokens), m_seq_length(seq_length) {}
+    m_tokens(tokens), m_seq_length(seq_length) {
+}
 
 [[nodiscard]] size_t InMemoryCharDataset::get_size_impl() const {
     if (m_tokens.size() <= m_seq_length) {

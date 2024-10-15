@@ -1,3 +1,7 @@
+// SPDX-FileCopyrightText: (c) 2024 Tenstorrent AI ULC
+//
+// SPDX-License-Identifier: Apache-2.0
+
 #pragma once
 
 #include "core/not_null.hpp"
@@ -10,11 +14,14 @@ class DatasetSubset : public DatasetBase<
                           DatasetSubset<DatasetType>,
                           typename DatasetType::DataTypeT,
                           typename DatasetType::TargetTypeT> {
-   public:
+public:
     DatasetSubset(const DatasetType& dataset, const std::vector<size_t>& indices) :
-        m_dataset(&dataset), m_indices(indices) {}
+        m_dataset(&dataset), m_indices(indices) {
+    }
 
-    [[nodiscard]] size_t get_size_impl() const { return m_indices.size(); }
+    [[nodiscard]] size_t get_size_impl() const {
+        return m_indices.size();
+    }
 
     [[nodiscard]] DatasetType::Sample get_item_impl(size_t index) const {
         if (index >= m_indices.size()) {
@@ -23,7 +30,7 @@ class DatasetSubset : public DatasetBase<
         return m_dataset->get_item(m_indices[index]);
     }
 
-   private:
+private:
     core::not_null<const DatasetType*> m_dataset;
     std::vector<size_t> m_indices;
 };

@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: (c) 2024 Tenstorrent AI ULC
+#
+# SPDX-License-Identifier: Apache-2.0
+
 # Description: This file is used to initialize the environment variables for the TT-Metal project.
 # Called from the init_repo.sh file.
 
