@@ -2,7 +2,7 @@
 
 
 # Install
-1. Initialize and update submodules 
+1. Initialize and update submodules
 ```
 git submodule update --init --recursive
 ```

@@ -18,7 +18,9 @@
 
 class AutogradTest : public ::testing::Test {
 protected:
-    void TearDown() override { ttml::autograd::ctx().reset_graph(); }
+    void TearDown() override {
+        ttml::autograd::ctx().reset_graph();
+    }
 };
 
 TEST_F(AutogradTest, TestSum) {

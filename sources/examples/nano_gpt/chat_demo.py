@@ -100,7 +100,7 @@ def main():
                     full_response += "  "
                 full_response += chunk
                 message_placeholder.markdown(full_response + "▌")
-            
+
             message_placeholder.markdown(full_response)
 
         # Add assistant response to chat history
