@@ -8,4 +8,4 @@
 
 namespace ttml::core {
 std::string demangle(const char* name);
-}
+}  // namespace ttml::core

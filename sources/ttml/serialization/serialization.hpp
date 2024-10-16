@@ -12,7 +12,7 @@
 
 namespace ttml::optimizers {
 class OptimizerBase;
-}
+}  // namespace ttml::optimizers
 namespace ttml::serialization {
 class MsgPackFile;
 
