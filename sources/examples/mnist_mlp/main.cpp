@@ -21,6 +21,14 @@
 
 using ttml::autograd::TensorPtr;
 
+class StrangeClass {
+public:
+    StrangeClass() = default;
+
+    int &a;
+    int &b;
+};
+
 using DatasetSample = std::pair<std::vector<uint8_t>, uint8_t>;
 using BatchType = std::pair<TensorPtr, TensorPtr>;
 using DataLoader = ttml::datasets::DataLoader<
