@@ -27,7 +27,7 @@ jobs:
         run: |
           commit=$(git -C 3rd_party/tt-metal rev-parse HEAD)
           echo "Submodule commit hash: $commit"
-          echo "::set-output name=commit::$commit"
+          echo "commit=$commit" >> $GITHUB_OUTPUT
 
       - name: Restore Metal Build Cache
         id: restore-cache
@@ -44,6 +44,12 @@ jobs:
           cd 3rd_party/tt-metal
           ./build_metal.sh -b Release
           cd ../../
+
+      - name: Verify Metal Build Directories
+        run: |
+          ls -la ${{ env.TT_METAL_HOME }}
+          ls -la ${{ env.TT_METAL_HOME }}/build_Release
+          ls -la ${{ env.TT_METAL_HOME }}/build
       
       # See https://github.com/marketplace/actions/cache#cache-limits
       - name: Update Metal Build Cache
