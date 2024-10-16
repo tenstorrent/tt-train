@@ -6,7 +6,6 @@ on:
 jobs:
   validate-pr:
     runs-on: ubuntu-latest
-
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -40,12 +39,15 @@ jobs:
         ref: ${{ github.event.pull_request.head.sha }}
         fetch-depth: 0
         submodules: "recursive"
+
     - name: Set safe directory for Git
       run: git config --global --add safe.directory $GITHUB_WORKSPACE
+
     - name: Fetch base branch
       run: |
         git remote add upstream "https://github.com/${{ github.event.pull_request.base.repo.full_name }}"
         git fetch --no-tags upstream "${{ github.event.pull_request.base.ref }}"
+
     - name: Install dependencies
       run: |
         sudo apt-get update
@@ -53,17 +55,21 @@ jobs:
         source ~/.bashrc
         # sudo DEBIAN_FRONTEND=noninteractive apt-get install -y clang-tidy-17 python3.11 python3.11-venv python3.11-dev
         # sudo ln -s $(which clang-tidy-17) /usr/local/bin/clang-tidy
+
     - name: Prepare compile_commands.json
       run: |
         cmake -B build -DCMAKE_EXPORT_COMPILE_COMMANDS=ON -DCMAKE_DISABLE_PRECOMPILE_HEADERS=ON
+
     - name: Create results directory
       run: |
         mkdir clang-tidy-result
+
     - name: Analyze
       run: |
-        git diff -U0 "$(git merge-base HEAD "upstream/${{ github.event.pull_request.base.ref }}")" | python3 clang-tidy-diff-17.py -p1 -path build -export-fixes clang-tidy-result/fixes.yml -j4
+        git diff -U0 "$(git merge-base HEAD "upstream/${{ github.event.pull_request.base.ref }}")" | python3 /usr/bin/clang-tidy-diff-17.py -p1 -path build -export-fixes clang-tidy-result/fixes.yml -j4
       timeout-minutes: 10
       continue-on-error: true
+
     - name: Run clang-tidy-pr-comments action
       uses: platisd/clang-tidy-pr-comments@837ad8077b1f554dab31a8a43e8bb12c89d2f144
       with:
@@ -79,5 +85,6 @@ jobs:
         # pull requests
         suggestions_per_comment: 10
       continue-on-error: true
+
     - name: Final step to signal success
       run: echo "The job passes even if 3rd party action fails."
