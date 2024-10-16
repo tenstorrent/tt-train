@@ -31,11 +31,11 @@ jobs:
 
       - name: Restore Metal Build Cache
         id: restore-cache
-        uses: actions/cache@v4
+        uses: actions/cache/restore@v4
         with:
           path: 
-            3rd_party/tt-metal/build
             3rd_party/tt-metal/build_Release
+            3rd_party/tt-metal/build
           key: metal-build-${{ steps.submodule-commit.outputs.commit }}
       
       - name: Build Metal
@@ -48,11 +48,11 @@ jobs:
       # See https://github.com/marketplace/actions/cache#cache-limits
       - name: Update Metal Build Cache
         if: steps.restore-cache.outputs.cache-hit != 'true'
-        uses: actions/cache@v4
+        uses: actions/cache/save@v4
         with:
           path:
-            3rd_party/tt-metal/build
             3rd_party/tt-metal/build_Release
+            3rd_party/tt-metal/build
           key: metal-build-${{ steps.submodule-commit.outputs.commit }}
           
       - name: Build
