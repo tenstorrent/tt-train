@@ -51,6 +51,10 @@ jobs:
         sudo apt-get update
         sudo DEBIAN_FRONTEND=noninteractive apt-get install -y clang-tidy-17 libc++-17-dev libc++abi-17-dev
         source ~/.bashrc
+        which clang-tidy
+        which clang-tidy-17
+        which clang-tidy-diff
+        which clang-tidy-diff-17
         # sudo DEBIAN_FRONTEND=noninteractive apt-get install -y clang-tidy-17 python3.11 python3.11-venv python3.11-dev
         # sudo ln -s $(which clang-tidy-17) /usr/local/bin/clang-tidy
     - name: Prepare compile_commands.json
