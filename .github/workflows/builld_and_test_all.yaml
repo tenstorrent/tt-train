@@ -27,10 +27,10 @@ jobs:
       # actions/checkout runs `git clean -ffdx && git reset --hard HEAD` before fetching
       # but `build`, `build_Release`, `built` (contains compiled kernels) dirs are not removed because they are in .gitignore
       # Keep things hermetic - wiping those folders
+      # Not removing `build` - it is a symlink to `build_Release` and actions/cache does can't store a symlink
       - name: Clear Metal Repo Artifacts
         run: |
-          rm -rf ${{ env.TT_METAL_HOME }}/build_Release
-          rm -rf ${{ env.TT_METAL_HOME }}/build
+          rm -rf ${{ env.TT_METAL_HOME }}/build_Release          
           rm -rf ${{ env.TT_METAL_HOME }}/built          
           
       - name: Get submodule commit hash
