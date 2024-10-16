@@ -26,12 +26,12 @@ jobs:
       
       # actions/checkout runs `git clean -ffdx && git reset --hard HEAD` before fetching
       # but `build`, `build_Release`, `built` (contains compiled kernels) dirs are not removed because they are in .gitignore
-      # Keep things hermetic - wiping those folders
-      # Not removing `build` - it is a symlink to `build_Release` and actions/cache does can't store a symlink
+      # Keep things hermetic - wiping those folders      
       - name: Clear Metal Repo Artifacts
         run: |
-          rm -rf ${{ env.TT_METAL_HOME }}/build_Release          
-          rm -rf ${{ env.TT_METAL_HOME }}/built          
+          rm -rf ${{ env.TT_METAL_HOME }}/build
+          rm -rf ${{ env.TT_METAL_HOME }}/build_Release
+          rm -rf ${{ env.TT_METAL_HOME }}/built
           
       - name: Get submodule commit hash
         id: submodule-commit
@@ -44,9 +44,16 @@ jobs:
         id: restore-cache
         uses: actions/cache/restore@v4
         with:
-          path: 
+          path:
             ${{ env.TT_METAL_HOME }}/build_Release
           key: metal-build-${{ steps.submodule-commit.outputs.commit }}
+
+      # Making sure that valid `build` symlink exists
+      # It can't be cached by actions/cache
+      - name: Restore Metal build -> build_Release symlink
+        if: steps.restore-cache.outputs.cache-hit == 'true'
+        run: |
+          ln -nsf ${{ env.TT_METAL_HOME }}/build_Release ${{ env.TT_METAL_HOME }}/build
       
       - name: Build Metal
         if: steps.restore-cache.outputs.cache-hit != 'true'
@@ -69,10 +76,10 @@ jobs:
           cmake -DCMAKE_BUILD_TYPE=Release -B build -GNinja
           cmake --build build --config Release --clean-first
       
-      - name: Test
+      - name: Tests
         run: |
           cd build
-          ctest --no-tests=error --output-on-failure
+          ctest --no-tests=error --output-on-failure          
 
   # Status check requires job with exact same name
   # This approach allows to further extend this workflow to allow for a multijob run
