@@ -4,7 +4,9 @@
 
 # Description: Initialize the repository with the necessary configurations
 sudo apt install clang-tidy-17
-sudo apt install clang-format=1:10.0-50~exp1
+sudo apt install clang-format-17
+sudo ln -sf /usr/bin/clang-tidy-17 /usr/bin/clang-tidy
+sudo ln -sf /usr/bin/clang-format-17 /usr/bin/clang-format
 sudo apt install pre-commit
 pre-commit install
 sudo apt  install direnv=2.21.2-1
