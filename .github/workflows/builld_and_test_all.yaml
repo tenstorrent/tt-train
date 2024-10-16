@@ -19,9 +19,20 @@ jobs:
         with:
           submodules: recursive
           lfs: true
+          
       - name: LFS pull
         run: |
           git submodule foreach --recursive git lfs pull
+      
+      # actions/checkout runs `git clean -ffdx && git reset --hard HEAD` before fetching
+      # but `build`, `build_Release`, `built` (contains compiled kernels) dirs are not removed because they are in .gitignore
+      # Keep things hermetic - wiping those folders
+      - name: Clear Metal Repo Artifacts
+        run: |
+          rm -rf ${{ env.TT_METAL_HOME }}/build_Release
+          rm -rf ${{ env.TT_METAL_HOME }}/build
+          rm -rf ${{ env.TT_METAL_HOME }}/built          
+          
       - name: Get submodule commit hash
         id: submodule-commit
         run: |
@@ -57,6 +68,7 @@ jobs:
         run: |
           cmake -DCMAKE_BUILD_TYPE=Release -B build -GNinja
           cmake --build build --config Release --clean-first
+      
       - name: Test
         run: |
           cd build
