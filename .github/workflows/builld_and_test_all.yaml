@@ -13,6 +13,8 @@ jobs:
       TT_METAL_HOME: ${{ github.workspace }}/3rd_party/tt-metal
       PYTHONPATH: ${{ github.workspace }}/3rd_party/tt-metal
     steps:
+      - name: Setup Telemetry
+        uses: catchpoint/workflow-telemetry-action@v2
       - uses: actions/checkout@v4
         with:
           submodules: recursive
