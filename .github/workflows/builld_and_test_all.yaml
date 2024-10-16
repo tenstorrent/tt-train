@@ -34,8 +34,8 @@ jobs:
         uses: actions/cache/restore@v4
         with:
           path: 
-            3rd_party/tt-metal/build_Release
-            3rd_party/tt-metal/build
+            ${{ env.TT_METAL_HOME }}/build_Release
+            ${{ env.TT_METAL_HOME }}/build
           key: metal-build-${{ steps.submodule-commit.outputs.commit }}
       
       - name: Build Metal
@@ -51,8 +51,8 @@ jobs:
         uses: actions/cache/save@v4
         with:
           path:
-            3rd_party/tt-metal/build_Release
-            3rd_party/tt-metal/build
+            ${{ env.TT_METAL_HOME }}/build_Release
+            ${{ env.TT_METAL_HOME }}/build
           key: metal-build-${{ steps.submodule-commit.outputs.commit }}
           
       - name: Build
