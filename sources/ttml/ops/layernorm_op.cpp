@@ -7,11 +7,6 @@
 #include <cstddef>
 #include <cstdint>
 #include <optional>
-#include <ttnn/deprecated/tt_dnn/op_library/moreh_layernorm/moreh_layernorm_op.hpp>
-#include <ttnn/deprecated/tt_dnn/op_library/moreh_layernorm_backward/moreh_layernorm_backward_op.hpp>
-#include <ttnn/operations/eltwise/binary/binary.hpp>
-#include <ttnn/operations/eltwise/unary/unary.hpp>
-#include <ttnn/tensor/tensor.hpp>
 
 #include "autograd/auto_context.hpp"
 #include "autograd/graph.hpp"
@@ -33,7 +28,7 @@ autograd::TensorPtr layernorm(
         core::create_shape({tensor_shape[0], tensor_shape[1], tensor_shape[2], 1}), &autograd::ctx().get_device());
     auto output = core::zeros_like(tensor->get_value());
 
-    auto out_tensors = tt::operations::primary::moreh_layernorm(
+    auto out_tensors = ttnn::moreh_layer_norm(
         tensor->get_value(),
         1,
         1e-6F,
@@ -55,7 +50,7 @@ autograd::TensorPtr layernorm(
         auto gamma_grad = core::zeros_like(gamma->get_value());
         auto beta_grad = core::zeros_like(beta->get_value());
 
-        auto res = tt::operations::primary::moreh_layernorm_backward(
+        auto res = ttnn::moreh_layer_norm_backward(
             out->get_grad(),
             tensor->get_value(),
             mean,
