@@ -13,7 +13,7 @@ target_include_directories(ttml SYSTEM PUBLIC
     $ENV{TT_METAL_HOME}/tt_metal/hw/inc/wormhole/wormhole_b0_defines
     $ENV{TT_METAL_HOME}/tt_metal/hw/inc/
     $ENV{TT_METAL_HOME}/tt_metal/third_party/umd/src/firmware/riscv/wormhole
-
+    $ENV{TT_METAL_HOME}/tt_metal/third_party/umd/device
     # TTNN
     $ENV{TT_METAL_HOME}/ttnn/cpp
     $ENV{TT_METAL_HOME}/ttnn/cpp/ttnn/deprecated
