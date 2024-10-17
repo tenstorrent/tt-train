@@ -4,6 +4,7 @@
 
 #include "tt_tensor_utils.hpp"
 
+#include <fmt/base.h>
 #include <fmt/color.h>
 
 #include <common/bfloat16.hpp>
@@ -12,13 +13,7 @@
 #include <functional>
 #include <optional>
 #include <stdexcept>
-#include <ttnn/operations/core/to_dtype/to_dtype_op.hpp>
-#include <ttnn/operations/creation.hpp>
-#include <ttnn/operations/data_movement/tilize_with_val_padding/tilize_with_val_padding.hpp>
-#include <ttnn/tensor/types.hpp>
-#include <ttnn/types.hpp>
 
-#include "fmt/base.h"
 #include "ttnn_all_includes.hpp"
 
 namespace {
@@ -179,14 +174,20 @@ tt::tt_metal::Tensor from_vector<float>(
         tt::tt_metal::Tensor(OwnedStorage{owned_buffer}, logical_shape.as_vector(), data_type, Layout::ROW_MAJOR);
 
     auto to_device_odd_slow = [&]() {
-        output = ttnn::to_layout(output, layout, std::nullopt, output_mem_config, device);
+        if (layout == Layout::TILE) {
+            output = ttnn::to_layout(output, layout, std::nullopt, output_mem_config, device);
+        }
+
         output = ttnn::to_device(output, device, output_mem_config);
         return output;
     };
 
     auto to_device_even_fast = [&]() {
         output = ttnn::to_device(output, device, output_mem_config);
-        output = ttnn::tilize_with_zero_padding(output, output_mem_config, std::nullopt, false);
+        if (layout == Layout::TILE) {
+            output = ttnn::tilize_with_zero_padding(output, output_mem_config, std::nullopt, false);
+        }
+
         return output;
     };
 
@@ -208,6 +209,9 @@ std::vector<float> to_vector<float>(const tt::tt_metal::Tensor& tensor) {
     return final_res;
 }
 
+/*
+From vector uint32 doesn't support tilize_with_zero_padding on device
+*/
 template <>
 tt::tt_metal::Tensor from_vector<uint32_t>(
     const std::vector<uint32_t>& buffer, const ttnn::Shape& shape, tt::tt_metal::Device* device, Layout layout) {
