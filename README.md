@@ -1,4 +1,4 @@
-# TT-Tron: CPP ML training framework
+# tt-train: CPP ML training framework
 
 
 # Install
