@@ -36,6 +36,7 @@
 #include <ttnn/operations/embedding/embedding.hpp>                                            // NOLINT
 #include <ttnn/operations/embedding_backward/embedding_backward.hpp>                          // NOLINT
 #include <ttnn/operations/matmul/matmul.hpp>                                                  // NOLINT
+#include <ttnn/operations/moreh/moreh_adamw/moreh_adamw.hpp>                                  // NOLINT
 #include <ttnn/operations/moreh/moreh_layer_norm/moreh_layer_norm.hpp>                        // NOLINT
 #include <ttnn/operations/moreh/moreh_layer_norm_backward/moreh_layer_norm_backward.hpp>      // NOLINT
 #include <ttnn/operations/moreh/moreh_linear_backward/moreh_linear_backward.hpp>              // NOLINT

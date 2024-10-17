@@ -146,7 +146,7 @@ int main(int argc, char **argv) {
     uint32_t batch_size = config.batch_size;
     uint32_t sequence_length = config.sequence_length;
     std::string model_path = "/tmp/nano_gpt.msgpack";
-    std::string data_path = "/home/ubuntu/ML-Framework-CPP/sources/examples/nano_gpt/data/shakespeare.txt";
+    std::string data_path = std::string(DATA_FOLDER) + "/shakespeare.txt";
     bool is_eval = false;
 
     app.add_option("-b,--batch_size", batch_size, "Batch size")->default_val(batch_size);
@@ -269,7 +269,7 @@ int main(int argc, char **argv) {
     }
 
     const uint32_t num_epochs = config.num_epochs;
-    std::ofstream loss_file("loss.txt");
+    std::ofstream loss_file("/tmp/loss.txt");
     for (uint32_t epoch = 0; epoch < num_epochs; ++epoch) {
         for (auto [features, target, masks, positions] : train_dataloader) {
             optimizer.zero_grad();
