@@ -7,11 +7,6 @@
 #include <cstddef>
 #include <cstdint>
 #include <optional>
-#include <ttnn/operations/eltwise/binary/binary.hpp>
-#include <ttnn/operations/eltwise/unary/unary.hpp>
-#include <ttnn/operations/moreh/moreh_layer_norm/moreh_layer_norm.hpp>
-#include <ttnn/operations/moreh/moreh_layer_norm_backward/moreh_layer_norm_backward.hpp>
-#include <ttnn/tensor/tensor.hpp>
 
 #include "autograd/auto_context.hpp"
 #include "autograd/graph.hpp"

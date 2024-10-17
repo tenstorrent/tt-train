@@ -73,6 +73,8 @@ void generate(
     }
 
     auto *device = &ttml::autograd::ctx().get_device();
+    device->enable_program_cache();
+
     auto prompt_tokens = tokenizer.encode(prompt);
 
     auto pad_token_id = 0U;
@@ -258,7 +260,6 @@ int main(int argc, char **argv) {
     }
 
     if (is_eval) {
-        device->enable_program_cache();
         fmt::print("\nEvaluation started\n");
         for (;;) {
             generate(model, tokenizer, sequence_length, config.num_heads);
