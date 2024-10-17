@@ -50,7 +50,7 @@ void AdamW::step() {
         auto& second_moment = second_moment_ptr->get_value();
 
         const auto& gradients = tensor_ptr->get_grad();
-        auto out_vec = ttnn::moreh_adamw(
+        ttnn::moreh_adamw(
             tensor_ptr->get_value(),
             gradients,
             first_moment,
@@ -63,15 +63,12 @@ void AdamW::step() {
             m_steps,
             /* amsgrad */ false,
             /* max_exp_avg_sq_in */ std::nullopt,
-            /* param_out */ std::nullopt,
-            /* exp_avg_out */ std::nullopt,
-            /* exp_avg_sq_out */ std::nullopt,
+            /* param_out */ tensor_ptr->get_value(),
+            /* exp_avg_out */ first_moment,
+            /* exp_avg_sq_out */ second_moment,
             /* max_exp_avg_sq_out */ std::nullopt,
             /* memory_config */ std::nullopt,
             /* compute_kernel_config */ std::nullopt);
-        tensor_ptr->set_value(out_vec.at(0).value());
-        first_moment_ptr->set_value(out_vec.at(1).value());
-        second_moment_ptr->set_value(out_vec.at(2).value());
     }
 }
 
