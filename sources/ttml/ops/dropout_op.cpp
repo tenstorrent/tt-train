@@ -18,7 +18,8 @@ namespace ttml::ops {
 autograd::TensorPtr dropout(const autograd::TensorPtr& tensor, float probability) {
     auto mask = core::ones_like(tensor->get_value());
     // dropout seed is not properly used in ttnn::dropout
-    auto dropout_seed = autograd::ctx().get_generator()();
+    // auto dropout_seed = autograd::ctx().get_generator()();
+    auto dropout_seed = 0U;
     auto scaler = 1.0F / (1.0F - probability);
     mask = ttnn::dropout(mask, dropout_seed, probability, scaler);
     auto out = autograd::create_tensor();

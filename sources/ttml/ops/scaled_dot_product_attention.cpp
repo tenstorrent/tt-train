@@ -22,7 +22,7 @@ tt::tt_metal::Tensor matmul(
         /* output */ std::nullopt,
         /* bias */ std::nullopt,
         /* output_mem_config */ std::nullopt,
-        /* compute_kernel_config */ core::ComputeKernelConfig::precise());
+        /* compute_kernel_config */ core::ComputeKernelConfig::fast());
 }
 
 autograd::TensorPtr scaled_dot_product_attention(
@@ -47,39 +47,38 @@ autograd::TensorPtr scaled_dot_product_attention(
         matmul(attention_weights, value->get_value(), /* transpose_a */ false, /* transpose_b */ false);
     auto out = ttml::autograd::create_tensor(attention_qkv);
 
-    ttml::autograd::GradFunction grad =
-        [scale, query, key, value, qk_t, qk_scaled, attention_weights, attention_qkv, out, mask]() {
-            auto grad_output = out->get_grad();
-            // (B, H, S, S) x (B, H, S, E) -> (B, H, S, E)
-            auto grad_v = matmul(attention_weights, grad_output, /* transpose_a */ true, /* transpose_b */ false);
-            auto grad_attention_weights =
-                matmul(grad_output, value->get_value(), /* transpose_a */ false, /* transpose_b */ true);
-            auto grad_scaled_dot = ttnn::multiply(
-                attention_weights,
-                ttnn::subtract(
-                    grad_attention_weights,
-                    ttnn_fixed::sum_over_dim(ttnn::multiply(attention_weights, grad_attention_weights), 3)));
-            if (mask.has_value()) {
-                grad_scaled_dot = ttnn::multiply(grad_scaled_dot, mask.value()->get_value());
-            }
-            auto grad_q = matmul(
-                grad_scaled_dot,
-                key->get_value(),
-                /* transpose_a */ false,
-                /* transpose_b */ false);
-            grad_q = ttnn::multiply(grad_q, scale);
+    ttml::autograd::GradFunction grad = [scale, query, key, value, attention_weights, out, mask]() {
+        auto grad_output = out->get_grad();
+        // (B, H, S, S) x (B, H, S, E) -> (B, H, S, E)
+        auto grad_v = matmul(attention_weights, grad_output, /* transpose_a */ true, /* transpose_b */ false);
+        auto grad_attention_weights =
+            matmul(grad_output, value->get_value(), /* transpose_a */ false, /* transpose_b */ true);
+        auto grad_scaled_dot = ttnn::multiply(
+            attention_weights,
+            ttnn::subtract(
+                grad_attention_weights,
+                ttnn_fixed::sum_over_dim(ttnn::multiply(attention_weights, grad_attention_weights), 3)));
+        if (mask.has_value()) {
+            grad_scaled_dot = ttnn::multiply(grad_scaled_dot, mask.value()->get_value());
+        }
+        auto grad_q = matmul(
+            grad_scaled_dot,
+            key->get_value(),
+            /* transpose_a */ false,
+            /* transpose_b */ false);
+        grad_q = ttnn::multiply(grad_q, scale);
 
-            auto grad_k = matmul(
-                grad_scaled_dot,
-                query->get_value(),
-                /* transpose_a */ true,
-                /* transpose_b */ false);
-            grad_k = ttnn::multiply(grad_k, scale);
+        auto grad_k = matmul(
+            grad_scaled_dot,
+            query->get_value(),
+            /* transpose_a */ true,
+            /* transpose_b */ false);
+        grad_k = ttnn::multiply(grad_k, scale);
 
-            query->add_grad(grad_q);
-            key->add_grad(grad_k);
-            value->add_grad(grad_v);
-        };
+        query->add_grad(grad_q);
+        key->add_grad(grad_k);
+        value->add_grad(grad_v);
+    };
 
     auto links = autograd::get_links(query, key, value);
     out->set_node(ttml::autograd::ctx().add_backward_node(std::move(grad), links));
