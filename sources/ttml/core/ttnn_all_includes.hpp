@@ -39,6 +39,7 @@
 #include <ttnn/operations/moreh/moreh_mean/moreh_mean.hpp>                        // NOLINT
 #include <ttnn/operations/moreh/moreh_mean_backward/moreh_mean_backward.hpp>      // NOLINT
 #include <ttnn/operations/moreh/moreh_sum/moreh_sum.hpp>                          // NOLINT
+#include <ttnn/operations/normalization/rmsnorm/rmsnorm.hpp>                      // NOLINT
 #include <ttnn/operations/normalization/softmax/softmax.hpp>                      // NOLINT
 #include <ttnn/operations/reduction/generic/generic_reductions.hpp>               // NOLINT
 #include <ttnn/tensor/host_buffer/functions.hpp>                                  // NOLINT
