@@ -269,7 +269,7 @@ int main(int argc, char **argv) {
     }
 
     const uint32_t num_epochs = config.num_epochs;
-    std::ofstream loss_file("loss.txt");
+    std::ofstream loss_file("/tmp/loss.txt");
     for (uint32_t epoch = 0; epoch < num_epochs; ++epoch) {
         for (auto [features, target, masks, positions] : train_dataloader) {
             optimizer.zero_grad();
