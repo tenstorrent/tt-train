@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: (c) 2024 Tenstorrent AI ULC
+#
+# SPDX-License-Identifier: Apache-2.0
+
 sudo apt-get update && sudo apt-get upgrade -y
 sudo apt-get install build-essential libssl-dev
 CURRENT_PATH=$(pwd)
