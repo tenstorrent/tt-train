@@ -4,14 +4,12 @@
 
 #include "linear_op.hpp"
 
-#include <ttnn/operations/core/compute_kernel/compute_kernel_config.hpp>
-#include <ttnn/tensor/types.hpp>
-
 #include "autograd/auto_context.hpp"
 #include "autograd/graph_utils.hpp"
 #include "core/compute_kernel_config.hpp"
 #include "core/tt_tensor_utils.hpp"
 #include "core/ttnn_all_includes.hpp"
+
 namespace ttml::ops {
 
 autograd::TensorPtr linear_op(
@@ -30,9 +28,9 @@ autograd::TensorPtr linear_op(
         /* compute_kernel_config */ core::ComputeKernelConfig::fast()));
 
     autograd::GradFunction grad = [weight, bias, tensor, out]() {
-        auto bias_grad = core::zeros_like(bias->get_value());
-        auto tensor_grad = core::zeros_like(tensor->get_value());
-        auto weight_grad = core::zeros_like(weight->get_value());
+        auto bias_grad = ttnn::empty_like(bias->get_value());
+        auto tensor_grad = ttnn::empty_like(tensor->get_value());
+        auto weight_grad = ttnn::empty_like(weight->get_value());
 
         auto res = ttnn::moreh_linear_backward(
             out->get_grad(),
