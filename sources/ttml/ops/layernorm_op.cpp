@@ -26,7 +26,7 @@ autograd::TensorPtr layernorm(
         core::create_shape({tensor_shape[0], tensor_shape[1], tensor_shape[2], 1}), &autograd::ctx().get_device());
     auto rstd = core::zeros(
         core::create_shape({tensor_shape[0], tensor_shape[1], tensor_shape[2], 1}), &autograd::ctx().get_device());
-    auto output = core::zeros_like(tensor->get_value());
+    auto output = ttnn::empty_like(tensor->get_value());
 
     auto out_tensors = ttnn::moreh_layer_norm(
         tensor->get_value(),
@@ -46,9 +46,9 @@ autograd::TensorPtr layernorm(
     rstd = out_tensors[2].value();
 
     autograd::GradFunction grad = [tensor, out, mean, rstd, gamma, beta]() {
-        auto input_grad = core::zeros_like(tensor->get_value());
-        auto gamma_grad = core::zeros_like(gamma->get_value());
-        auto beta_grad = core::zeros_like(beta->get_value());
+        auto input_grad = ttnn::empty_like(tensor->get_value());
+        auto gamma_grad = ttnn::empty_like(gamma->get_value());
+        auto beta_grad = ttnn::empty_like(beta->get_value());
 
         auto res = ttnn::moreh_layer_norm_backward(
             out->get_grad(),
