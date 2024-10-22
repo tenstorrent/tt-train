@@ -180,8 +180,8 @@ int main(int argc, char **argv) {
 
     auto *device = &ttml::autograd::ctx().get_device();
     device->enable_program_cache();
-    //  disable for now, unexpected freezes and crashes
-    //  device->enable_async(true);
+    //   disable for now, unexpected freezes and crashes
+    //   device->enable_async(true);
 
     std::function<BatchType(std::vector<DatasetSample> && samples)> collate_fn =
         [sequence_length, num_heads = config.num_heads, vocab_size = tokenizer.get_vocab_size(), device](
