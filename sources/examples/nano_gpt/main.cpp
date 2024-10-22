@@ -45,11 +45,10 @@ struct DemoConfig {
 };
 const DemoConfig config;
 
-uint32_t sample(std::span<const float> logits, float temperature = 1.F) {
-    auto probabilities_vector = std::vector<float>(logits.size());
-    auto max_logit = *std::max_element(logits.begin(), logits.end());
-    std::transform(logits.begin(), logits.end(), probabilities_vector.begin(), [temperature, max_logit](float logit) {
-        return std::exp((logit - max_logit) / temperature);
+uint32_t sample(std::span<const float> log_softmax) {
+    auto probabilities_vector = std::vector<float>(log_softmax.size());
+    std::transform(log_softmax.begin(), log_softmax.end(), probabilities_vector.begin(), [](float value) {
+        return std::exp(value);
     });
     auto distribution = std::discrete_distribution<uint32_t>(probabilities_vector.begin(), probabilities_vector.end());
     return distribution(ttml::autograd::ctx().get_generator());
@@ -217,14 +216,16 @@ int main(int argc, char **argv) {
                 std::copy(features.begin(), features.end(), std::back_inserter(data));
                 std::copy(target_span.begin(), target_span.end(), std::back_inserter(targets));
             }
+
             auto data_tensor = ttml::autograd::create_tensor(ttml::core::from_vector<uint32_t>(
                 data, ttml::core::create_shape({batch_size, 1, 1, sequence_length}), device, Layout::ROW_MAJOR));
             auto targets_tensor = ttml::autograd::create_tensor(
-                ttml::core::from_vector<int32_t>(targets, {batch_size, sequence_length}, device));
+                ttml::core::from_vector<int32_t>(targets, {batch_size * sequence_length, 1}, device));
             auto masks_tensor = ttml::autograd::create_tensor(ttml::core::from_vector(
                 mask, ttml::core::create_shape({batch_size, num_heads, sequence_length, sequence_length}), device));
             auto positions_tensor = ttml::autograd::create_tensor(ttml::core::from_vector<uint32_t>(
                 positions, ttml::core::create_shape({batch_size, 1, 1, sequence_length}), device, Layout::ROW_MAJOR));
+
             return std::make_tuple(data_tensor, targets_tensor, masks_tensor, positions_tensor);
         };
 
@@ -271,24 +272,23 @@ int main(int argc, char **argv) {
             auto output = (*model)(features, positions, masks);
             ttml::core::print_tensor_stats(output->get_value(), "Output");
             auto loss = ttml::ops::nll_loss(output, target);
-            fmt::print("Loss shape: {}\n", loss->get_value().get_shape());
             auto loss_float = ttml::core::to_vector(loss->get_value())[0];
             loss_meter.update(loss_float, features->get_value().get_shape()[0]);
-            // loss->backward();
-            // optimizer.step();
+            loss->backward();
+            optimizer.step();
             ttml::autograd::ctx().reset_graph();
 
             auto global_step = optimizer.get_steps();
             fmt::print("Step: {}, Loss: {}\n", global_step, loss_float);
-            // loss_file << fmt::format("Step: {}, Loss: {}", global_step, loss_float) << std::endl;
+            loss_file << fmt::format("Step: {}, Loss: {}", global_step, loss_float) << std::endl;
 
-            // if (!model_path.empty() && global_step % model_save_interval == 0) {
-            //     save_model_and_optimizer(model_path, model, optimizer, "transformer", "adamw");
-            // }
+            if (!model_path.empty() && global_step % model_save_interval == 0) {
+                save_model_and_optimizer(model_path, model, optimizer, "transformer", "adamw");
+            }
 
-            // if (global_step >= max_steps) {
-            //     break;
-            // }
+            if (global_step >= max_steps) {
+                break;
+            }
         }
         if (optimizer.get_steps() >= max_steps) {
             break;

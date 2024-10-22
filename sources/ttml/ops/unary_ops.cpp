@@ -56,7 +56,10 @@ autograd::TensorPtr log_softmax(const autograd::TensorPtr& tensor, int dim) {
     auto log_softmax = ttnn_fixed::log_softmax(tensor->get_value(), dim);
     auto out = autograd::create_tensor(log_softmax);
     autograd::GradFunction grad = [tensor, out, dim]() {
-        auto grad = ttnn::subtract(ttnn::exp(out->get_value()), out->get_grad());
+        auto softmax = ttnn::exp(out->get_value());
+        auto grad = ttnn::multiply(
+            softmax,
+            ttnn::subtract(out->get_grad(), ttnn_fixed::sum_over_dim(ttnn::multiply(softmax, out->get_grad()), dim)));
         tensor->add_grad(grad);
     };
     auto links = autograd::get_links(tensor);

@@ -71,13 +71,9 @@ autograd::TensorPtr nll_loss(
     auto divisor = ttnn::full(ttnn::Shape({1, 1}, {32, 32}), 0.F, DataType::BFLOAT16, Layout::TILE, std::ref(*device));
 
     auto tensor_shape = prediction->get_value().shape();
-    uint32_t batch_size = tensor_shape[0];
-    uint32_t num_heads = tensor_shape[1];
-    uint32_t sequence_length = tensor_shape[2];
-    uint32_t vocab_size = tensor_shape[3];
-    auto reshaped_tensor =
-        ttnn::reshape(prediction->get_value(), ttnn::Shape({batch_size * num_heads * sequence_length, vocab_size}));
-    fmt::print("Reshaped tensor shape: {}\n", reshaped_tensor.shape());
+    uint32_t Ndim = tensor_shape[0] * tensor_shape[1] * tensor_shape[2];
+    uint32_t Cdim = tensor_shape[3];
+    auto reshaped_tensor = ttnn::reshape(prediction->get_value(), ttnn::Shape({Ndim, Cdim}));
     auto loss_tensor = ttnn::moreh_nll_loss(
         reshaped_tensor,
         target->get_value(),
@@ -90,8 +86,13 @@ autograd::TensorPtr nll_loss(
         /* compute_kernel_config */ core::ComputeKernelConfig::precise());
     auto out = autograd::create_tensor(loss_tensor);
 
-    autograd::GradFunction grad = [prediction, target, out]() {
-        auto out_grad = ttnn::empty_like(prediction->get_value());
+    autograd::GradFunction grad = [prediction, target, out, Ndim, Cdim, device]() {
+        auto out_grad = ttnn::empty(
+            ttnn::Shape({Ndim, Cdim}),
+            DataType::BFLOAT16,
+            Layout::TILE,
+            device,
+            prediction->get_value().memory_config());
         auto grad = ttnn::moreh_nll_loss_backward(
             target->get_value(),
             out->get_grad(),
@@ -102,6 +103,7 @@ autograd::TensorPtr nll_loss(
             /* ignore_index */ std::numeric_limits<int32_t>::max(),
             /* memory_config */ std::nullopt,
             /* compute_kernel_config */ std::nullopt);
+        grad = ttnn::reshape(grad, prediction->get_value().shape());
         prediction->add_grad(grad);
     };
     auto links = autograd::get_links(prediction);

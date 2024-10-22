@@ -275,6 +275,16 @@ std::vector<uint32_t> to_vector<uint32_t>(const tt::tt_metal::Tensor& tensor) {
     return final_res;
 }
 
+template <>
+std::vector<int32_t> to_vector<int32_t>(const tt::tt_metal::Tensor& tensor) {
+    auto cpu_tensor = tensor.cpu();
+    cpu_tensor = cpu_tensor.to(Layout::ROW_MAJOR);
+
+    auto buffer = tt::tt_metal::host_buffer::get_as<int32_t>(cpu_tensor);
+    auto final_res = untile_tensor_to_vec<int32_t, int32_t>(cpu_tensor);
+    return final_res;
+}
+
 bool is_tensor_initialized(const tt::tt_metal::Tensor& tensor) {
     return tensor.tensor_attributes != nullptr;
 }
