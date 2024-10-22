@@ -86,7 +86,7 @@ autograd::TensorPtr nll_loss(
         /* compute_kernel_config */ core::ComputeKernelConfig::precise());
     auto out = autograd::create_tensor(loss_tensor);
 
-    autograd::GradFunction grad = [prediction, target, out, Ndim, Cdim, device]() {
+    autograd::GradFunction grad = [prediction, target, out, Ndim, Cdim, device, divisor]() {
         auto out_grad = ttnn::empty(
             ttnn::Shape({Ndim, Cdim}),
             DataType::BFLOAT16,
@@ -99,8 +99,8 @@ autograd::TensorPtr nll_loss(
             /* reduction_mean */ true,
             /* weight_tensor */ std::nullopt,
             /* input_grad_tensor */ out_grad,
-            /* divisor_tensor */ std::nullopt,
-            /* ignore_index */ std::numeric_limits<int32_t>::max(),
+            /* divisor_tensor */ divisor,
+            /* ignore_index */ -100,
             /* memory_config */ std::nullopt,
             /* compute_kernel_config */ std::nullopt);
         grad = ttnn::reshape(grad, prediction->get_value().shape());

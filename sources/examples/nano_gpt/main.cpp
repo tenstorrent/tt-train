@@ -220,12 +220,11 @@ int main(int argc, char **argv) {
             auto data_tensor = ttml::autograd::create_tensor(ttml::core::from_vector<uint32_t>(
                 data, ttml::core::create_shape({batch_size, 1, 1, sequence_length}), device, Layout::ROW_MAJOR));
             auto targets_tensor = ttml::autograd::create_tensor(
-                ttml::core::from_vector<int32_t>(targets, {batch_size * sequence_length, 1}, device));
+                ttml::core::from_vector<int32_t>(targets, {batch_size * sequence_length}, device));
             auto masks_tensor = ttml::autograd::create_tensor(ttml::core::from_vector(
                 mask, ttml::core::create_shape({batch_size, num_heads, sequence_length, sequence_length}), device));
             auto positions_tensor = ttml::autograd::create_tensor(ttml::core::from_vector<uint32_t>(
                 positions, ttml::core::create_shape({batch_size, 1, 1, sequence_length}), device, Layout::ROW_MAJOR));
-
             return std::make_tuple(data_tensor, targets_tensor, masks_tensor, positions_tensor);
         };
 
@@ -270,7 +269,6 @@ int main(int argc, char **argv) {
         for (auto [features, target, masks, positions] : train_dataloader) {
             optimizer.zero_grad();
             auto output = (*model)(features, positions, masks);
-            ttml::core::print_tensor_stats(output->get_value(), "Output");
             auto loss = ttml::ops::nll_loss(output, target);
             auto loss_float = ttml::core::to_vector(loss->get_value())[0];
             loss_meter.update(loss_float, features->get_value().get_shape()[0]);
