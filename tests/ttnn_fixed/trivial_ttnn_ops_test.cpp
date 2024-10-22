@@ -23,7 +23,7 @@ TEST(TrivialTnnFixedTest, TestMaxNegativeOne_BROKEN) {
     std::vector<float> data(24, -1.F);
     auto shape = ttml::core::create_shape({1, 2, 3, 4});
     auto tensor = ttml::core::from_vector(data, shape, device);
-    auto res = ttml::ttnn_fixed::max(tensor, /* dim */ 3, /* keepdim */ true);
+    auto res = ttnn::max(tensor, /* dim */ 3, /* keepdim */ true);
     auto res_vector = ttml::core::to_vector(res);
     EXPECT_EQ(res_vector.size(), 6);
     bool all_equal = true;
@@ -46,7 +46,7 @@ TEST(TrivialTnnFixedTest, TestMaxNegativeBatch_BROKEN) {
         }
     }
     auto tensor = ttml::core::from_vector(data, shape, device);
-    auto res = ttml::ttnn_fixed::max(tensor, /* dim */ 3, /* keepdim */ true);
+    auto res = ttnn::max(tensor, /* dim */ 3, /* keepdim */ true);
     auto res_vector = ttml::core::to_vector(res);
     EXPECT_EQ(res_vector.size(), 4);
     bool all_equal = true;

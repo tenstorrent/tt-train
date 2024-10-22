@@ -4,6 +4,8 @@
 
 #include "losses.hpp"
 
+#include <ttnn/types.hpp>
+
 #include "autograd/auto_context.hpp"
 #include "autograd/graph_utils.hpp"
 #include "core/compute_kernel_config.hpp"
@@ -57,6 +59,55 @@ autograd::TensorPtr cross_entropy_loss(
     } else {
         throw std::logic_error("Unsupported cross entropy reduction type");
     }
+}
+
+autograd::TensorPtr nll_loss(
+    const autograd::TensorPtr& prediction, const autograd::TensorPtr& target, ReduceType reduce) {
+    if (reduce != ReduceType::MEAN) {
+        throw std::logic_error("Unsupported NLL reduction type, only MEAN is supported");
+    }
+
+    auto* device = &autograd::ctx().get_device();
+    auto divisor = ttnn::full(ttnn::Shape({1, 1}, {32, 32}), 0.F, DataType::BFLOAT16, Layout::TILE, std::ref(*device));
+
+    auto tensor_shape = prediction->get_value().shape();
+    uint32_t batch_size = tensor_shape[0];
+    uint32_t num_heads = tensor_shape[1];
+    uint32_t sequence_length = tensor_shape[2];
+    uint32_t vocab_size = tensor_shape[3];
+    auto reshaped_tensor =
+        ttnn::reshape(prediction->get_value(), ttnn::Shape({batch_size * num_heads * sequence_length, vocab_size}));
+    fmt::print("Reshaped tensor shape: {}\n", reshaped_tensor.shape());
+    auto loss_tensor = ttnn::moreh_nll_loss(
+        reshaped_tensor,
+        target->get_value(),
+        /* reduction */ "mean",
+        /* weight_tensor */ std::nullopt,
+        /* divisor_tensor */ divisor,
+        /* output_tensor */ std::nullopt,
+        /* ignore_index */ -100,
+        /* memory_config */ prediction->get_value().memory_config(),
+        /* compute_kernel_config */ core::ComputeKernelConfig::precise());
+    auto out = autograd::create_tensor(loss_tensor);
+
+    autograd::GradFunction grad = [prediction, target, out]() {
+        auto out_grad = ttnn::empty_like(prediction->get_value());
+        auto grad = ttnn::moreh_nll_loss_backward(
+            target->get_value(),
+            out->get_grad(),
+            /* reduction_mean */ true,
+            /* weight_tensor */ std::nullopt,
+            /* input_grad_tensor */ out_grad,
+            /* divisor_tensor */ std::nullopt,
+            /* ignore_index */ std::numeric_limits<int32_t>::max(),
+            /* memory_config */ std::nullopt,
+            /* compute_kernel_config */ std::nullopt);
+        prediction->add_grad(grad);
+    };
+    auto links = autograd::get_links(prediction);
+    out->set_node(autograd::ctx().add_backward_node(std::move(grad), links));
+
+    return out;
 }
 
 }  // namespace ttml::ops

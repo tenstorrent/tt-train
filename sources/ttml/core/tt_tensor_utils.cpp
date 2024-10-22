@@ -236,6 +236,35 @@ tt::tt_metal::Tensor from_vector<uint32_t>(
 
     return output;
 }
+
+/*
+From vector int32 doesn't support tilize_with_zero_padding on device
+*/
+template <>
+tt::tt_metal::Tensor from_vector<int32_t>(
+    const std::vector<int32_t>& buffer, const ttnn::Shape& shape, tt::tt_metal::Device* device, Layout layout) {
+    MemoryConfig output_mem_config{};
+    auto logical_shape = shape.logical_shape();
+    auto volume = logical_shape.volume();
+    if (buffer.size() != volume) {
+        throw std::logic_error(
+            fmt::format("Current buffer size is {} different from shape volume {}", buffer.size(), volume));
+    }
+
+    // remove possible paddings from the shape (it conflicts with ROW MAJOR)
+    std::vector<int32_t> buffer_copy = buffer;
+    auto output =
+        ttml_create_owned_tensor(std::move(buffer_copy), logical_shape.as_vector(), DataType::INT32, Layout::ROW_MAJOR);
+    if (device != nullptr) {
+        if (layout != Layout::ROW_MAJOR) {
+            output = ttnn::to_layout(output, layout, std::nullopt, output_mem_config, device);
+        }
+        output = ttnn::to_device(output, device, output_mem_config);
+    }
+
+    return output;
+}
+
 template <>
 std::vector<uint32_t> to_vector<uint32_t>(const tt::tt_metal::Tensor& tensor) {
     auto cpu_tensor = tensor.cpu();

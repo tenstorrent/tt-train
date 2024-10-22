@@ -52,6 +52,18 @@ autograd::TensorPtr gelu(const autograd::TensorPtr& tensor) {
     return out;
 }
 
+autograd::TensorPtr log_softmax(const autograd::TensorPtr& tensor, int dim) {
+    auto log_softmax = ttnn_fixed::log_softmax(tensor->get_value(), dim);
+    auto out = autograd::create_tensor(log_softmax);
+    autograd::GradFunction grad = [tensor, out, dim]() {
+        auto grad = ttnn::subtract(ttnn::exp(out->get_value()), out->get_grad());
+        tensor->add_grad(grad);
+    };
+    auto links = autograd::get_links(tensor);
+    out->set_node(autograd::ctx().add_backward_node(std::move(grad), links));
+    return out;
+}
+
 autograd::TensorPtr mean(const autograd::TensorPtr& tensor) {
     auto shape = core::create_shape({1, 1, 1, 1});
     autograd::TensorPtr out = autograd::create_tensor(core::from_vector({0.F}, shape, &autograd::ctx().get_device()));
