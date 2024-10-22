@@ -4,6 +4,10 @@
 
 #include "graph.hpp"
 
+#include <fmt/core.h>
+
+#include "core/system_utils.hpp"
+
 namespace ttml::autograd {
 
 const std::vector<std::vector<size_t>>& Graph::get_edges() const {
@@ -16,7 +20,25 @@ const std::vector<GraphNode>& Graph::get_graph_nodes() const {
 
 NodeId Graph::add_node(GradFunction&& grad_function, std::span<NodeId> links) {
     size_t curr_id = m_graph_nodes.size();
-    m_graph_nodes.emplace_back(std::move(grad_function));
+
+    //   we are using this wrapper to measure the time taken by each node.
+    //   We do it pretty often so currently I commented it out.
+    constexpr bool debug_perf = true;
+    if (debug_perf) {
+        GradFunction wrapper = [grad_function = std::move(grad_function), curr_id, this]() {
+            const std::type_info& typeInfo = grad_function.target_type();
+            auto demangled_name = core::demangle(typeInfo.name());
+            auto time = std::chrono::high_resolution_clock::now();
+            grad_function();
+            auto duration =
+                std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::high_resolution_clock::now() - time);
+            fmt::print(
+                "Node {} took {} ms Demangled name {}\n", curr_id, (double)duration.count() / 1000., demangled_name);
+        };
+        m_graph_nodes.emplace_back(std::move(wrapper));
+    } else {
+        m_graph_nodes.emplace_back(std::move(grad_function));
+    }
 
     auto& node_links = m_links.emplace_back();
     node_links.reserve(links.size());
