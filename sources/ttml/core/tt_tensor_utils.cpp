@@ -13,6 +13,7 @@
 #include <functional>
 #include <optional>
 #include <stdexcept>
+#include <ttnn/operations/full_like/full_like.hpp>
 
 #include "ttnn_all_includes.hpp"
 
@@ -119,11 +120,11 @@ std::vector<T> untile_tensor_to_vec(const tt::tt_metal::Tensor& cpu_tensor) {
 namespace ttml::core {
 
 tt::tt_metal::Tensor zeros_like(const tt::tt_metal::Tensor& tensor) {
-    return ttnn::zeros_like(tensor);
+    return ttnn::moreh_full_like(tensor, 0.F, tensor.get_dtype(), tensor.get_layout(), tensor.memory_config());
 }
 
 tt::tt_metal::Tensor ones_like(const tt::tt_metal::Tensor& tensor) {
-    return ttnn::ones_like(tensor);
+    return ttnn::moreh_full_like(tensor, 1.F, tensor.get_dtype(), tensor.get_layout(), tensor.memory_config());
 }
 
 tt::tt_metal::Tensor full(const ttnn::Shape& shape, float value, tt::tt_metal::Device* device) {

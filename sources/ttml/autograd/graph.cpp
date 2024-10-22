@@ -4,6 +4,10 @@
 
 #include "graph.hpp"
 
+#include <fmt/core.h>
+
+#include "core/system_utils.hpp"
+
 namespace ttml::autograd {
 
 const std::vector<std::vector<size_t>>& Graph::get_edges() const {
@@ -17,7 +21,16 @@ const std::vector<GraphNode>& Graph::get_graph_nodes() const {
 NodeId Graph::add_node(GradFunction&& grad_function, std::span<NodeId> links) {
     size_t curr_id = m_graph_nodes.size();
     m_graph_nodes.emplace_back(std::move(grad_function));
-
+    /* GradFunction wrapper = [grad_function = std::move(grad_function), curr_id, this]() {
+         const std::type_info& typeInfo = grad_function.target_type();
+         auto demangled_name = core::demangle(typeInfo.name());
+         auto time = std::chrono::high_resolution_clock::now();
+         grad_function();
+         auto duration =
+             std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::high_resolution_clock::now() - time);
+         fmt::print("Node {} took {} ms Demangled name {}\n", curr_id, duration.count() / 1000.F, demangled_name);
+     };*/
+    // m_graph_nodes.emplace_back(std::move(wrapper));
     auto& node_links = m_links.emplace_back();
     node_links.reserve(links.size());
     for (const auto& link : links) {
