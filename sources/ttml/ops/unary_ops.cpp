@@ -40,7 +40,7 @@ autograd::TensorPtr gelu(const autograd::TensorPtr& tensor) {
     out->set_value(ttnn::gelu(tensor->get_value()));
     autograd::GradFunction grad = [tensor, out]() {
         tt::tt_metal::MemoryConfig mem_config;
-        static const std::string approx_mode = "tanh";
+        static const std::string approx_mode = "none";
         auto res = ttnn::gelu_bw(out->get_grad(), tensor->get_value(), approx_mode, mem_config);
         assert(res.size() == 1U && "Gelu backward should return only one gradient");
         tensor->add_grad(res.front().value());

@@ -233,7 +233,7 @@ int main(int argc, char **argv) {
                 positions, ttml::core::create_shape({batch_size, 1, 1, sequence_length}), device, Layout::ROW_MAJOR));
             auto end_timer = std::chrono::high_resolution_clock::now();
             auto duration = std::chrono::duration_cast<std::chrono::microseconds>(end_timer - start_timer).count();
-            fmt::print("dataloader step time {} ms\n", duration / 1000.F);
+            fmt::print("dataloader step time {} ms\n", (double)duration / 1000.);
             return std::make_tuple(data_tensor, targets_tensor, masks_tensor, positions_tensor);
         };
 
@@ -299,8 +299,7 @@ int main(int argc, char **argv) {
             }
             auto end_timer = std::chrono::high_resolution_clock::now();
             auto duration = std::chrono::duration_cast<std::chrono::microseconds>(end_timer - start_timer).count();
-            fmt::print(
-                "Full step time {} ms, cache_size: {}\n", duration / 1000.F, device->num_program_cache_entries());
+            fmt::print("Full step time {} ms\n", (double)duration / 1000.);
         }
         if (optimizer.get_steps() >= max_steps) {
             break;
