@@ -78,3 +78,5 @@ target_link_libraries(ttml PUBLIC
 target_link_libraries(ttml PUBLIC
 Boost::core
 )
+
+add_definitions(-DTOKENIZERS_DATA_PATH="${CMAKE_CURRENT_SOURCE_DIR}/data/tokenizers")

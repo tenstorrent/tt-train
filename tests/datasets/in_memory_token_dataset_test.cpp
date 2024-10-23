@@ -2,14 +2,14 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-#include "datasets/in_memory_char_dataset.hpp"
+#include "datasets/in_memory_token_dataset.hpp"
 
 #include <gtest/gtest.h>
 
 using namespace ttml::datasets;
 
-// Test fixture for InMemoryCharDataset
-class InMemoryCharDatasetTest : public ::testing::Test {
+// Test fixture for InMemoryTokenDataset
+class InMemoryTokenDatasetTest : public ::testing::Test {
 protected:
     // Example tokens for testing
     std::vector<uint32_t> tokens = {1, 2, 3, 4, 5, 6, 7, 8, 9, 10};
@@ -17,12 +17,12 @@ protected:
     // Sequence length
     uint32_t seq_length = 3;
 
-    // Create an instance of InMemoryCharDataset
-    InMemoryCharDataset dataset = InMemoryCharDataset(tokens, seq_length);
+    // Create an instance of InMemoryTokenDataset
+    InMemoryTokenDataset dataset = InMemoryTokenDataset(tokens, seq_length);
 };
 
 // Test get_size_impl function
-TEST_F(InMemoryCharDatasetTest, GetSize) {
+TEST_F(InMemoryTokenDatasetTest, GetSize) {
     // Expected number of samples
     size_t expected_size = tokens.size() - seq_length;
 
@@ -30,7 +30,7 @@ TEST_F(InMemoryCharDatasetTest, GetSize) {
 }
 
 // Test get_item_impl function for the first sample
-TEST_F(InMemoryCharDatasetTest, GetItemFirstSample) {
+TEST_F(InMemoryTokenDatasetTest, GetItemFirstSample) {
     size_t index = 0;
 
     auto sample = dataset.get_item(index);
@@ -44,7 +44,7 @@ TEST_F(InMemoryCharDatasetTest, GetItemFirstSample) {
 }
 
 // Test get_item_impl function for the second sample
-TEST_F(InMemoryCharDatasetTest, GetItemSecondSample) {
+TEST_F(InMemoryTokenDatasetTest, GetItemSecondSample) {
     size_t index = 1;
 
     auto sample = dataset.get_item(index);
@@ -58,7 +58,7 @@ TEST_F(InMemoryCharDatasetTest, GetItemSecondSample) {
 }
 
 // Test get_item_impl function for the last sample
-TEST_F(InMemoryCharDatasetTest, GetItemLastSample) {
+TEST_F(InMemoryTokenDatasetTest, GetItemLastSample) {
     size_t index = dataset.get_size() - 1;
 
     auto sample = dataset.get_item(index);
@@ -72,7 +72,7 @@ TEST_F(InMemoryCharDatasetTest, GetItemLastSample) {
 }
 
 // Test out of range error for get_item_impl function
-TEST_F(InMemoryCharDatasetTest, GetItemOutOfRange) {
+TEST_F(InMemoryTokenDatasetTest, GetItemOutOfRange) {
     size_t index = dataset.get_size();  // Index out of range
     auto test_throw_lambda = [&]() { auto _ = dataset.get_item(index); };
     EXPECT_THROW(test_throw_lambda(), std::out_of_range);

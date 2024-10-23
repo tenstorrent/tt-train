@@ -9,7 +9,7 @@
 #include "core/tt_tensor_utils.hpp"
 #include "core/ttnn_all_includes.hpp"
 #include "datasets/dataloader.hpp"
-#include "datasets/in_memory_char_dataset.hpp"
+#include "datasets/in_memory_token_dataset.hpp"
 #include "datasets/utils.hpp"
 #include "models.hpp"
 #include "ops/binary_ops.hpp"
@@ -25,7 +25,7 @@ using DatasetSample = std::pair<std::span<const uint32_t>, std::span<const uint3
 // tokens, targets, mask, positions
 using BatchType = std::tuple<TensorPtr, TensorPtr, TensorPtr, TensorPtr>;
 using DataLoader = ttml::datasets::DataLoader<
-    ttml::datasets::InMemoryCharDataset,
+    ttml::datasets::InMemoryTokenDataset,
     std::function<BatchType(std::vector<DatasetSample> &&samples)>,
     BatchType>;
 
@@ -174,7 +174,8 @@ int main(int argc, char **argv) {
     fmt::print("Batch size {}\n", batch_size);
     fmt::print("Seed {}\n", ttml::autograd::ctx().get_seed());
 
-    auto [dataset, tokenizer] = ttml::datasets::create_in_memory_char_dataset(text, sequence_length);
+    auto [dataset, tokenizer] =
+        ttml::datasets::create_in_memory_token_dataset<ttml::tokenizers::CharTokenizer>(text, sequence_length);
     fmt::print("Dataset size: {}\n", dataset.get_size());
     fmt::print("Vocab size: {}\n", tokenizer.get_vocab_size());
 
