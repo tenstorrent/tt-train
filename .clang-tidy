@@ -15,6 +15,7 @@ Checks: "*,
         -include-what-you-use,
         -cppcoreguidelines-avoid-magic-numbers,
         -readability-magic-numbers,
+        -misc-include-cleaner
 "
 WarningsAsErrors: ''
 HeaderFilterRegex: ''

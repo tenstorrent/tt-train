@@ -75,3 +75,6 @@ target_compile_options(tokenizers_cpp PUBLIC -stdlib=libc++)
 target_link_libraries(ttml PUBLIC
     tokenizers_cpp
 )
+target_link_libraries(ttml PUBLIC
+Boost::core
+)

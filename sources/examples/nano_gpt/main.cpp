@@ -3,6 +3,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 #include <CLI/CLI.hpp>
+#include <chrono>
 
 #include "autograd/tensor.hpp"
 #include "core/tt_tensor_utils.hpp"
@@ -179,13 +180,14 @@ int main(int argc, char **argv) {
 
     auto *device = &ttml::autograd::ctx().get_device();
     device->enable_program_cache();
-
+  
     // disable for now, unexpected freezes and crashes
     // device->enable_async(true);
 
     std::function<BatchType(std::vector<DatasetSample> && samples)> collate_fn =
         [sequence_length, num_heads = config.num_heads, vocab_size = tokenizer.get_vocab_size(), device](
             std::vector<DatasetSample> &&samples) {
+            auto start_timer = std::chrono::high_resolution_clock::now();
             const uint32_t batch_size = samples.size();
             std::vector<uint32_t> data;
             std::vector<int32_t> targets;
@@ -225,6 +227,9 @@ int main(int argc, char **argv) {
                 mask, ttml::core::create_shape({batch_size, num_heads, sequence_length, sequence_length}), device));
             auto positions_tensor = ttml::autograd::create_tensor(ttml::core::from_vector<uint32_t>(
                 positions, ttml::core::create_shape({batch_size, 1, 1, sequence_length}), device, Layout::ROW_MAJOR));
+            auto end_timer = std::chrono::high_resolution_clock::now();
+            auto duration = std::chrono::duration_cast<std::chrono::microseconds>(end_timer - start_timer).count();
+            fmt::print("dataloader step time {} ms\n", (double)duration / 1000.);
             return std::make_tuple(data_tensor, targets_tensor, masks_tensor, positions_tensor);
         };
 
@@ -267,6 +272,7 @@ int main(int argc, char **argv) {
     std::ofstream loss_file("/tmp/loss.txt");
     for (uint32_t epoch = 0; epoch < num_epochs; ++epoch) {
         for (auto [features, target, masks, positions] : train_dataloader) {
+            auto start_timer = std::chrono::high_resolution_clock::now();
             optimizer.zero_grad();
             auto output = (*model)(features, positions, masks);
             auto loss = ttml::ops::nll_loss(output, target);
@@ -287,6 +293,9 @@ int main(int argc, char **argv) {
             if (global_step >= max_steps) {
                 break;
             }
+            auto end_timer = std::chrono::high_resolution_clock::now();
+            auto duration = std::chrono::duration_cast<std::chrono::microseconds>(end_timer - start_timer).count();
+            fmt::print("Full step time {} ms\n", (double)duration / 1000.);
         }
         if (optimizer.get_steps() >= max_steps) {
             break;
