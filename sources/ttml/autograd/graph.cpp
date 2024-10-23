@@ -23,7 +23,7 @@ NodeId Graph::add_node(GradFunction&& grad_function, std::span<NodeId> links) {
 
     //   we are using this wrapper to measure the time taken by each node.
     //   We do it pretty often so currently I commented it out.
-    constexpr bool debug_perf = true;
+    constexpr bool debug_perf = false;
     if (debug_perf) {
         GradFunction wrapper = [grad_function = std::move(grad_function), curr_id, this]() {
             const std::type_info& typeInfo = grad_function.target_type();
