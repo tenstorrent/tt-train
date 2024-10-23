@@ -43,8 +43,8 @@ void Tensor::add_grad(const tt::tt_metal::Tensor& grad) {
             fmt::format("Shapes of gradients are not equal. Expected: {}, got: {}", m_grad_shape, grad_shape));
     }
 
-    // m_grad = ttnn::add(m_grad, grad);
-    ttnn::add_(m_grad, grad);
+    m_grad = ttnn::add(m_grad, grad);
+    // ttnn::add_(m_grad, grad);
 }
 
 void Tensor::backward() {

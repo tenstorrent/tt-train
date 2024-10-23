@@ -181,7 +181,7 @@ int main(int argc, char **argv) {
     fmt::print("Vocab size: {}\n", tokenizer.get_vocab_size());
 
     auto *device = &ttml::autograd::ctx().get_device();
-    device->enable_program_cache();
+    // device->enable_program_cache();
 
     // disable for now, unexpected freezes and crashes
     // device->enable_async(true);
@@ -255,7 +255,7 @@ int main(int argc, char **argv) {
     transformer_config.embedding_dim = config.embedding_dim;
     transformer_config.dropout_prob = config.dropout_prob;
     transformer_config.num_blocks = config.num_blocks;
-    transformer_config.vocab_size = tokenizer.get_vocab_size();
+    transformer_config.vocab_size = tokenizer.get_vocab_size();  //(tokenizer.get_vocab_size() + 31) / 32 * 32;
     transformer_config.max_sequence_length = sequence_length;
     auto model = std::make_shared<Transformer>(transformer_config);
 
@@ -295,7 +295,6 @@ int main(int argc, char **argv) {
             loss->backward();
             optimizer.step();
             ttml::autograd::ctx().reset_graph();
-
             auto global_step = optimizer.get_steps();
             fmt::print("Step: {}, Loss: {}\n", global_step, loss_float);
             loss_file << fmt::format("Step: {}, Loss: {}", global_step, loss_float) << std::endl;

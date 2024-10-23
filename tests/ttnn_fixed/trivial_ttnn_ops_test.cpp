@@ -79,34 +79,6 @@ TEST(TrivialTnnFixedTest, TestStableSoftmax_0) {
     EXPECT_NEAR(res_vector[1], 0.7311F, 2e-2);
 }
 
-TEST(TrivialTnnFixedTest, TestStableSoftmaxAllNegative_BROKEN) {
-    auto* device = &ttml::autograd::ctx().get_device();
-
-    const size_t batch_size = 1U;
-    const size_t features = 2U;
-    std::vector<float> data(batch_size * features);
-    for (int i = 0; i < data.size(); ++i) {
-        data[i] = -100.F + static_cast<float>(i);
-    }
-    auto shape = ttml::core::create_shape({batch_size, 1, 1, features});
-    auto tensor = ttml::core::from_vector(data, shape, device);
-    auto tensor_data = ttml::core::to_vector(tensor);
-    EXPECT_NEAR(tensor_data[0], -100.F, 1e-2);
-    EXPECT_NEAR(tensor_data[1], -99.F, 1e-2);
-
-    auto res = ttml::ttnn_fixed::softmax(tensor, /* dim */ 3);
-    auto res_vector = ttml::core::to_vector(res);
-    std::vector<float> expected = {0.2689F, 0.7311F};
-    bool all_equal = true;
-    EXPECT_EQ(res_vector.size(), expected.size());
-    for (int i = 0; i < res_vector.size(); ++i) {
-        if (std::fabs(res_vector[i] - expected[i]) > 2e-2) {
-            all_equal = false;
-        }
-    }
-    EXPECT_FALSE(all_equal);
-}
-
 TEST(TrivialTnnFixedTest, TestOriginalStableSoftmax_AllNegative) {
     auto* device = &ttml::autograd::ctx().get_device();
 
@@ -123,7 +95,7 @@ TEST(TrivialTnnFixedTest, TestOriginalStableSoftmax_AllNegative) {
     EXPECT_NEAR(tensor_data[1], -99.F, 1e-2);
     auto compute_kernel_config = ttml::core::ComputeKernelConfig::precise();
     // setting it false because it become totally broken with fp32_dest_acc_en = true
-    compute_kernel_config.fp32_dest_acc_en = false;
+    // compute_kernel_config.fp32_dest_acc_en = false;
     auto res = ttnn::softmax(
         tensor,
         /* dim */ 3,

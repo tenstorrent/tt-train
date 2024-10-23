@@ -41,12 +41,15 @@ tt::tt_metal::Tensor log_softmax(const tt::tt_metal::Tensor& t, int dim) {
 // Stable softmax implementation
 // ttnn::softmax also exists, but it is not stable (even after max subtraction optimization)
 tt::tt_metal::Tensor softmax(const tt::tt_metal::Tensor& t, int dim) {
-    auto t_max = ttnn::max(t, dim, /* keepdim */ true);
-    auto t_sub_max = ttnn::subtract(t, t_max);
-    auto t_sub_max_exp = ttnn::exp(t_sub_max);
-    auto t_sum_over_dim = sum_over_dim(t_sub_max_exp, dim);
-    auto inv_t_sum_over_dim = ttnn::reciprocal(/* queue_id */ 0, t_sum_over_dim);
-    return ttnn::multiply(t_sub_max_exp, inv_t_sum_over_dim);
+    auto compute_kernel_config = ttml::core::ComputeKernelConfig::precise();
+    // setting it false because it become totally broken with fp32_dest_acc_en = true
+    compute_kernel_config.fp32_dest_acc_en = false;
+    return ttnn::softmax(
+        t,
+        /* dim */ dim,
+        /*memory_config */ std::nullopt,
+        compute_kernel_config,
+        /*stable*/ true);
 }
 
 tt::tt_metal::Tensor divide(const tt::tt_metal::Tensor& a, const tt::tt_metal::Tensor& b) {
