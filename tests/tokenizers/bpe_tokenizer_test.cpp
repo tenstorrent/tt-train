@@ -16,7 +16,7 @@ protected:
 };
 
 TEST_F(BPETokenizerTest, EncodeAndDecode) {
-    std::string prompt = "What is the  capital of Canada?";
+    const std::string prompt = "What is the  capital of Canada?";
     auto ids = tokenizer.encode(prompt);
     auto decoded_prompt = tokenizer.decode(ids);
     EXPECT_EQ(decoded_prompt, prompt);

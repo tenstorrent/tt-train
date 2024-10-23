@@ -41,7 +41,7 @@ std::vector<uint32_t> BPETokenizer::encode(const std::string& text) const {
 }
 
 std::string BPETokenizer::decode(const std::vector<uint32_t>& tokens) const {
-    std::vector<int32_t> tokens_i32(tokens.begin(), tokens.end());
+    const std::vector<int32_t> tokens_i32(tokens.begin(), tokens.end());
     return m_tokenizer->Decode(tokens_i32);
 }
 

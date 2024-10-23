@@ -26,7 +26,7 @@ std::tuple<InMemoryTokenDataset, tokenizers::BPETokenizer> create_in_memory_toke
     auto json_file_path = std::string(TOKENIZERS_DATA_PATH) + "/gpt2-tokenizer.json";
     auto tokenizer = tokenizers::BPETokenizer(json_file_path);
 
-    std::vector<uint32_t> tokenized_text = tokenizer.encode(text);
+    const std::vector<uint32_t> tokenized_text = tokenizer.encode(text);
 
     return {InMemoryTokenDataset(tokenized_text, seq_length), std::move(tokenizer)};
 }
