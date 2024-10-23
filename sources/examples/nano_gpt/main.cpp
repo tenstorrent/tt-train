@@ -4,8 +4,6 @@
 
 #include <CLI/CLI.hpp>
 #include <chrono>
-#include <cstdint>
-#include <ttnn/tensor/tensor.hpp>
 
 #include "autograd/tensor.hpp"
 #include "core/tt_tensor_utils.hpp"
