@@ -46,11 +46,10 @@ struct DemoConfig {
 };
 const DemoConfig config;
 
-uint32_t sample(std::span<const float> logits, float temperature = 1.F) {
-    auto probabilities_vector = std::vector<float>(logits.size());
-    auto max_logit = *std::max_element(logits.begin(), logits.end());
-    std::transform(logits.begin(), logits.end(), probabilities_vector.begin(), [temperature, max_logit](float logit) {
-        return std::exp((logit - max_logit) / temperature);
+uint32_t sample(std::span<const float> log_softmax) {
+    auto probabilities_vector = std::vector<float>(log_softmax.size());
+    std::transform(log_softmax.begin(), log_softmax.end(), probabilities_vector.begin(), [](float value) {
+        return std::exp(value);
     });
     auto distribution = std::discrete_distribution<uint32_t>(probabilities_vector.begin(), probabilities_vector.end());
     return distribution(ttml::autograd::ctx().get_generator());
@@ -181,7 +180,8 @@ int main(int argc, char **argv) {
 
     auto *device = &ttml::autograd::ctx().get_device();
     device->enable_program_cache();
-    //   disable for now, unexpected freezes and crashes
+
+    // disable for now, unexpected freezes and crashes
     // device->enable_async(true);
 
     std::function<BatchType(std::vector<DatasetSample> && samples)> collate_fn =
@@ -190,7 +190,7 @@ int main(int argc, char **argv) {
             auto start_timer = std::chrono::high_resolution_clock::now();
             const uint32_t batch_size = samples.size();
             std::vector<uint32_t> data;
-            std::vector<float> targets;
+            std::vector<int32_t> targets;
             std::vector<uint32_t> positions;
             std::vector<float> mask;
 
@@ -213,21 +213,16 @@ int main(int argc, char **argv) {
             }
 
             data.reserve((size_t)batch_size * sequence_length);
-            targets.reserve((size_t)batch_size * vocab_size * sequence_length);
-            std::vector<float> one_hot_target(vocab_size);
+            targets.reserve((size_t)batch_size * sequence_length);
             for (auto &[features, target_span] : samples) {
                 std::copy(features.begin(), features.end(), std::back_inserter(data));
-
-                for (auto target : target_span) {
-                    std::fill(one_hot_target.begin(), one_hot_target.end(), 0.0F);
-                    one_hot_target[target] = 1.0F;
-                    std::copy(one_hot_target.begin(), one_hot_target.end(), std::back_inserter(targets));
-                }
+                std::copy(target_span.begin(), target_span.end(), std::back_inserter(targets));
             }
+
             auto data_tensor = ttml::autograd::create_tensor(ttml::core::from_vector<uint32_t>(
                 data, ttml::core::create_shape({batch_size, 1, 1, sequence_length}), device, Layout::ROW_MAJOR));
-            auto targets_tensor = ttml::autograd::create_tensor(ttml::core::from_vector(
-                targets, ttml::core::create_shape({batch_size, 1, sequence_length, vocab_size}), device));
+            auto targets_tensor = ttml::autograd::create_tensor(
+                ttml::core::from_vector<int32_t>(targets, {batch_size * sequence_length}, device));
             auto masks_tensor = ttml::autograd::create_tensor(ttml::core::from_vector(
                 mask, ttml::core::create_shape({batch_size, num_heads, sequence_length, sequence_length}), device));
             auto positions_tensor = ttml::autograd::create_tensor(ttml::core::from_vector<uint32_t>(
@@ -280,7 +275,7 @@ int main(int argc, char **argv) {
             auto start_timer = std::chrono::high_resolution_clock::now();
             optimizer.zero_grad();
             auto output = (*model)(features, positions, masks);
-            auto loss = ttml::ops::cross_entropy_loss(output, target);
+            auto loss = ttml::ops::nll_loss(output, target);
             auto loss_float = ttml::core::to_vector(loss->get_value())[0];
             loss_meter.update(loss_float, features->get_value().get_shape()[0]);
             loss->backward();

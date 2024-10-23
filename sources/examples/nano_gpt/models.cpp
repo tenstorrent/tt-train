@@ -5,6 +5,7 @@
 #include "models.hpp"
 
 #include "ops/binary_ops.hpp"
+#include "ops/unary_ops.hpp"
 
 Transformer::Transformer(const TransformerConfig& config) {
     uint32_t vocab_size = config.vocab_size;
@@ -65,7 +66,8 @@ ttml::autograd::TensorPtr Transformer::operator()(
     }
     out = (*ln_fc)(out);
     auto logits = (*fc)(out);
-    return logits;
+    auto log_softmax = ttml::ops::log_softmax(logits, 3);
+    return log_softmax;
 }
 
 BigramFCModel::BigramFCModel(uint32_t vocab_size, uint32_t num_tokens, uint32_t hidden_dim) {

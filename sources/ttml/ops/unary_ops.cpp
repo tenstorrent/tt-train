@@ -6,9 +6,6 @@
 
 #include <array>
 #include <optional>
-#include <ttnn/operations/eltwise/unary_backward/unary_backward.hpp>
-#include <ttnn/operations/reduction/generic/generic_reductions.hpp>
-#include <ttnn/tensor/tensor_utils.hpp>
 
 #include "autograd/auto_context.hpp"
 #include "autograd/graph.hpp"
@@ -18,6 +15,7 @@
 #include "core/tt_tensor_utils.hpp"
 #include "core/ttnn_all_includes.hpp"
 #include "ttnn_fixed/trivial_ttnn_ops.hpp"
+
 namespace ttml::ops {
 
 autograd::TensorPtr relu(const autograd::TensorPtr& tensor) {
@@ -49,6 +47,20 @@ autograd::TensorPtr gelu(const autograd::TensorPtr& tensor) {
     std::vector<autograd::NodeId> links = autograd::get_links(tensor);
     out->set_node(autograd::ctx().add_backward_node(std::move(grad), links));
 
+    return out;
+}
+
+autograd::TensorPtr log_softmax(const autograd::TensorPtr& tensor, int dim) {
+    auto log_softmax = ttnn_fixed::log_softmax(tensor->get_value(), dim);
+    auto out = autograd::create_tensor(log_softmax);
+    autograd::GradFunction grad = [tensor, out, dim]() {
+        auto softmax = ttnn::exp(out->get_value());
+        auto sum_grad_over_dim = ttnn_fixed::sum_over_dim(out->get_grad(), dim);
+        auto grad = ttnn::subtract(out->get_grad(), ttnn::multiply(softmax, sum_grad_over_dim));
+        tensor->add_grad(grad);
+    };
+    auto links = autograd::get_links(tensor);
+    out->set_node(autograd::ctx().add_backward_node(std::move(grad), links));
     return out;
 }
 
