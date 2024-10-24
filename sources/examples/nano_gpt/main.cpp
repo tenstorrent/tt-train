@@ -184,33 +184,47 @@ int main(int argc, char **argv) {
     // disable for now, unexpected freezes and crashes
     // device->enable_async(true);
 
+    struct CachedHostData {
+        std::vector<uint32_t> data;
+        std::vector<int32_t> targets;
+        ttml::autograd::TensorPtr masks_tensor;
+        ttml::autograd::TensorPtr positions_tensor;
+    };
+    CachedHostData cached_data;
+    std::vector<uint32_t> positions;
+    std::vector<float> mask;
+    positions.reserve((size_t)batch_size * sequence_length);
+    for (int sample_idx = 0; sample_idx < batch_size; ++sample_idx) {
+        for (int i = 0; i < sequence_length; ++i) {
+            positions.push_back(i);
+        }
+    }
+
+    mask.reserve((size_t)batch_size * sequence_length * sequence_length * config.num_heads);
+    for (int sample_idx = 0; sample_idx < batch_size; ++sample_idx) {
+        for (int head = 0; head < config.num_heads; ++head) {
+            for (int i = 0; i < sequence_length; ++i) {
+                for (int j = 0; j < sequence_length; ++j) {
+                    mask.push_back(i >= j ? 1.0F : 0.0F);
+                }
+            }
+        }
+    }
+    cached_data.masks_tensor = ttml::autograd::create_tensor(ttml::core::from_vector(
+        mask, ttml::core::create_shape({batch_size, config.num_heads, sequence_length, sequence_length}), device));
+    cached_data.positions_tensor = ttml::autograd::create_tensor(ttml::core::from_vector<uint32_t>(
+        positions, ttml::core::create_shape({batch_size, 1, 1, sequence_length}), device, Layout::ROW_MAJOR));
+
     std::function<BatchType(std::vector<DatasetSample> && samples)> collate_fn =
-        [sequence_length, num_heads = config.num_heads, vocab_size = tokenizer.get_vocab_size(), device](
+        [sequence_length, num_heads = config.num_heads, vocab_size = tokenizer.get_vocab_size(), device, &cached_data](
             std::vector<DatasetSample> &&samples) {
             auto start_timer = std::chrono::high_resolution_clock::now();
             const uint32_t batch_size = samples.size();
-            std::vector<uint32_t> data;
-            std::vector<int32_t> targets;
-            std::vector<uint32_t> positions;
-            std::vector<float> mask;
+            std::vector<uint32_t> &data = cached_data.data;
+            std::vector<int32_t> &targets = cached_data.targets;
 
-            positions.reserve((size_t)batch_size * sequence_length);
-            for (int sample_idx = 0; sample_idx < batch_size; ++sample_idx) {
-                for (int i = 0; i < sequence_length; ++i) {
-                    positions.push_back(i);
-                }
-            }
-
-            mask.reserve((size_t)batch_size * sequence_length * sequence_length * num_heads);
-            for (int sample_idx = 0; sample_idx < batch_size; ++sample_idx) {
-                for (int head = 0; head < num_heads; ++head) {
-                    for (int i = 0; i < sequence_length; ++i) {
-                        for (int j = 0; j < sequence_length; ++j) {
-                            mask.push_back(i >= j ? 1.0F : 0.0F);
-                        }
-                    }
-                }
-            }
+            data.clear();
+            targets.clear();
 
             data.reserve((size_t)batch_size * sequence_length);
             targets.reserve((size_t)batch_size * sequence_length);
@@ -218,19 +232,17 @@ int main(int argc, char **argv) {
                 std::copy(features.begin(), features.end(), std::back_inserter(data));
                 std::copy(target_span.begin(), target_span.end(), std::back_inserter(targets));
             }
-
+            auto end_timer = std::chrono::high_resolution_clock::now();
+            auto duration = std::chrono::duration_cast<std::chrono::microseconds>(end_timer - start_timer).count();
+            fmt::print("dataloader host only step time {} ms\n", (double)duration / 1000.);
             auto data_tensor = ttml::autograd::create_tensor(ttml::core::from_vector<uint32_t>(
                 data, ttml::core::create_shape({batch_size, 1, 1, sequence_length}), device, Layout::ROW_MAJOR));
             auto targets_tensor = ttml::autograd::create_tensor(
                 ttml::core::from_vector<int32_t>(targets, {batch_size * sequence_length}, device));
-            auto masks_tensor = ttml::autograd::create_tensor(ttml::core::from_vector(
-                mask, ttml::core::create_shape({batch_size, num_heads, sequence_length, sequence_length}), device));
-            auto positions_tensor = ttml::autograd::create_tensor(ttml::core::from_vector<uint32_t>(
-                positions, ttml::core::create_shape({batch_size, 1, 1, sequence_length}), device, Layout::ROW_MAJOR));
-            auto end_timer = std::chrono::high_resolution_clock::now();
-            auto duration = std::chrono::duration_cast<std::chrono::microseconds>(end_timer - start_timer).count();
+            end_timer = std::chrono::high_resolution_clock::now();
+            duration = std::chrono::duration_cast<std::chrono::microseconds>(end_timer - start_timer).count();
             fmt::print("dataloader step time {} ms\n", (double)duration / 1000.);
-            return std::make_tuple(data_tensor, targets_tensor, masks_tensor, positions_tensor);
+            return std::make_tuple(data_tensor, targets_tensor, cached_data.masks_tensor, cached_data.positions_tensor);
         };
 
     LossAverageMeter loss_meter;
