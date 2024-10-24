@@ -41,14 +41,11 @@ tt::tt_metal::Tensor log_softmax(const tt::tt_metal::Tensor& t, int dim) {
 // Stable softmax implementation
 // ttnn::softmax also exists, but it is not stable (even after max subtraction optimization)
 tt::tt_metal::Tensor softmax(const tt::tt_metal::Tensor& t, int dim) {
-    auto compute_kernel_config = ttml::core::ComputeKernelConfig::precise();
-    // setting it false because it become totally broken with fp32_dest_acc_en = true
-    compute_kernel_config.fp32_dest_acc_en = false;
     return ttnn::softmax(
         t,
         /* dim */ dim,
         /*memory_config */ std::nullopt,
-        compute_kernel_config,
+        ttml::core::ComputeKernelConfig::softmax(),
         /*stable*/ true);
 }
 

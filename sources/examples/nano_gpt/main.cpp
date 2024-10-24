@@ -139,6 +139,7 @@ void generate(
 }
 
 int main(int argc, char **argv) {
+    auto start_timer = std::chrono::high_resolution_clock::now();
     CLI::App app{"NanoGPT Example"};
     argv = app.ensure_utf8(argv);
 
@@ -147,7 +148,7 @@ int main(int argc, char **argv) {
     uint32_t max_steps = config.max_steps;
     uint32_t batch_size = config.batch_size;
     uint32_t sequence_length = config.sequence_length;
-    std::string model_path = "/tmp/nano_gpt.msgpack";
+    std::string model_path = "";
     std::string data_path = std::string(DATA_FOLDER) + "/shakespeare.txt";
     bool is_eval = false;
 
@@ -181,7 +182,7 @@ int main(int argc, char **argv) {
     fmt::print("Vocab size: {}\n", tokenizer.get_vocab_size());
 
     auto *device = &ttml::autograd::ctx().get_device();
-    // device->enable_program_cache();
+    device->enable_program_cache();
 
     // disable for now, unexpected freezes and crashes
     // device->enable_async(true);
@@ -255,7 +256,7 @@ int main(int argc, char **argv) {
     transformer_config.embedding_dim = config.embedding_dim;
     transformer_config.dropout_prob = config.dropout_prob;
     transformer_config.num_blocks = config.num_blocks;
-    transformer_config.vocab_size = tokenizer.get_vocab_size();  //(tokenizer.get_vocab_size() + 31) / 32 * 32;
+    transformer_config.vocab_size = (tokenizer.get_vocab_size() + 31) / 32 * 32;
     transformer_config.max_sequence_length = sequence_length;
     auto model = std::make_shared<Transformer>(transformer_config);
 
@@ -297,7 +298,7 @@ int main(int argc, char **argv) {
             ttml::autograd::ctx().reset_graph();
             auto global_step = optimizer.get_steps();
             fmt::print("Step: {}, Loss: {}\n", global_step, loss_float);
-            loss_file << fmt::format("Step: {}, Loss: {}", global_step, loss_float) << std::endl;
+            loss_file << fmt::format("Step: {}, Loss: {}", global_step, loss_float) << "\n";
 
             if (!model_path.empty() && global_step % model_save_interval == 0) {
                 save_model_and_optimizer(model_path, model, optimizer, "transformer", "adamw");
@@ -309,7 +310,9 @@ int main(int argc, char **argv) {
             auto end_timer = std::chrono::high_resolution_clock::now();
             auto duration = std::chrono::duration_cast<std::chrono::microseconds>(end_timer - start_timer).count();
             fmt::print(
-                "Full step time {} ms, cache: {}\n", (double)duration / 1000., device->num_program_cache_entries());
+                "Full step time {} ms, cache entries: {}\n",
+                (double)duration / 1000,
+                device->num_program_cache_entries());
         }
         if (optimizer.get_steps() >= max_steps) {
             break;
@@ -321,5 +324,11 @@ int main(int argc, char **argv) {
     }
 
     loss_file.close();
+    auto end_timer = std::chrono::high_resolution_clock::now();
+    auto duration = std::chrono::duration_cast<std::chrono::microseconds>(end_timer - start_timer).count();
+    fmt::print(
+        "5000 Steps training time: {} s, cache entries: {}\n",
+        (double)duration / 1000000.,
+        device->num_program_cache_entries());
     return 0;
 }
