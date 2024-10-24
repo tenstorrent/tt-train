@@ -11,6 +11,7 @@ namespace ttml::core {
 class ComputeKernelConfig {
 public:
     static ttnn::WormholeComputeKernelConfig precise();
+    static ttnn::WormholeComputeKernelConfig softmax();
     static ttnn::WormholeComputeKernelConfig fast();
 };
 

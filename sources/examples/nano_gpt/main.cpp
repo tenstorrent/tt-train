@@ -203,16 +203,14 @@ int main(int argc, char **argv) {
 
     mask.reserve((size_t)batch_size * sequence_length * sequence_length * config.num_heads);
     for (int sample_idx = 0; sample_idx < batch_size; ++sample_idx) {
-        for (int head = 0; head < config.num_heads; ++head) {
-            for (int i = 0; i < sequence_length; ++i) {
-                for (int j = 0; j < sequence_length; ++j) {
-                    mask.push_back(i >= j ? 1.0F : 0.0F);
-                }
+        for (int i = 0; i < sequence_length; ++i) {
+            for (int j = 0; j < sequence_length; ++j) {
+                mask.push_back(i >= j ? 1.0F : 0.0F);
             }
         }
     }
     cached_data.masks_tensor = ttml::autograd::create_tensor(ttml::core::from_vector(
-        mask, ttml::core::create_shape({batch_size, config.num_heads, sequence_length, sequence_length}), device));
+        mask, ttml::core::create_shape({batch_size, 1, sequence_length, sequence_length}), device));
     cached_data.positions_tensor = ttml::autograd::create_tensor(ttml::core::from_vector<uint32_t>(
         positions, ttml::core::create_shape({batch_size, 1, 1, sequence_length}), device, Layout::ROW_MAJOR));
 

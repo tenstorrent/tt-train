@@ -13,7 +13,24 @@
 namespace ttml::ops {
 
 tt::tt_metal::Tensor matmul(
-    const tt::tt_metal::Tensor& a, const tt::tt_metal::Tensor& b, bool transpose_a, bool transpose_b) {
+    const tt::tt_metal::Tensor& a,
+    const tt::tt_metal::Tensor& b,
+    bool transpose_a,
+    bool transpose_b,
+    bool use_ttnn = false) {
+    if (use_ttnn) {
+        return ttnn::matmul(
+            a,
+            b,
+            /* transpose_a */ transpose_a,
+            /* tranpose_b */ transpose_b,
+            /* memory_config */ std::nullopt,
+            /* dtype */ std::nullopt,
+            /* program_config */ std::nullopt,
+            /* activation */ std::nullopt,
+            /* compute_kernel_config */ core::ComputeKernelConfig::fast());
+    }
+
     return ttnn::moreh_matmul(
         a,
         b,
@@ -33,13 +50,14 @@ autograd::TensorPtr scaled_dot_product_attention(
     const float scale = 1.0F / std::sqrtf(static_cast<float>(query->get_value().get_shape()[-1]));
     // (B, H, S, E) x (B, H, E, S) -> (B, H, S, S)
     auto qk_t = matmul(query->get_value(), key->get_value(), /* transpose_a */ false, /* transpose_b */ true);
-    // (B, H, S, S) * scale
-    auto qk_scaled = ttnn::multiply(qk_t, scale);
-    if (mask.has_value()) {
-        qk_scaled = ttnn::where(mask.value()->get_value(), qk_scaled, /* other */ -1e9F);
-    }
-    // (B, H, S, S)
-    auto attention_weights = ttnn_fixed::softmax(qk_scaled, /* axis */ 3);
+    auto attention_weights = ttnn::scale_mask_softmax_in_place(
+        qk_t,
+        scale,
+        mask.value()->get_value(),
+        ttnn::operations::normalization::SoftmaxDefaultProgramConfig{},
+        /* is_causal_mask */ true,
+        ttml::core::ComputeKernelConfig::softmax(),
+        /* numeric_stable */ true);
     // TODO: add dropout here
 
     // (B, H, S, S) x (B, H, S, E) -> (B, H, S, E)
