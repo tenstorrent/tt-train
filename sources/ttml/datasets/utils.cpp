@@ -4,16 +4,31 @@
 
 #include "utils.hpp"
 
-#include "datasets/in_memory_char_dataset.hpp"
+#include "datasets/in_memory_token_dataset.hpp"
+#include "tokenizers/bpe_tokenizer.hpp"
 #include "tokenizers/char_tokenizer_trainer.hpp"
 
 namespace ttml::datasets {
-std::tuple<InMemoryCharDataset, tokenizers::CharTokenizer> create_in_memory_char_dataset(
-    const std::string& text, uint32_t seq_length) {
+
+template <>
+std::tuple<InMemoryTokenDataset, tokenizers::CharTokenizer> create_in_memory_token_dataset<tokenizers::CharTokenizer>(
+    const std::string &text, uint32_t seq_length) {
     tokenizers::CharTokenizer tokenizer = tokenizers::CharTokenizerTrainer::train(text);
 
     std::vector<uint32_t> tokenized_text = tokenizer.encode(text);
 
-    return {InMemoryCharDataset(tokenized_text, seq_length), std::move(tokenizer)};
+    return {InMemoryTokenDataset(tokenized_text, seq_length), std::move(tokenizer)};
 }
+
+template <>
+std::tuple<InMemoryTokenDataset, tokenizers::BPETokenizer> create_in_memory_token_dataset<tokenizers::BPETokenizer>(
+    const std::string &text, uint32_t seq_length) {
+    auto json_file_path = std::string(TOKENIZERS_DATA_PATH) + "/gpt2-tokenizer.json";
+    auto tokenizer = tokenizers::BPETokenizer(json_file_path);
+
+    const std::vector<uint32_t> tokenized_text = tokenizer.encode(text);
+
+    return {InMemoryTokenDataset(tokenized_text, seq_length), std::move(tokenizer)};
+}
+
 }  // namespace ttml::datasets

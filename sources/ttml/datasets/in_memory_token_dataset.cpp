@@ -2,24 +2,24 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-#include "in_memory_char_dataset.hpp"
+#include "in_memory_token_dataset.hpp"
 
 #include <cstddef>
 
 namespace ttml::datasets {
 
-InMemoryCharDataset::InMemoryCharDataset(const std::vector<uint32_t>& tokens, uint32_t seq_length) :
+InMemoryTokenDataset::InMemoryTokenDataset(const std::vector<uint32_t>& tokens, uint32_t seq_length) :
     m_tokens(tokens), m_seq_length(seq_length) {
 }
 
-[[nodiscard]] size_t InMemoryCharDataset::get_size_impl() const {
+[[nodiscard]] size_t InMemoryTokenDataset::get_size_impl() const {
     if (m_tokens.size() <= m_seq_length) {
         return 0UL;
     }
     return m_tokens.size() - m_seq_length;
 }
 
-[[nodiscard]] InMemoryCharDataset::Sample InMemoryCharDataset::get_item_impl(size_t index) const {
+[[nodiscard]] InMemoryTokenDataset::Sample InMemoryTokenDataset::get_item_impl(size_t index) const {
     size_t dataset_size = get_size_impl();
     if (index >= dataset_size) {
         throw std::out_of_range("Index out of range");
