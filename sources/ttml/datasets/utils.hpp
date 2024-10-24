@@ -9,11 +9,13 @@
 
 #include "autograd/auto_context.hpp"
 #include "dataset_subset.hpp"
-#include "in_memory_char_dataset.hpp"
+#include "in_memory_token_dataset.hpp"
 #include "tokenizers/char_tokenizer.hpp"
+
 namespace ttml::datasets {
 
-std::tuple<InMemoryCharDataset, tokenizers::CharTokenizer> create_in_memory_char_dataset(
+template <typename Tokenizer>
+std::tuple<InMemoryTokenDataset, Tokenizer> create_in_memory_token_dataset(
     const std::string& text, uint32_t seq_length);
 
 template <typename DatasetType>
