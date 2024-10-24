@@ -328,7 +328,8 @@ int main(int argc, char **argv) {
     auto end_timer = std::chrono::high_resolution_clock::now();
     auto duration = std::chrono::duration_cast<std::chrono::microseconds>(end_timer - start_timer).count();
     fmt::print(
-        "5000 Steps training time: {} s, cache entries: {}\n",
+        "{} Steps training time: {} s, cache entries: {}\n",
+        max_steps,
         (double)duration / 1000000.,
         device->num_program_cache_entries());
     return 0;
