@@ -9,6 +9,7 @@
 #include "core/tt_tensor_utils.hpp"
 #include "optimizers/optimizer_base.hpp"
 #include "ttnn_fixed/trivial_ttnn_ops.hpp"
+
 namespace {
 
 const std::string kFirstMoment = "first_moment/";
@@ -137,25 +138,29 @@ void AdamW::step() {
         auto& second_moment = second_moment_ptr->get_value();
 
         const auto& gradients = tensor_ptr->get_grad();
-        ttnn::moreh_adamw(
+        if (m_config.weight_decay != 0.0F) {
+            auto weight_decay_update = ttnn::multiply(tensor_ptr->get_value(), m_config.weight_decay * m_config.lr);
+            // weights -= weight_decay * lr * weights
+            tensor_ptr->set_value(ttnn::subtract(tensor_ptr->get_value(), weight_decay_update));
+        }
+
+        // first moment = beta1 * first moment + (1 - beta1) * gradients
+        first_moment =
+            ttnn::add(ttnn::multiply(first_moment, m_config.beta1), ttnn::multiply(gradients, 1.F - m_config.beta1));
+        // second moment = beta2 * second moment + (1 - beta2) * gradients^2
+        second_moment = ttnn::add(
+            ttnn::multiply(second_moment, m_config.beta2),
+            ttnn::multiply(ttnn::square(gradients), 1.F - m_config.beta2));
+        // first_moment_hat = first_moment / (1 - beta1^steps)
+        auto first_moment_hat = ttnn::multiply(first_moment, 1.F / (1.F - std::pow(m_config.beta1, m_steps)));
+        // second_moment_hat = second_moment / (1 - beta2^steps)
+        auto second_moment_hat = ttnn::multiply(second_moment, 1.F / (1.F - std::pow(m_config.beta2, m_steps)));
+        // weights -= lr * first_moment_hat / (sqrt(second_moment_hat) + epsilon)
+        tensor_ptr->set_value(ttnn::subtract(
             tensor_ptr->get_value(),
-            gradients,
-            first_moment,
-            second_moment,
-            m_config.lr,
-            m_config.beta1,
-            m_config.beta2,
-            m_config.epsilon,
-            m_config.weight_decay,
-            m_steps,
-            /* amsgrad */ false,
-            /* max_exp_avg_sq_in */ std::nullopt,
-            /* param_out */ tensor_ptr->get_value(),
-            /* exp_avg_out */ first_moment,
-            /* exp_avg_sq_out */ second_moment,
-            /* max_exp_avg_sq_out */ std::nullopt,
-            /* memory_config */ std::nullopt,
-            /* compute_kernel_config */ core::ComputeKernelConfig::precise());
+            ttnn_fixed::divide(
+                ttnn::multiply(first_moment_hat, m_config.lr),
+                ttnn::add(ttnn::sqrt(second_moment_hat), m_config.epsilon))));
     }
 }
 
