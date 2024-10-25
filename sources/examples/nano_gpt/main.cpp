@@ -73,7 +73,6 @@ void generate(
     }
 
     auto *device = &ttml::autograd::ctx().get_device();
-    device->enable_program_cache();
 
     auto prompt_tokens = tokenizer.encode(prompt);
 
