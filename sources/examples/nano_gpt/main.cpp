@@ -148,7 +148,6 @@ int main(int argc, char **argv) {
     uint32_t batch_size = config.batch_size;
     uint32_t sequence_length = config.sequence_length;
     std::string model_path = "/tmp/nano_gpt.msgpack";
-    ;
     std::string data_path = std::string(DATA_FOLDER) + "/shakespeare.txt";
     bool is_eval = false;
 
