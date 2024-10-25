@@ -14,7 +14,6 @@ namespace ttml::ops {
 
 tt::tt_metal::Tensor matmul(
     const tt::tt_metal::Tensor& a, const tt::tt_metal::Tensor& b, bool transpose_a, bool transpose_b) {
-    ttnn::CoreGrid core_grid(4, 4);
     return ttnn::matmul(
         a,
         b,
@@ -25,7 +24,7 @@ tt::tt_metal::Tensor matmul(
         /* program_config */ std::nullopt,
         /* activation */ std::nullopt,
         /* compute_kernel_config */ core::ComputeKernelConfig::fast(),
-        /* core_grid */ core_grid,
+        /* core_grid */ ttnn::CoreGrid{8, 8},
         /* output_tile */ std::nullopt);
 }
 

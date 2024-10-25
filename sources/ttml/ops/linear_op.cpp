@@ -15,7 +15,6 @@ namespace ttml::ops {
 autograd::TensorPtr linear_op(
     const autograd::TensorPtr& tensor, const autograd::TensorPtr& weight, const autograd::TensorPtr& bias) {
     auto out = autograd::create_tensor();
-    ttnn::CoreGrid core_grid(8, 8);
     out->set_value(ttnn::linear(
         tensor->get_value(),
         weight->get_value(),
@@ -27,7 +26,7 @@ autograd::TensorPtr linear_op(
         /* program_config */ std::nullopt,
         /* activation */ std::nullopt,
         /* compute_kernel_config */ core::ComputeKernelConfig::fast(),
-        /* core_grid */ core_grid));
+        /* core_grid */ ttnn::CoreGrid{8, 8}));
 
     autograd::GradFunction grad = [weight, bias, tensor, out]() {
         auto bias_grad = ttnn::empty_like(bias->get_value());
