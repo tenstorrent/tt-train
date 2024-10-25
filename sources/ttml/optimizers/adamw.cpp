@@ -5,10 +5,10 @@
 #include "adamw.hpp"
 
 #include "autograd/module_base.hpp"
+#include "core/compute_kernel_config.hpp"
 #include "core/tt_tensor_utils.hpp"
 #include "optimizers/optimizer_base.hpp"
 #include "ttnn_fixed/trivial_ttnn_ops.hpp"
-
 namespace {
 
 const std::string kFirstMoment = "first_moment/";
@@ -68,7 +68,7 @@ void MorehAdamW::step() {
             /* exp_avg_sq_out */ second_moment,
             /* max_exp_avg_sq_out */ std::nullopt,
             /* memory_config */ std::nullopt,
-            /* compute_kernel_config */ std::nullopt);
+            /* compute_kernel_config */ core::ComputeKernelConfig::precise());
     }
 }
 
