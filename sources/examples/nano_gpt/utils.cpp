@@ -31,3 +31,7 @@ std::string read_file_to_str(const std::string& file_path) {
     buffer << file.rdbuf();
     return buffer.str();
 }
+
+uint32_t round_up_to_tile(uint32_t value, uint32_t tile_size) {
+    return (value + tile_size - 1) / tile_size * tile_size;
+}
