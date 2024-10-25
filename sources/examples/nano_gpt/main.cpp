@@ -148,7 +148,8 @@ int main(int argc, char **argv) {
     uint32_t max_steps = config.max_steps;
     uint32_t batch_size = config.batch_size;
     uint32_t sequence_length = config.sequence_length;
-    std::string model_path = "";
+    std::string model_path = "/tmp/nano_gpt.msgpack";
+    ;
     std::string data_path = std::string(DATA_FOLDER) + "/shakespeare.txt";
     bool is_eval = false;
 
@@ -257,7 +258,7 @@ int main(int argc, char **argv) {
     transformer_config.embedding_dim = config.embedding_dim;
     transformer_config.dropout_prob = config.dropout_prob;
     transformer_config.num_blocks = config.num_blocks;
-    transformer_config.vocab_size = (tokenizer.get_vocab_size() + 31) / 32 * 32;
+    transformer_config.vocab_size = round_up_to_tile(tokenizer.get_vocab_size());
     transformer_config.max_sequence_length = sequence_length;
     auto model = std::make_shared<Transformer>(transformer_config);
 

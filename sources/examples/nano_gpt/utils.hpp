@@ -48,3 +48,5 @@ void load_model_and_optimizer(
     ttml::serialization::read_module(deserializer, model_name, model.get());
     ttml::serialization::read_optimizer(deserializer, optimizer_name, &optimizer);
 }
+
+uint32_t round_up_to_tile(uint32_t value, uint32_t tile_size = 32);
