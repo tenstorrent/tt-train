@@ -94,8 +94,6 @@ TEST(TrivialTnnFixedTest, TestOriginalStableSoftmax_AllNegative) {
     EXPECT_NEAR(tensor_data[0], -100.F, 1e-2);
     EXPECT_NEAR(tensor_data[1], -99.F, 1e-2);
     auto compute_kernel_config = ttml::core::ComputeKernelConfig::precise();
-    // setting it false because it become totally broken with fp32_dest_acc_en = true
-    // compute_kernel_config.fp32_dest_acc_en = false;
     auto res = ttnn::softmax(
         tensor,
         /* dim */ 3,
