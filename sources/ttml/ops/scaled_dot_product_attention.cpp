@@ -22,7 +22,7 @@ tt::tt_metal::Tensor matmul(
         /* output */ std::nullopt,
         /* bias */ std::nullopt,
         /* output_mem_config */ std::nullopt,
-        /* compute_kernel_config */ core::ComputeKernelConfig::fast());
+        /* compute_kernel_config */ core::ComputeKernelConfig::precise());
 }
 
 autograd::TensorPtr scaled_dot_product_attention(

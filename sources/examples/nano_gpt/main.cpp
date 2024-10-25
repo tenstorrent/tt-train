@@ -75,7 +75,6 @@ void generate(
     }
 
     auto *device = &ttml::autograd::ctx().get_device();
-    device->enable_program_cache();
 
     auto prompt_tokens = tokenizer.encode(prompt);
 
@@ -268,7 +267,7 @@ int main(int argc, char **argv) {
     fmt::print("AdamW configuration:\n");
     fmt::print("    Learning rate: {}\n", adamw_params.lr);
     fmt::print("    Weight decay: {}\n", adamw_params.weight_decay);
-    auto optimizer = ttml::optimizers::AdamW(model->parameters(), adamw_params);
+    auto optimizer = ttml::optimizers::MorehAdamW(model->parameters(), adamw_params);
 
     if (!model_path.empty() && std::filesystem::exists(model_path)) {
         fmt::print("Loading model from {}\n", model_path);
