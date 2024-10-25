@@ -25,7 +25,8 @@ autograd::TensorPtr linear_op(
         /* dtype */ std::nullopt,
         /* program_config */ std::nullopt,
         /* activation */ std::nullopt,
-        /* compute_kernel_config */ core::ComputeKernelConfig::fast()));
+        /* compute_kernel_config */ core::ComputeKernelConfig::fast(),
+        /* core_grid */ ttnn::CoreGrid{8, 8}));
 
     autograd::GradFunction grad = [weight, bias, tensor, out]() {
         auto bias_grad = ttnn::empty_like(bias->get_value());
