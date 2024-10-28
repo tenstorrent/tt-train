@@ -173,8 +173,7 @@ tt::tt_metal::Tensor from_vector<float>(
     }
     auto owned_buffer = create_owned_buffer_from_vector_of_floats(buffer, data_type);
     // remove possible paddings from the shape (it conflicts with ROW MAJOR)
-    auto output =
-        tt::tt_metal::Tensor(OwnedStorage{owned_buffer}, logical_shape.as_vector(), data_type, Layout::ROW_MAJOR);
+    auto output = tt::tt_metal::Tensor(OwnedStorage{owned_buffer}, logical_shape, data_type, Layout::ROW_MAJOR);
 
     auto to_device_odd_slow = [&]() {
         if (layout == Layout::TILE) {
@@ -228,8 +227,7 @@ tt::tt_metal::Tensor from_vector<uint32_t>(
 
     // remove possible paddings from the shape (it conflicts with ROW MAJOR)
     std::vector<uint32_t> buffer_copy = buffer;
-    auto output = ttml_create_owned_tensor(
-        std::move(buffer_copy), logical_shape.as_vector(), DataType::UINT32, Layout::ROW_MAJOR);
+    auto output = ttml_create_owned_tensor(std::move(buffer_copy), logical_shape, DataType::UINT32, Layout::ROW_MAJOR);
     if (device != nullptr) {
         if (layout != Layout::ROW_MAJOR) {
             output = ttnn::to_layout(output, layout, std::nullopt, output_mem_config, device);
@@ -256,8 +254,7 @@ tt::tt_metal::Tensor from_vector<int32_t>(
 
     // remove possible paddings from the shape (it conflicts with ROW MAJOR)
     std::vector<int32_t> buffer_copy = buffer;
-    auto output =
-        ttml_create_owned_tensor(std::move(buffer_copy), logical_shape.as_vector(), DataType::INT32, Layout::ROW_MAJOR);
+    auto output = ttml_create_owned_tensor(std::move(buffer_copy), logical_shape, DataType::INT32, Layout::ROW_MAJOR);
     if (device != nullptr) {
         if (layout != Layout::ROW_MAJOR) {
             output = ttnn::to_layout(output, layout, std::nullopt, output_mem_config, device);
