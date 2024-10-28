@@ -22,10 +22,11 @@ namespace ttml::ops {
 autograd::TensorPtr layernorm(
     const autograd::TensorPtr& tensor, const autograd::TensorPtr& gamma, const autograd::TensorPtr& beta) {
     auto tensor_shape = tensor->get_value().get_shape();
-    auto mean = core::zeros(
-        core::create_shape({tensor_shape[0], tensor_shape[1], tensor_shape[2], 1}), &autograd::ctx().get_device());
-    auto rstd = core::zeros(
-        core::create_shape({tensor_shape[0], tensor_shape[1], tensor_shape[2], 1}), &autograd::ctx().get_device());
+    auto mean = core::empty(
+        core::create_shape({tensor_shape[0], tensor_shape[1], tensor_shape[2], 1}),
+        &autograd::ctx().get_device(),
+        tensor->get_value().memory_config());
+    auto rstd = ttnn::empty_like(mean);
     auto output = ttnn::empty_like(tensor->get_value());
 
     auto out_tensors = ttnn::moreh_layer_norm(

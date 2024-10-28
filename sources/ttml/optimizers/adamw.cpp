@@ -34,7 +34,8 @@ MorehAdamW::MorehAdamW(autograd::NamedParameters parameters, const AdamWConfig& 
 void MorehAdamW::zero_grad() {
     for (auto& [key, tensor_ptr] : m_parameters) {
         if (tensor_ptr->get_requires_grad() && tensor_ptr->is_grad_initialized()) {
-            tensor_ptr->set_grad(core::zeros_like(tensor_ptr->get_value()));
+            // setting gradients to not initialized tensor
+            tensor_ptr->set_grad(ttnn::Tensor());
         }
     }
 }
@@ -121,7 +122,8 @@ AdamW::AdamW(autograd::NamedParameters parameters, const AdamWConfig& config) :
 void AdamW::zero_grad() {
     for (auto& [key, tensor_ptr] : m_parameters) {
         if (tensor_ptr->get_requires_grad() && tensor_ptr->is_grad_initialized()) {
-            tensor_ptr->set_grad(core::zeros_like(tensor_ptr->get_value()));
+            // setting gradients to not initialized tensor
+            tensor_ptr->set_grad(ttnn::Tensor());
         }
     }
 }

@@ -34,7 +34,15 @@ Tensor::Tensor(tt::tt_metal::Tensor m_value, bool requires_grad) :
 }
 
 void Tensor::add_grad(const tt::tt_metal::Tensor& grad) {
-    try_init_grad();
+    if (!is_grad_initialized()) {
+        if (grad.get_shape() != m_value.get_shape()) {
+            throw std::logic_error(fmt::format(
+                "Shapes of gradients are not equal. Expected: {}, got: {}", m_value.get_shape(), grad.get_shape()));
+        }
+
+        m_grad = grad;
+        return;
+    }
 
     const auto& grad_shape = grad.get_shape();
     const auto& m_grad_shape = m_grad.get_shape();
@@ -43,8 +51,9 @@ void Tensor::add_grad(const tt::tt_metal::Tensor& grad) {
             fmt::format("Shapes of gradients are not equal. Expected: {}, got: {}", m_grad_shape, grad_shape));
     }
 
-    // m_grad = ttnn::add(m_grad, grad);
-    ttnn::add_(m_grad, grad);
+    // It is important to not use inline addition here
+    // m_grad might share memory with other tensors
+    m_grad = ttnn::add(m_grad, grad);
 }
 
 void Tensor::backward() {
