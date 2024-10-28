@@ -71,8 +71,8 @@ tt::tt_metal::Tensor ttml_create_owned_tensor(
 template <class T = float, class InternalT = bfloat16>
 std::vector<T> untile_tensor_to_vec(const tt::tt_metal::Tensor& cpu_tensor) {
     auto tiled_buffer = tt::tt_metal::host_buffer::get_as<InternalT>(cpu_tensor);
-    auto untiled_shape = cpu_tensor.get_shape();
-    auto tiled_shape = untiled_shape.with_tile_padding();
+    auto untiled_shape = cpu_tensor.get_logical_shape();
+    auto tiled_shape = cpu_tensor.get_padded_shape();
 
     // Calculate total size of the untiled tensor
     size_t total_size = 1;
@@ -82,7 +82,7 @@ std::vector<T> untile_tensor_to_vec(const tt::tt_metal::Tensor& cpu_tensor) {
 
     std::vector<T> untiled_data(total_size);
 
-    auto compute_flat_index = [](const std::vector<uint32_t>& indices, ttnn::Shape& shape) -> uint32_t {
+    auto compute_flat_index = [](const std::vector<uint32_t>& indices, ttnn::SimpleShape& shape) -> uint32_t {
         uint32_t flat_index = 0;
         uint32_t multiplier = 1;
         for (int i = (int)indices.size() - 1; i >= 0; --i) {
