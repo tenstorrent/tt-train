@@ -17,6 +17,7 @@ void print_tensor_stats(const tt::tt_metal::Tensor& tensor, const std::string& n
 tt::tt_metal::Tensor zeros_like(const tt::tt_metal::Tensor& tensor);
 tt::tt_metal::Tensor ones_like(const tt::tt_metal::Tensor& tensor);
 
+tt::tt_metal::Tensor empty(const ttnn::Shape& shape, tt::tt_metal::Device* device, const MemoryConfig& memory_config);
 tt::tt_metal::Tensor full(const ttnn::Shape& shape, float value, tt::tt_metal::Device* device);
 tt::tt_metal::Tensor zeros(const ttnn::Shape& shape, tt::tt_metal::Device* device);
 tt::tt_metal::Tensor ones(const ttnn::Shape& shape, tt::tt_metal::Device* device);

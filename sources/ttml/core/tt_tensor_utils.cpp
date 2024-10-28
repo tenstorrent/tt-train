@@ -7,13 +7,11 @@
 #include <fmt/base.h>
 #include <fmt/color.h>
 
-#include <common/bfloat16.hpp>
 #include <cstddef>
 #include <cstdint>
 #include <functional>
 #include <optional>
 #include <stdexcept>
-#include <ttnn/operations/full_like/full_like.hpp>
 
 #include "ttnn_all_includes.hpp"
 
@@ -125,6 +123,10 @@ tt::tt_metal::Tensor zeros_like(const tt::tt_metal::Tensor& tensor) {
 
 tt::tt_metal::Tensor ones_like(const tt::tt_metal::Tensor& tensor) {
     return ttnn::moreh_full_like(tensor, 1.F, tensor.get_dtype(), tensor.get_layout(), tensor.memory_config());
+}
+
+tt::tt_metal::Tensor empty(const ttnn::Shape& shape, tt::tt_metal::Device* device, const MemoryConfig& memory_config) {
+    return ttnn::empty(shape, DataType::BFLOAT16, Layout::TILE, device, memory_config);
 }
 
 tt::tt_metal::Tensor full(const ttnn::Shape& shape, float value, tt::tt_metal::Device* device) {
