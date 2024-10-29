@@ -7,6 +7,7 @@
 #include <fmt/base.h>
 #include <fmt/color.h>
 
+#include <algorithm>
 #include <cstddef>
 #include <cstdint>
 #include <functional>
@@ -18,16 +19,38 @@
 namespace {
 
 template <typename T>
+T get_median(std::vector<T>& vec) {
+    assert(!vec.empty());
+    std::nth_element(vec.begin(), vec.begin() + vec.size() / 2, vec.end());
+    if (vec.size() & 1U) {
+        return vec[vec.size() / 2];
+    }
+    auto neighbor = *std::max_element(vec.begin(), vec.begin() + vec.size() / 2);
+    return std::midpoint(neighbor, vec[vec.size() / 2]);
+};
+
+template <typename T>
 void print_tensor_stats_(const tt::tt_metal::Tensor& tensor, const std::string& name) {
     auto tensor_shape = tensor.get_shape();
     auto tensor_vec = ttml::core::to_vector<T>(tensor);
+
+    auto median = get_median(tensor_vec);
+    auto mean = std::accumulate(tensor_vec.begin(), tensor_vec.end(), 0.F) / static_cast<float>(tensor_vec.size());
+    auto mean_sq =
+        std::accumulate(
+            tensor_vec.begin(), tensor_vec.end(), 0.F, [](float acc, float val) { return acc + val * val; }) /
+        static_cast<float>(tensor_vec.size());
+    auto variance = mean_sq - mean * mean;
+
     fmt::print(
-        "{}: shape: {} min: {} max: {} mean: {}\n",
+        "{}: shape: {} min: {} max: {} median: {} mean: {} variance: {}\n",
         name,
         tensor_shape,
         *std::min_element(tensor_vec.begin(), tensor_vec.end()),
         *std::max_element(tensor_vec.begin(), tensor_vec.end()),
-        std::accumulate(tensor_vec.begin(), tensor_vec.end(), 0.F) / static_cast<float>(tensor_vec.size()));
+        median,
+        mean,
+        variance);
 }
 
 // copypaste from deprecated tensor pybinds ttnn
