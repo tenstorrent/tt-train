@@ -21,9 +21,9 @@ void clip_tensor_norm_(tt::tt_metal::Tensor& tensor, float max_norm) {
     ttnn::moreh_sum(squared, std::nullopt, true, out, squared.memory_config(), core::ComputeKernelConfig::precise());
     auto grad_norm_tensor = ttnn::sqrt(out);
 
-    auto grad_norm_tensor_repeated = ttnn::repeat(grad_norm_tensor, tensor.get_shape().logical_shape());
-    auto inv_grad_norm_tensor_repeated = ttnn::reciprocal(grad_norm_tensor);
-    auto scale = ttnn::multiply(inv_grad_norm_tensor_repeated, max_norm);
+    auto grad_norm_tensor_repeated = ttnn::repeat(grad_norm_tensor, tensor.get_logical_shape());
+    auto inv_grad_norm_tensor = ttnn::reciprocal(grad_norm_tensor);
+    auto scale = ttnn::multiply(inv_grad_norm_tensor, max_norm);
     auto scaled_tensor = ttnn::multiply(tensor, scale);
     core::print_tensor_stats(tensor, "tensor");
     core::print_tensor_stats(grad_norm_tensor, "grad_norm_tensor");
