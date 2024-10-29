@@ -5,6 +5,7 @@
 #include "autograd/clip_gradient_norm.hpp"
 
 #include "autograd/auto_context.hpp"
+#include "core/compute_kernel_config.hpp"
 #include "core/tt_tensor_utils.hpp"
 
 namespace ttml::autograd {
@@ -17,14 +18,17 @@ void clip_tensor_norm_(tt::tt_metal::Tensor& tensor, float max_norm) {
     auto squared = ttnn::multiply(tensor, tensor);
     auto shape = core::create_shape({1, 1, 1, 1});
     auto out = ttml::core::from_vector({0.F}, shape, &ttml::autograd::ctx().get_device());
-    ttnn::moreh_sum(squared, std::nullopt, true, out, squared.memory_config(), std::nullopt);
+    ttnn::moreh_sum(squared, std::nullopt, true, out, squared.memory_config(), core::ComputeKernelConfig::precise());
     auto grad_norm_tensor = ttnn::sqrt(out);
 
-    // this is workaround before ttnn::repeat is fixed
-    auto grad_norm_tensor_float = ttml::core::to_vector(grad_norm_tensor)[0];
-    if (grad_norm_tensor_float > max_norm) {
-        auto scale = max_norm / grad_norm_tensor_float;
-        tensor = ttnn::multiply(tensor, scale);
-    }
+    auto grad_norm_tensor_repeated = ttnn::repeat(grad_norm_tensor, tensor.get_shape().logical_shape());
+    auto inv_grad_norm_tensor_repeated = ttnn::reciprocal(grad_norm_tensor);
+    auto scale = ttnn::multiply(inv_grad_norm_tensor_repeated, max_norm);
+    auto scaled_tensor = ttnn::multiply(tensor, scale);
+    core::print_tensor_stats(tensor, "tensor");
+    core::print_tensor_stats(grad_norm_tensor, "grad_norm_tensor");
+    core::print_tensor_stats(grad_norm_tensor_repeated, "grad_norm_tensor_repeated");
+    tensor = ttnn::where(ttnn::gt(grad_norm_tensor_repeated, max_norm), scaled_tensor, tensor);
 }
+
 }  // namespace ttml::autograd
