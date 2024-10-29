@@ -10,7 +10,7 @@ namespace ttml::optimizers {
 
 class OptimizerBase {
 public:
-    OptimizerBase() = default;
+    explicit OptimizerBase(autograd::NamedParameters&& parameters);
     OptimizerBase(const OptimizerBase&) = delete;
     OptimizerBase& operator=(const OptimizerBase&) = delete;
     OptimizerBase(OptimizerBase&&) = delete;

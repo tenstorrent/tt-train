@@ -20,7 +20,7 @@ const std::string kSecondMoment = "second_moment/";
 namespace ttml::optimizers {
 
 MorehAdamW::MorehAdamW(autograd::NamedParameters parameters, const AdamWConfig& config) :
-    m_config(config), m_parameters(std::move(parameters)) {
+    OptimizerBase(std::move(parameters)), m_config(config) {
     for (const auto& [key, tensor_ptr] : m_parameters) {
         if (tensor_ptr->get_requires_grad()) {
             m_first_moment.emplace(
@@ -108,7 +108,7 @@ void MorehAdamW::set_steps(size_t steps) {
 }
 
 AdamW::AdamW(autograd::NamedParameters parameters, const AdamWConfig& config) :
-    m_config(config), m_parameters(std::move(parameters)) {
+    OptimizerBase(std::move(parameters)), m_config(config) {
     for (const auto& [key, tensor_ptr] : m_parameters) {
         if (tensor_ptr->get_requires_grad()) {
             m_first_moment.emplace(

@@ -13,7 +13,7 @@
 namespace ttml::optimizers {
 
 SGD::SGD(ttml::autograd::NamedParameters parameters, const SGDConfig& config) :
-    m_config(config), m_parameters(std::move(parameters)) {
+    OptimizerBase(std::move(parameters)), m_config(config) {
     for (const auto& [name, tensor_ptr] : m_parameters) {
         if (tensor_ptr->get_requires_grad()) {
             m_theta.emplace(
