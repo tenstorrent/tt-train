@@ -56,7 +56,6 @@ public:
 private:
     size_t m_steps{0};
     AdamWConfig m_config;
-    ttml::autograd::NamedParameters m_parameters;
     autograd::NamedParameters m_first_moment;
     autograd::NamedParameters m_second_moment;
 };
