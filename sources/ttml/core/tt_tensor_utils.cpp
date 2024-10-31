@@ -210,7 +210,7 @@ tt::tt_metal::Tensor from_vector<float>(
     auto to_device_even_fast = [&]() {
         output = ttnn::to_device(output, device, output_mem_config);
         if (layout == Layout::TILE) {
-            output = ttnn::tilize_with_zero_padding(output, output_mem_config, std::nullopt, false);
+            output = ttnn::tilize_with_zero_padding(output, output_mem_config, std::nullopt, /* multicore */ true);
         }
 
         return output;
