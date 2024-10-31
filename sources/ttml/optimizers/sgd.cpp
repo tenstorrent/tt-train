@@ -6,14 +6,13 @@
 
 #include <fmt/format.h>
 
-#include <ttnn/operations/eltwise/binary/binary.hpp>
-
+#include "core/debug.hpp"
 #include "core/tt_tensor_utils.hpp"
 
 namespace ttml::optimizers {
 
 SGD::SGD(ttml::autograd::NamedParameters parameters, const SGDConfig& config) :
-    m_config(config), m_parameters(std::move(parameters)) {
+    OptimizerBase(std::move(parameters)), m_config(config) {
     for (const auto& [name, tensor_ptr] : m_parameters) {
         if (tensor_ptr->get_requires_grad()) {
             m_theta.emplace(
@@ -31,6 +30,10 @@ void SGD::zero_grad() {
 }
 
 void SGD::step() {
+    if (core::debug::Debug::enable_print_tensor_stats()) {
+        print_stats();
+    }
+
     for (auto& [name, theta_ptr] : m_theta) {
         auto& theta = theta_ptr->get_value();
         const auto& tensor_ptr = m_parameters.at(name);

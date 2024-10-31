@@ -38,7 +38,6 @@ public:
 private:
     size_t steps{0};
     SGDConfig m_config;
-    ttml::autograd::NamedParameters m_parameters;
     ttml::autograd::NamedParameters m_theta;
 };
 
