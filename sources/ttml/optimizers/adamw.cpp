@@ -57,7 +57,7 @@ void MorehAdamW::step() {
         auto& second_moment = second_moment_ptr->get_value();
 
         const auto& gradients = tensor_ptr->get_grad();
-        constexpr size_t default_step = 1;  //
+        constexpr size_t default_step = 1;  // we don't need to call pow(beta, step) in  the kernel.
         ttnn::moreh_adamw(
             tensor_ptr->get_value(),
             gradients,
