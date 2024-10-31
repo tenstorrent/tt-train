@@ -42,7 +42,7 @@ void MorehAdamW::zero_grad() {
 }
 
 void MorehAdamW::step() {
-    if (core::debug::Debug::enable_print_tensor_stats) {
+    if (core::debug::Debug::enable_print_tensor_stats()) {
         print_stats();
     }
 
@@ -134,7 +134,7 @@ void AdamW::zero_grad() {
 }
 
 void AdamW::step() {
-    if (core::debug::Debug::enable_print_tensor_stats) {
+    if (core::debug::Debug::enable_print_tensor_stats()) {
         print_stats();
     }
 

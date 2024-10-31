@@ -30,7 +30,7 @@ void SGD::zero_grad() {
 }
 
 void SGD::step() {
-    if (core::debug::Debug::enable_print_tensor_stats) {
+    if (core::debug::Debug::enable_print_tensor_stats()) {
         print_stats();
     }
 

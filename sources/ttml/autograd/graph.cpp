@@ -21,7 +21,7 @@ const std::vector<GraphNode>& Graph::get_graph_nodes() const {
 
 NodeId Graph::add_node(GradFunction&& grad_function, std::span<NodeId> links) {
     size_t curr_id = m_graph_nodes.size();
-    if (core::debug::Debug::enable_backward_performance_measurement) {
+    if (core::debug::Debug::enable_backward_performance_measurement()) {
         //  we are using this wrapper to measure the time taken by each node.
         GradFunction wrapper = [grad_function = std::move(grad_function), curr_id, this]() {
             const std::type_info& typeInfo = grad_function.target_type();
