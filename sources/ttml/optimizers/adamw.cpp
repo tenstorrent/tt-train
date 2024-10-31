@@ -6,6 +6,7 @@
 
 #include "autograd/module_base.hpp"
 #include "core/compute_kernel_config.hpp"
+#include "core/debug.hpp"
 #include "core/tt_tensor_utils.hpp"
 #include "optimizers/optimizer_base.hpp"
 #include "ttnn_fixed/trivial_ttnn_ops.hpp"
@@ -41,6 +42,10 @@ void MorehAdamW::zero_grad() {
 }
 
 void MorehAdamW::step() {
+    if (core::debug::Debug::enable_print_tensor_stats) {
+        print_stats();
+    }
+
     m_steps++;
     for (auto& [key, first_moment_ptr] : m_first_moment) {
         const auto& tensor_ptr = m_parameters.at(key);
@@ -129,6 +134,10 @@ void AdamW::zero_grad() {
 }
 
 void AdamW::step() {
+    if (core::debug::Debug::enable_print_tensor_stats) {
+        print_stats();
+    }
+
     m_steps++;
     for (auto& [key, first_moment_ptr] : m_first_moment) {
         const auto& tensor_ptr = m_parameters.at(key);

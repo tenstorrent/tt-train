@@ -6,6 +6,7 @@
 
 #include <fmt/core.h>
 
+#include "core/debug.hpp"
 #include "core/system_utils.hpp"
 
 namespace ttml::autograd {
@@ -20,11 +21,8 @@ const std::vector<GraphNode>& Graph::get_graph_nodes() const {
 
 NodeId Graph::add_node(GradFunction&& grad_function, std::span<NodeId> links) {
     size_t curr_id = m_graph_nodes.size();
-
-    //   we are using this wrapper to measure the time taken by each node.
-    //   We do it pretty often so currently I commented it out.
-    constexpr bool debug_perf = false;
-    if (debug_perf) {
+    if (core::debug::Debug::enable_backward_performance_measurement) {
+        //  we are using this wrapper to measure the time taken by each node.
         GradFunction wrapper = [grad_function = std::move(grad_function), curr_id, this]() {
             const std::type_info& typeInfo = grad_function.target_type();
             auto demangled_name = core::demangle(typeInfo.name());
