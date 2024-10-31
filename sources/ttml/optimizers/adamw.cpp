@@ -6,6 +6,7 @@
 
 #include "autograd/module_base.hpp"
 #include "core/compute_kernel_config.hpp"
+#include "core/debug.hpp"
 #include "core/tt_tensor_utils.hpp"
 #include "optimizers/optimizer_base.hpp"
 #include "ttnn_fixed/trivial_ttnn_ops.hpp"
@@ -20,7 +21,7 @@ const std::string kSecondMoment = "second_moment/";
 namespace ttml::optimizers {
 
 MorehAdamW::MorehAdamW(autograd::NamedParameters parameters, const AdamWConfig& config) :
-    m_config(config), m_parameters(std::move(parameters)) {
+    OptimizerBase(std::move(parameters)), m_config(config) {
     for (const auto& [key, tensor_ptr] : m_parameters) {
         if (tensor_ptr->get_requires_grad()) {
             m_first_moment.emplace(
@@ -41,6 +42,10 @@ void MorehAdamW::zero_grad() {
 }
 
 void MorehAdamW::step() {
+    if (core::debug::Debug::enable_print_tensor_stats()) {
+        print_stats();
+    }
+
     m_steps++;
     for (auto& [key, first_moment_ptr] : m_first_moment) {
         const auto& tensor_ptr = m_parameters.at(key);
@@ -108,7 +113,7 @@ void MorehAdamW::set_steps(size_t steps) {
 }
 
 AdamW::AdamW(autograd::NamedParameters parameters, const AdamWConfig& config) :
-    m_config(config), m_parameters(std::move(parameters)) {
+    OptimizerBase(std::move(parameters)), m_config(config) {
     for (const auto& [key, tensor_ptr] : m_parameters) {
         if (tensor_ptr->get_requires_grad()) {
             m_first_moment.emplace(
@@ -129,6 +134,10 @@ void AdamW::zero_grad() {
 }
 
 void AdamW::step() {
+    if (core::debug::Debug::enable_print_tensor_stats()) {
+        print_stats();
+    }
+
     m_steps++;
     for (auto& [key, first_moment_ptr] : m_first_moment) {
         const auto& tensor_ptr = m_parameters.at(key);

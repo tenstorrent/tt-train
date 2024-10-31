@@ -4,16 +4,13 @@
 
 #pragma once
 
-#include <ttnn/tensor/tensor.hpp>
-
 #include "autograd/module_base.hpp"
-#include "core/tt_tensor_utils.hpp"
 
 namespace ttml::optimizers {
 
 class OptimizerBase {
 public:
-    OptimizerBase() = default;
+    explicit OptimizerBase(autograd::NamedParameters&& parameters);
     OptimizerBase(const OptimizerBase&) = delete;
     OptimizerBase& operator=(const OptimizerBase&) = delete;
     OptimizerBase(OptimizerBase&&) = delete;
@@ -29,6 +26,11 @@ public:
 
     [[nodiscard]] virtual size_t get_steps() const = 0;
     virtual void set_steps(size_t steps) = 0;
+
+    virtual void print_stats() const;
+
+protected:
+    autograd::NamedParameters m_parameters;
 };
 
 }  // namespace ttml::optimizers

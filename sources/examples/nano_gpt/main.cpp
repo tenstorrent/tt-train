@@ -284,7 +284,6 @@ int main(int argc, char **argv) {
     }
 
     const uint32_t num_epochs = config.num_epochs;
-    std::ofstream loss_file("/tmp/loss.txt");
     for (uint32_t epoch = 0; epoch < num_epochs; ++epoch) {
         for (auto [features, target, masks, positions] : train_dataloader) {
             auto start_timer = std::chrono::high_resolution_clock::now();
@@ -298,7 +297,6 @@ int main(int argc, char **argv) {
             ttml::autograd::ctx().reset_graph();
             auto global_step = optimizer.get_steps();
             fmt::print("Step: {}, Loss: {}\n", global_step, loss_float);
-            loss_file << fmt::format("Step: {}, Loss: {}", global_step, loss_float) << "\n";
 
             if (!model_path.empty() && global_step % model_save_interval == 0) {
                 save_model_and_optimizer(model_path, model, optimizer, "transformer", "adamw");
@@ -323,7 +321,6 @@ int main(int argc, char **argv) {
         save_model_and_optimizer(model_path, model, optimizer, "transformer", "adamw");
     }
 
-    loss_file.close();
     auto end_timer = std::chrono::high_resolution_clock::now();
     auto duration = std::chrono::duration_cast<std::chrono::microseconds>(end_timer - start_timer).count();
     fmt::print(
