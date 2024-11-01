@@ -149,7 +149,7 @@ tt::tt_metal::Tensor empty(const ttnn::Shape& shape, tt::tt_metal::Device* devic
     return ttnn::empty(shape, DataType::BFLOAT16, Layout::TILE, device, memory_config);
 }
 
-tt::tt_metal::Tensor full(const ttnn::Shape& shape, float value, tt::tt_metal::Device* device) {
+tt::tt_metal::Tensor full(const ttnn::Shape& shape, float value, tt::tt_metal::Device* device, DataType dtype) {
     auto padded = shape.with_tile_padding();
     // if the shape is not divisible by TILE_SIZE, we need to add padding
     if (padded[2] % ttnn::types::TILE_SIZE != 0 || padded[3] % ttnn::types::TILE_SIZE != 0) {
@@ -165,18 +165,18 @@ tt::tt_metal::Tensor full(const ttnn::Shape& shape, float value, tt::tt_metal::D
                 (padded[2] + additional_padding_h),
                 (padded[3] + additional_padding_w),
             });
-        return ttnn::full(padded_shape, value, DataType::BFLOAT16, Layout::TILE, std::ref(*device));
+        return ttnn::full(padded_shape, value, dtype, Layout::TILE, std::ref(*device));
     }
     // if not padding available, we can just create a tensor with the given shape
-    return ttnn::full(shape, value, DataType::BFLOAT16, Layout::TILE, std::ref(*device));
+    return ttnn::full(shape, value, dtype, Layout::TILE, std::ref(*device));
 }
 
-tt::tt_metal::Tensor zeros(const ttnn::Shape& shape, tt::tt_metal::Device* device) {
-    return core::full(shape, 0.F, device);
+tt::tt_metal::Tensor zeros(const ttnn::Shape& shape, tt::tt_metal::Device* device, DataType dtype) {
+    return core::full(shape, 0.F, device, dtype);
 }
 
-tt::tt_metal::Tensor ones(const ttnn::Shape& shape, tt::tt_metal::Device* device) {
-    return core::full(shape, 1.F, device);
+tt::tt_metal::Tensor ones(const ttnn::Shape& shape, tt::tt_metal::Device* device, DataType dtype) {
+    return core::full(shape, 1.F, device, dtype);
 }
 
 template <>
@@ -225,44 +225,49 @@ tt::tt_metal::Tensor from_vector<float, DataType::BFLOAT16>(
 template <>
 tt::tt_metal::Tensor from_vector<float, DataType::FLOAT32>(
     const std::vector<float>& buffer, const ttnn::Shape& shape, tt::tt_metal::Device* device, Layout layout) {
-    assert(device != nullptr);
-    const DataType data_type = DataType::FLOAT32;
-    MemoryConfig output_mem_config{};
-    auto logical_shape = shape.logical_shape();
-    size_t volume = logical_shape.volume();
-    if (buffer.size() != volume) {
-        throw std::logic_error(
-            fmt::format("Current buffer size is {} different from shape volume {}", buffer.size(), volume));
-    }
-    auto owned_buffer = create_owned_buffer_from_vector_of_floats(buffer, data_type);
-    // remove possible paddings from the shape (it conflicts with ROW MAJOR)
-    auto output = tt::tt_metal::Tensor(OwnedStorage{owned_buffer}, logical_shape, data_type, Layout::ROW_MAJOR);
+    auto tensor = from_vector<float, DataType::BFLOAT16>(buffer, shape, device, layout);
+    return ttnn::typecast(tensor, DataType::FLOAT32);
 
-    auto to_device_odd_slow = [&]() {
-        if (layout == Layout::TILE) {
-            output = ttnn::to_layout(output, layout, std::nullopt, output_mem_config, device);
-        }
+    // Currently not supported due to tilize issue with float32
 
-        output = ttnn::to_device(output, device, output_mem_config);
-        return output;
-    };
+    // assert(device != nullptr);
+    // const DataType data_type = DataType::FLOAT32;
+    // MemoryConfig output_mem_config{};
+    // auto logical_shape = shape.logical_shape();
+    // size_t volume = logical_shape.volume();
+    // if (buffer.size() != volume) {
+    //     throw std::logic_error(
+    //         fmt::format("Current buffer size is {} different from shape volume {}", buffer.size(), volume));
+    // }
+    // auto owned_buffer = create_owned_buffer_from_vector_of_floats(buffer, data_type);
+    // // remove possible paddings from the shape (it conflicts with ROW MAJOR)
+    // auto output = tt::tt_metal::Tensor(OwnedStorage{owned_buffer}, logical_shape, data_type, Layout::ROW_MAJOR);
 
-    auto to_device_even_fast = [&]() {
-        output = ttnn::to_device(output, device, output_mem_config);
-        if (layout == Layout::TILE) {
-            output = ttnn::tilize_with_zero_padding(output, output_mem_config, std::nullopt, /* multicore */ true);
-        }
+    // auto to_device_odd_slow = [&]() {
+    //     if (layout == Layout::TILE) {
+    //         output = ttnn::to_layout(output, layout, std::nullopt, output_mem_config, device);
+    //     }
 
-        return output;
-    };
+    //     output = ttnn::to_device(output, device, output_mem_config);
+    //     return output;
+    // };
 
-    if (shape[-1] % 2 == 1) {
-        output = to_device_odd_slow();
-    } else {
-        output = to_device_even_fast();
-    }
+    // auto to_device_even_fast = [&]() {
+    //     output = ttnn::to_device(output, device, output_mem_config);
+    //     if (layout == Layout::TILE) {
+    //         output = ttnn::tilize_with_zero_padding(output, output_mem_config, std::nullopt, /* multicore */ true);
+    //     }
 
-    return output;
+    //     return output;
+    // };
+
+    // if (shape[-1] % 2 == 1) {
+    //     output = to_device_odd_slow();
+    // } else {
+    //     output = to_device_even_fast();
+    // }
+
+    // return output;
 }
 
 template <>
