@@ -3,17 +3,19 @@
 // SPDX-License-Identifier: Apache-2.0
 
 #pragma once
+
 #include <core/ttnn_all_includes.hpp>
 #include <memory>
 #include <optional>
 
-#include "autograd/graph.hpp"
+#include "autocast_tensor.hpp"
 #include "graph.hpp"
 
 namespace ttml::autograd {
+
 class Tensor : public std::enable_shared_from_this<Tensor> {
 private:
-    tt::tt_metal::Tensor m_value;
+    AutocastTensor m_value;
     tt::tt_metal::Tensor m_grad;
     bool m_requires_grad = true;
     std::optional<NodeId> m_node_id;
@@ -24,7 +26,7 @@ public:
     Tensor(Tensor &&) noexcept = default;
     Tensor &operator=(const Tensor &) = default;
     Tensor &operator=(Tensor &&) noexcept = default;
-    explicit Tensor(tt::tt_metal::Tensor m_value, bool requires_grad = true);
+    explicit Tensor(const tt::tt_metal::Tensor &value, bool requires_grad = true);
     ~Tensor() = default;
 
     void set_value(const tt::tt_metal::Tensor &value);
@@ -34,8 +36,7 @@ public:
     void add_grad(const tt::tt_metal::Tensor &grad);
     void set_requires_grad(bool requires_grad);
 
-    tt::tt_metal::Tensor &get_value();
-    const tt::tt_metal::Tensor &get_value() const;
+    tt::tt_metal::Tensor &get_value(bool full_precision = false);
     const tt::tt_metal::Tensor &get_grad() const;
     tt::tt_metal::Tensor &get_grad();
     bool get_requires_grad() const;
