@@ -82,8 +82,19 @@ void moreh_linear_backward(
         /* bias_grad_mem_config */ std::nullopt,
         /* compute_kernel_config */ core::ComputeKernelConfig::precise());
 
+    if (!res[0].has_value()) {
+        throw std::runtime_error("Tensor gradient is not available");
+    }
     tensor->add_grad(res[0].value());
+
+    if (!res[1].has_value()) {
+        throw std::runtime_error("Weight gradient is not available");
+    }
     weight->add_grad(res[1].value());
+
+    if (!res[2].has_value()) {
+        throw std::runtime_error("Bias gradient is not available");
+    }
     bias->add_grad(res[2].value());
 }
 
