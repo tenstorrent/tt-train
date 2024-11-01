@@ -180,7 +180,7 @@ tt::tt_metal::Tensor ones(const ttnn::Shape& shape, tt::tt_metal::Device* device
 }
 
 template <>
-tt::tt_metal::Tensor from_vector<float>(
+tt::tt_metal::Tensor from_vector<float, DataType::BFLOAT16>(
     const std::vector<float>& buffer, const ttnn::Shape& shape, tt::tt_metal::Device* device, Layout layout) {
     assert(device != nullptr);
     const DataType data_type = DataType::BFLOAT16;
@@ -221,21 +221,66 @@ tt::tt_metal::Tensor from_vector<float>(
 
     return output;
 }
+
+template <>
+tt::tt_metal::Tensor from_vector<float, DataType::FLOAT32>(
+    const std::vector<float>& buffer, const ttnn::Shape& shape, tt::tt_metal::Device* device, Layout layout) {
+    assert(device != nullptr);
+    const DataType data_type = DataType::FLOAT32;
+    MemoryConfig output_mem_config{};
+    auto logical_shape = shape.logical_shape();
+    size_t volume = logical_shape.volume();
+    if (buffer.size() != volume) {
+        throw std::logic_error(
+            fmt::format("Current buffer size is {} different from shape volume {}", buffer.size(), volume));
+    }
+    auto owned_buffer = create_owned_buffer_from_vector_of_floats(buffer, data_type);
+    // remove possible paddings from the shape (it conflicts with ROW MAJOR)
+    auto output = tt::tt_metal::Tensor(OwnedStorage{owned_buffer}, logical_shape, data_type, Layout::ROW_MAJOR);
+
+    auto to_device_odd_slow = [&]() {
+        if (layout == Layout::TILE) {
+            output = ttnn::to_layout(output, layout, std::nullopt, output_mem_config, device);
+        }
+
+        output = ttnn::to_device(output, device, output_mem_config);
+        return output;
+    };
+
+    auto to_device_even_fast = [&]() {
+        output = ttnn::to_device(output, device, output_mem_config);
+        if (layout == Layout::TILE) {
+            output = ttnn::tilize_with_zero_padding(output, output_mem_config, std::nullopt, /* multicore */ true);
+        }
+
+        return output;
+    };
+
+    if (shape[-1] % 2 == 1) {
+        output = to_device_odd_slow();
+    } else {
+        output = to_device_even_fast();
+    }
+
+    return output;
+}
+
 template <>
 std::vector<float> to_vector<float>(const tt::tt_metal::Tensor& tensor) {
     auto cpu_tensor = tensor.cpu();
     cpu_tensor = cpu_tensor.to(Layout::ROW_MAJOR);
-
-    auto buffer = tt::tt_metal::host_buffer::get_as<bfloat16>(cpu_tensor);
-    auto final_res = untile_tensor_to_vec(cpu_tensor);
-    return final_res;
+    if (cpu_tensor.get_dtype() == DataType::BFLOAT16) {
+        return untile_tensor_to_vec<float, bfloat16>(cpu_tensor);
+    }
+    assert(cpu_tensor.get_dtype() == DataType::FLOAT32);
+    return untile_tensor_to_vec<float, float>(cpu_tensor);
 }
 
 /*
 From vector uint32 doesn't support tilize_with_zero_padding on device
 */
 template <>
-tt::tt_metal::Tensor from_vector<uint32_t>(
+tt::tt_metal::Tensor from_vector<uint32_t, DataType::UINT32>(
     const std::vector<uint32_t>& buffer, const ttnn::Shape& shape, tt::tt_metal::Device* device, Layout layout) {
     MemoryConfig output_mem_config{};
     auto logical_shape = shape.logical_shape();
@@ -262,7 +307,7 @@ tt::tt_metal::Tensor from_vector<uint32_t>(
 From vector int32 doesn't support tilize_with_zero_padding on device
 */
 template <>
-tt::tt_metal::Tensor from_vector<int32_t>(
+tt::tt_metal::Tensor from_vector<int32_t, DataType::INT32>(
     const std::vector<int32_t>& buffer, const ttnn::Shape& shape, tt::tt_metal::Device* device, Layout layout) {
     MemoryConfig output_mem_config{};
     auto logical_shape = shape.logical_shape();
@@ -290,9 +335,7 @@ std::vector<uint32_t> to_vector<uint32_t>(const tt::tt_metal::Tensor& tensor) {
     auto cpu_tensor = tensor.cpu();
     cpu_tensor = cpu_tensor.to(Layout::ROW_MAJOR);
 
-    auto buffer = tt::tt_metal::host_buffer::get_as<uint32_t>(cpu_tensor);
-    auto final_res = untile_tensor_to_vec<uint32_t, uint32_t>(cpu_tensor);
-    return final_res;
+    return untile_tensor_to_vec<uint32_t, uint32_t>(cpu_tensor);
 }
 
 template <>
@@ -300,9 +343,7 @@ std::vector<int32_t> to_vector<int32_t>(const tt::tt_metal::Tensor& tensor) {
     auto cpu_tensor = tensor.cpu();
     cpu_tensor = cpu_tensor.to(Layout::ROW_MAJOR);
 
-    auto buffer = tt::tt_metal::host_buffer::get_as<int32_t>(cpu_tensor);
-    auto final_res = untile_tensor_to_vec<int32_t, int32_t>(cpu_tensor);
-    return final_res;
+    return untile_tensor_to_vec<int32_t, int32_t>(cpu_tensor);
 }
 
 bool is_tensor_initialized(const tt::tt_metal::Tensor& tensor) {

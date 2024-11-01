@@ -22,9 +22,13 @@ tt::tt_metal::Tensor full(const ttnn::Shape& shape, float value, tt::tt_metal::D
 tt::tt_metal::Tensor zeros(const ttnn::Shape& shape, tt::tt_metal::Device* device);
 tt::tt_metal::Tensor ones(const ttnn::Shape& shape, tt::tt_metal::Device* device);
 
-template <class T = float>
+template <class VectorType = float, DataType TensorType = DataType::BFLOAT16>
 [[nodiscard]] tt::tt_metal::Tensor from_vector(
-    const std::vector<T>& buffer, const ttnn::Shape& shape, tt::tt_metal::Device* device, Layout layout = Layout::TILE);
+    const std::vector<VectorType>& buffer,
+    const ttnn::Shape& shape,
+    tt::tt_metal::Device* device,
+    Layout layout = Layout::TILE);
+
 template <class T = float>
 [[nodiscard]] std::vector<T> to_vector(const tt::tt_metal::Tensor& tensor);
 
