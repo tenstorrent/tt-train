@@ -111,8 +111,8 @@ void Tensor::set_requires_grad(bool requires_grad) {
     m_requires_grad = requires_grad;
 }
 
-tt::tt_metal::Tensor& Tensor::get_value(bool full_precision) {
-    return m_value.get_tensor(full_precision);
+tt::tt_metal::Tensor& Tensor::get_value(bool half_precision) {
+    return m_value.get_tensor(half_precision);
 }
 
 const tt::tt_metal::Tensor& Tensor::get_grad() const {
