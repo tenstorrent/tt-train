@@ -13,3 +13,5 @@ pre-commit install
 sudo apt  install direnv=2.21.2-1
 chmod +x init_tt_metal.sh
 source ./init_tt_metal.sh
+
+pip install wandb

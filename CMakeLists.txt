@@ -63,7 +63,7 @@ set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
 # 3rd party projects
 add_subdirectory(3rd_party/tokenizers-cpp)
-
+add_subdirectory(3rd_party/wandb-cpp)
 # ttml projects
 
 add_subdirectory(sources)

@@ -72,12 +72,16 @@ target_include_directories(ttml PUBLIC ${TOKENZIER_CPP_PATH}/include)
 target_link_libraries(tokenizers_cpp PUBLIC ${LIBC++} ${LIBC++ABI})
 target_compile_options(tokenizers_cpp PUBLIC -stdlib=libc++)
 
+target_link_libraries(wandbcpp PUBLIC ${LIBC++} ${LIBC++ABI})
+target_compile_options(wandbcpp PUBLIC -stdlib=libc++)
+
 target_link_libraries(ttml PUBLIC
     tokenizers_cpp
+    wandbcpp
 )
 target_link_libraries(ttml PUBLIC
-Boost::core
-Boost::container
+    Boost::core
+    Boost::container
 )
 
 add_definitions(-DTOKENIZERS_DATA_PATH="${CMAKE_CURRENT_SOURCE_DIR}/data/tokenizers")
