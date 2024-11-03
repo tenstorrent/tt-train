@@ -6,6 +6,7 @@
 #include <chrono>
 #include <cstdint>
 #include <ttnn/tensor/tensor.hpp>
+#include <wandbcpp.hpp>
 
 #include "autograd/tensor.hpp"
 #include "core/tt_tensor_utils.hpp"
@@ -138,6 +139,7 @@ void generate(
 }
 
 int main(int argc, char **argv) {
+    wandbcpp::init({.project = "tt_train_nano_gpt", .tags = {"test"}});
     auto start_timer = std::chrono::high_resolution_clock::now();
     CLI::App app{"NanoGPT Example"};
     argv = app.ensure_utf8(argv);
@@ -266,7 +268,7 @@ int main(int argc, char **argv) {
     fmt::print("AdamW configuration:\n");
     fmt::print("    Learning rate: {}\n", adamw_params.lr);
     fmt::print("    Weight decay: {}\n", adamw_params.weight_decay);
-    auto optimizer = ttml::optimizers::MorehAdamW(model->parameters(), adamw_params);
+    auto optimizer = ttml::optimizers::AdamW(model->parameters(), adamw_params);
 
     if (!model_path.empty() && std::filesystem::exists(model_path)) {
         fmt::print("Loading model from {}\n", model_path);
@@ -298,6 +300,8 @@ int main(int argc, char **argv) {
             auto global_step = optimizer.get_steps();
             fmt::print("Step: {}, Loss: {}\n", global_step, loss_float);
 
+            // wandbcpp::update_config({{"Step", (int)global_step}, {"Loss", loss_float}});
+            wandbcpp::log({{"Step", (int)global_step}, {"Loss", loss_float}});
             if (!model_path.empty() && global_step % model_save_interval == 0) {
                 save_model_and_optimizer(model_path, model, optimizer, "transformer", "adamw");
             }
@@ -328,5 +332,6 @@ int main(int argc, char **argv) {
         max_steps,
         (double)duration / 1000000.,
         device->num_program_cache_entries());
+    wandbcpp::finish();
     return 0;
 }
