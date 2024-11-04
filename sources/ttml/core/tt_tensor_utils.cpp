@@ -222,52 +222,13 @@ tt::tt_metal::Tensor from_vector<float, DataType::BFLOAT16>(
     return output;
 }
 
+// Workaround implementation due to issue with tilize for float32
+// it is expected that tilize will be fixed in the after next tt-metal main update
 template <>
 tt::tt_metal::Tensor from_vector<float, DataType::FLOAT32>(
     const std::vector<float>& buffer, const ttnn::Shape& shape, tt::tt_metal::Device* device, Layout layout) {
     auto tensor = from_vector<float, DataType::BFLOAT16>(buffer, shape, device, layout);
     return ttnn::typecast(tensor, DataType::FLOAT32);
-
-    // Currently not supported due to tilize issue with float32
-
-    // assert(device != nullptr);
-    // const DataType data_type = DataType::FLOAT32;
-    // MemoryConfig output_mem_config{};
-    // auto logical_shape = shape.logical_shape();
-    // size_t volume = logical_shape.volume();
-    // if (buffer.size() != volume) {
-    //     throw std::logic_error(
-    //         fmt::format("Current buffer size is {} different from shape volume {}", buffer.size(), volume));
-    // }
-    // auto owned_buffer = create_owned_buffer_from_vector_of_floats(buffer, data_type);
-    // // remove possible paddings from the shape (it conflicts with ROW MAJOR)
-    // auto output = tt::tt_metal::Tensor(OwnedStorage{owned_buffer}, logical_shape, data_type, Layout::ROW_MAJOR);
-
-    // auto to_device_odd_slow = [&]() {
-    //     if (layout == Layout::TILE) {
-    //         output = ttnn::to_layout(output, layout, std::nullopt, output_mem_config, device);
-    //     }
-
-    //     output = ttnn::to_device(output, device, output_mem_config);
-    //     return output;
-    // };
-
-    // auto to_device_even_fast = [&]() {
-    //     output = ttnn::to_device(output, device, output_mem_config);
-    //     if (layout == Layout::TILE) {
-    //         output = ttnn::tilize_with_zero_padding(output, output_mem_config, std::nullopt, /* multicore */ true);
-    //     }
-
-    //     return output;
-    // };
-
-    // if (shape[-1] % 2 == 1) {
-    //     output = to_device_odd_slow();
-    // } else {
-    //     output = to_device_even_fast();
-    // }
-
-    // return output;
 }
 
 template <>

@@ -8,8 +8,7 @@ namespace ttml::autograd {
 
 class AutocastTensor {
     bool m_is_float32 = false;
-    bool m_needs_update = false;
-    std::optional<tt::tt_metal::Tensor> m_half_precision_tensor;
+    tt::tt_metal::Tensor m_half_precision_tensor;
     tt::tt_metal::Tensor m_full_precision_tensor;
 
 public:
@@ -23,7 +22,7 @@ public:
 
     [[nodiscard]] ttnn::Shape get_shape() const;
     void set_tensor(const tt::tt_metal::Tensor &tensor);
-    tt::tt_metal::Tensor &get_half_precision_tensor();
+    const tt::tt_metal::Tensor &get_tensor(bool half_precision = true) const;
     tt::tt_metal::Tensor &get_tensor(bool half_precision = true);
 };
 
