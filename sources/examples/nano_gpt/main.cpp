@@ -4,6 +4,7 @@
 
 #include <CLI/CLI.hpp>
 #include <chrono>
+#include <csignal>
 #include <cstdint>
 #include <ttnn/tensor/tensor.hpp>
 #include <wandbcpp.hpp>
@@ -21,6 +22,15 @@
 #include "optimizers/sgd.hpp"
 #include "ttnn_fixed/trivial_ttnn_ops.hpp"
 #include "utils.hpp"
+
+/* WANDB BLocks this signal.
+ Control+C didn't work.
+*/
+void signal_handler(int signum) {
+    std::cout << "\nInterrupt signal (" << signum << ") received.\n";
+    wandbcpp::finish();
+    exit(signum);
+}
 
 using ttml::autograd::TensorPtr;
 
@@ -139,15 +149,23 @@ void generate(
 }
 
 int main(int argc, char **argv) {
-    wandbcpp::init({.project = "tt_train_nano_gpt", .tags = {""}});
+    auto result = signal(SIGINT, signal_handler);
+    if (result == SIG_ERR) {
+        std::cerr << "Failed to set signal handler\n";
+        return -1;
+    }
+    wandbcpp::init({.project = "tt_train_nano_gpt"});
     wandbcpp::update_config({
         {"model", "transformer"},
         {"num_heads", static_cast<int>(config.num_heads)},
         {"embedding_dim", static_cast<int>(config.embedding_dim)},
         {"num_blocks", static_cast<int>(config.num_blocks)},
-        {"dropout_prob", static_cast<int>(config.dropout_prob)},
-        {"learning_rate", static_cast<int>(config.learning_rate)},
-        {"weight_decay", static_cast<int>(config.weight_decay)},
+        {"dropout_prob", config.dropout_prob},
+        {"learning_rate", config.learning_rate},
+        {"weight_decay", config.weight_decay},
+        {"batch_size", static_cast<int>(config.batch_size)},
+        {"sequence_length", static_cast<int>(config.sequence_length)},
+        {"max_steps", static_cast<int>(config.max_steps)},
     });
 
     auto start_timer = std::chrono::high_resolution_clock::now();
