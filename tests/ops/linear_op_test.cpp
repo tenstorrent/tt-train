@@ -7,6 +7,7 @@
 #include <gtest/gtest.h>
 
 #include "autograd/auto_context.hpp"
+#include "core/compute_kernel_config.hpp"
 #include "core/tt_tensor_utils.hpp"
 #include "init/tensor_initializers.hpp"
 
@@ -56,7 +57,7 @@ TEST(LinearOpTest, TTNNBackwardGoodShape) {
     ttml::init::uniform_init(out, ttml::core::create_shape({64, 1, 256, 64}), ttml::init::UniformRange{-0.1F, 0.1F});
     out->set_grad(out->get_value());
 
-    ttml::ops::ttnn_linear_backward(tensor, weight, bias, out);
+    ttml::ops::ttnn_linear_backward(tensor, weight, bias, out, ttml::core::ComputeKernelConfig::precise());
     auto ttnn_tensor_grad = tensor->get_grad();
     auto ttnn_weight_grad = weight->get_grad();
     auto ttnn_bias_grad = bias->get_grad();
@@ -64,7 +65,7 @@ TEST(LinearOpTest, TTNNBackwardGoodShape) {
     weight->set_grad(ttnn::Tensor());
     bias->set_grad(ttnn::Tensor());
 
-    ttml::ops::moreh_linear_backward(tensor, weight, bias, out);
+    ttml::ops::moreh_linear_backward(tensor, weight, bias, out, ttml::core::ComputeKernelConfig::precise());
     auto moreh_tensor_grad = tensor->get_grad();
     auto moreh_weight_grad = weight->get_grad();
     auto moreh_bias_grad = bias->get_grad();
