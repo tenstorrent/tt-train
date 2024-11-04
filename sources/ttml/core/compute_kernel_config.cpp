@@ -24,6 +24,15 @@ ttnn::WormholeComputeKernelConfig ComputeKernelConfig::softmax() {
     return config;
 }
 
+ttnn::WormholeComputeKernelConfig ComputeKernelConfig::matmul() {
+    ttnn::WormholeComputeKernelConfig config;
+    config.fp32_dest_acc_en = false;
+    config.math_approx_mode = false;
+    config.math_fidelity = MathFidelity::HiFi2;
+    config.packer_l1_acc = true;
+    return config;
+}
+
 ttnn::WormholeComputeKernelConfig ComputeKernelConfig::fast() {
     ttnn::WormholeComputeKernelConfig config;
     config.fp32_dest_acc_en = false;

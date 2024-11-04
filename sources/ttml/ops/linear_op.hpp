@@ -15,14 +15,12 @@ void ttnn_linear_backward(
     const autograd::TensorPtr& tensor,
     const autograd::TensorPtr& weight,
     const autograd::TensorPtr& bias,
-    const autograd::TensorPtr& out,
-    bool precise = false);
+    const autograd::TensorPtr& out);
 
 void moreh_linear_backward(
     const autograd::TensorPtr& tensor,
     const autograd::TensorPtr& weight,
     const autograd::TensorPtr& bias,
-    const autograd::TensorPtr& out,
-    bool precise = false);
+    const autograd::TensorPtr& out);
 
 }  // namespace ttml::ops

@@ -149,7 +149,7 @@ int main(int argc, char **argv) {
     uint32_t max_steps = config.max_steps;
     uint32_t batch_size = config.batch_size;
     uint32_t sequence_length = config.sequence_length;
-    std::string model_path = "/tmp/nano_gpt.msgpack";
+    std::string model_path = "";
     std::string data_path = std::string(DATA_FOLDER) + "/shakespeare.txt";
     bool is_eval = false;
 
@@ -301,7 +301,9 @@ int main(int argc, char **argv) {
             fmt::print("Step: {}, Loss: {}\n", global_step, loss_float);
 
             // wandbcpp::update_config({{"Step", (int)global_step}, {"Loss", loss_float}});
-            wandbcpp::log({{"Step", (int)global_step}, {"Loss", loss_float}});
+            if (global_step % 10 == 0) {
+                wandbcpp::log({{"Step", (int)global_step}, {"Loss", loss_float}});
+            }
             if (!model_path.empty() && global_step % model_save_interval == 0) {
                 save_model_and_optimizer(model_path, model, optimizer, "transformer", "adamw");
             }

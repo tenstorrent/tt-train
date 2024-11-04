@@ -56,7 +56,7 @@ TEST(LinearOpTest, TTNNBackwardGoodShape) {
     ttml::init::uniform_init(out, ttml::core::create_shape({64, 1, 256, 64}), ttml::init::UniformRange{-0.1F, 0.1F});
     out->set_grad(out->get_value());
 
-    ttml::ops::ttnn_linear_backward(tensor, weight, bias, out, /* precise */ true);
+    ttml::ops::ttnn_linear_backward(tensor, weight, bias, out);
     auto ttnn_tensor_grad = tensor->get_grad();
     auto ttnn_weight_grad = weight->get_grad();
     auto ttnn_bias_grad = bias->get_grad();
@@ -64,7 +64,7 @@ TEST(LinearOpTest, TTNNBackwardGoodShape) {
     weight->set_grad(ttnn::Tensor());
     bias->set_grad(ttnn::Tensor());
 
-    ttml::ops::moreh_linear_backward(tensor, weight, bias, out, /* precise */ true);
+    ttml::ops::moreh_linear_backward(tensor, weight, bias, out);
     auto moreh_tensor_grad = tensor->get_grad();
     auto moreh_weight_grad = weight->get_grad();
     auto moreh_bias_grad = bias->get_grad();
@@ -94,7 +94,7 @@ TEST(LinearOpTest, TTNNBackwardGoodShape) {
 //     ttml::init::uniform_init(out, ttml::core::create_shape({128, 1, 1, 256}), ttml::init::UniformRange{-0.1F, 0.1F});
 //     out->set_grad(out->get_value());
 
-//     ttml::ops::ttnn_linear_backward(tensor, weight, bias, out, /* precise */ true);
+//     ttml::ops::ttnn_linear_backward(tensor, weight, bias, out);
 //     auto ttnn_tensor_grad = tensor->get_grad();
 //     auto ttnn_weight_grad = weight->get_grad();
 //     auto ttnn_bias_grad = bias->get_grad();
@@ -102,7 +102,7 @@ TEST(LinearOpTest, TTNNBackwardGoodShape) {
 //     weight->set_grad(ttnn::Tensor());
 //     bias->set_grad(ttnn::Tensor());
 
-//     ttml::ops::moreh_linear_backward(tensor, weight, bias, out, /* precise */ true);
+//     ttml::ops::moreh_linear_backward(tensor, weight, bias, out);
 //     auto moreh_tensor_grad = tensor->get_grad();
 //     auto moreh_weight_grad = weight->get_grad();
 //     auto moreh_bias_grad = bias->get_grad();

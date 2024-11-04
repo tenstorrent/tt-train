@@ -15,3 +15,4 @@ chmod +x init_tt_metal.sh
 source ./init_tt_metal.sh
 
 pip install wandb
+pip install numpy
