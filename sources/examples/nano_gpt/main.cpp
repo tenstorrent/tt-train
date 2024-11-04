@@ -139,7 +139,17 @@ void generate(
 }
 
 int main(int argc, char **argv) {
-    wandbcpp::init({.project = "tt_train_nano_gpt", .tags = {"test"}});
+    wandbcpp::init({.project = "tt_train_nano_gpt", .tags = {""}});
+    wandbcpp::update_config({
+        {"model", "transformer"},
+        {"num_heads", static_cast<int>(config.num_heads)},
+        {"embedding_dim", static_cast<int>(config.embedding_dim)},
+        {"num_blocks", static_cast<int>(config.num_blocks)},
+        {"dropout_prob", static_cast<int>(config.dropout_prob)},
+        {"learning_rate", static_cast<int>(config.learning_rate)},
+        {"weight_decay", static_cast<int>(config.weight_decay)},
+    });
+
     auto start_timer = std::chrono::high_resolution_clock::now();
     CLI::App app{"NanoGPT Example"};
     argv = app.ensure_utf8(argv);
@@ -300,7 +310,6 @@ int main(int argc, char **argv) {
             auto global_step = optimizer.get_steps();
             fmt::print("Step: {}, Loss: {}\n", global_step, loss_float);
 
-            // wandbcpp::update_config({{"Step", (int)global_step}, {"Loss", loss_float}});
             if (global_step % 10 == 0) {
                 wandbcpp::log({{"Step", (int)global_step}, {"Loss", loss_float}});
             }
