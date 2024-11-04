@@ -135,7 +135,7 @@ autograd::TensorPtr linear_op(
         }
     };
 
-    std::vector<autograd::NodeId> links = autograd::get_links(weight, tensor, bias);
+    auto links = autograd::get_links(weight, tensor, bias);
     out->set_node(autograd::ctx().add_backward_node(std::move(grad), links));
     return out;
 }
