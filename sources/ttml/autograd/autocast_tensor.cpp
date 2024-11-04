@@ -31,7 +31,7 @@ const tt::tt_metal::Tensor &AutocastTensor::get_tensor(bool half_precision) cons
 
 tt::tt_metal::Tensor &AutocastTensor::get_tensor(bool half_precision) {
     if (half_precision && m_is_float32) {
-        return m_half_precision_tensor;
+        throw std::runtime_error("AutocastTensor doesn't return non-const reference to half precision tensor");
     }
 
     return m_full_precision_tensor;
