@@ -14,5 +14,6 @@ sudo apt  install direnv=2.21.2-1
 chmod +x init_tt_metal.sh
 source ./init_tt_metal.sh
 
+sudo apt-get install python3-dev python3-numpy
 pip install wandb
 pip install numpy
