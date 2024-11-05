@@ -7,7 +7,7 @@
 namespace ttml::ops {
 
 std::tuple<autograd::TensorPtr, autograd::TensorPtr, autograd::TensorPtr> heads_creation(
-    const autograd::TensorPtr& query, const autograd::TensorPtr& key_value, uint32_t num_heads);
+    const autograd::TensorPtr& qkv, uint32_t num_heads);
 
 autograd::TensorPtr heads_fusion(const autograd::TensorPtr& x);
 

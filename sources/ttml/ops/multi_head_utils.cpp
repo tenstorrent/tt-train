@@ -13,10 +13,10 @@
 namespace ttml::ops {
 
 std::tuple<autograd::TensorPtr, autograd::TensorPtr, autograd::TensorPtr> heads_creation(
-    const autograd::TensorPtr& query, const autograd::TensorPtr& key_value, uint32_t num_heads) {
+    const autograd::TensorPtr& qkv, uint32_t num_heads) {
     auto [q, k, v] = ttnn::experimental::nlp_create_qkv_heads(
-        query->get_value(),
-        key_value->get_value(),
+        qkv->get_value(),
+        std::nullopt,
         num_heads,
         num_heads,
         /* transpose_k */ false,
@@ -27,25 +27,20 @@ std::tuple<autograd::TensorPtr, autograd::TensorPtr, autograd::TensorPtr> heads_
     auto out_k = autograd::create_tensor(k);
     auto out_v = autograd::create_tensor(v);
 
-    autograd::GradFunction grad_q = [out_q, query]() {
-        auto grad = out_q->get_grad();
-        auto result = ttnn::experimental::nlp_concat_heads(grad);
-        query->add_grad(result);
-    };
-
-    autograd::GradFunction grad_kv = [out_k, out_v, key_value]() {
+    autograd::GradFunction grad_q = [out_q, out_k, out_v, qkv]() {
+        auto grad_q = out_q->get_grad();
         auto grad_k = out_k->get_grad();
         auto grad_v = out_v->get_grad();
-        auto result = ttnn::concat(std::vector<ttnn::Tensor>({grad_k, grad_v}), /* dim */ 3);
+        auto result = ttnn::concat(std::vector<ttnn::Tensor>({grad_q, grad_k, grad_v}), /* dim */ 3);
         result = ttnn::experimental::nlp_concat_heads(result);
-        key_value->add_grad(result);
+        qkv->add_grad(result);
     };
 
-    auto links_q = autograd::get_links(query);
+    auto links_q = autograd::get_links(qkv);
     out_q->set_node(autograd::ctx().add_backward_node(std::move(grad_q), links_q));
-    auto links_k = autograd::get_links(key_value);
-    out_k->set_node(autograd::ctx().add_backward_node(std::move(grad_kv), links_k));
-    auto links_v = autograd::get_links(key_value, out_k);
+    auto links_k = autograd::get_links(qkv, out_q);
+    out_k->set_node(autograd::ctx().add_backward_node([]() {}, links_k));
+    auto links_v = autograd::get_links(qkv, out_q);
     out_v->set_node(autograd::ctx().add_backward_node([]() {}, links_v));
     return {out_q, out_k, out_v};
 }
