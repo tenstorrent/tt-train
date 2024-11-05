@@ -12,39 +12,43 @@
 
 namespace ttml::ops {
 
-autograd::TensorPtr heads_creation(const autograd::TensorPtr& x, uint32_t num_heads) {
-    auto x_shape = x->get_value().get_shape();
+std::tuple<autograd::TensorPtr, autograd::TensorPtr, autograd::TensorPtr> heads_creation(
+    const autograd::TensorPtr& qkv, uint32_t num_heads) {
+    // qkv shape is (B, 1, S, E * 3)
+    // q, k, v shapes are (B, num_heads, S, E / num_heads)
+    auto [q, k, v] = ttnn::experimental::nlp_create_qkv_heads(
+        qkv->get_value(),
+        std::nullopt,
+        num_heads,
+        num_heads,
+        /* transpose_k */ false,
+        /* memory_config */ std::nullopt,
+        /* optional_output_tensors */ std::nullopt);
 
-    auto batch_size = x_shape[0];
-    assert(x_shape[1] == 1U);
-    auto sequence_length = x_shape[2];
-    auto embedding_dim = x_shape[3];
+    auto out_q = autograd::create_tensor(q);
+    auto out_k = autograd::create_tensor(k);
+    auto out_v = autograd::create_tensor(v);
 
-    auto out = autograd::create_tensor();
-    //  (B, 1, S, E) -> (B, 1, E, S)
-    auto result = ttnn::transpose(x->get_value(), -2, -1);
-    // (B, 1, E, S) -> (B, H, E/H, S)
-    result =
-        ttnn::reshape(result, core::create_shape({batch_size, num_heads, embedding_dim / num_heads, sequence_length}));
-    // (B, H, E/H, S) -> (B, H, S, E/H)
-    result = ttnn::transpose(result, -1, -2);
-    out->set_value(result);
-
-    autograd::GradFunction grad = [out, x, num_heads, batch_size, sequence_length, embedding_dim]() {
-        auto grad_output = out->get_grad();
-        // (B, H, S, E/H) -> (B, H, E/H, S)
-        auto grad_result = ttnn::transpose(grad_output, -2, -1);
-        // (B, H, E/H, S) -> (B, 1, E, S)
-        grad_result = ttnn::reshape(grad_result, core::create_shape({batch_size, 1, embedding_dim, sequence_length}));
-        // (B, 1, E, S) -> (B, 1, S, E)
-        grad_result = ttnn::transpose(grad_result, -2, -1);
-        x->add_grad(grad_result);
+    autograd::GradFunction grad_q = [out_q, out_k, out_v, qkv]() {
+        auto grad_q = out_q->get_grad();
+        auto grad_k = out_k->get_grad();
+        auto grad_v = out_v->get_grad();
+        // (B, num_heads, S, E / num_heads) -> (B, 1, S, E)
+        grad_q = ttnn::experimental::nlp_concat_heads(grad_q);
+        grad_k = ttnn::experimental::nlp_concat_heads(grad_k);
+        grad_v = ttnn::experimental::nlp_concat_heads(grad_v);
+        auto result = ttnn::concat(std::vector<ttnn::Tensor>({grad_q, grad_k, grad_v}), /* dim */ 3);
+        qkv->add_grad(result);
     };
 
-    auto links = autograd::get_links(x);
-    out->set_node(ttml::autograd::ctx().add_backward_node(std::move(grad), links));
-
-    return out;
+    auto links_q = autograd::get_links(qkv);
+    // grad_q function depends on gradients of q, k and v
+    out_q->set_node(autograd::ctx().add_backward_node(std::move(grad_q), links_q));
+    // this needs to be added to make sure that gradients for k and v are computed before we run backward for q
+    auto links_kv = autograd::get_links(qkv, out_q);
+    out_k->set_node(autograd::ctx().add_backward_node([]() {}, links_kv));
+    out_v->set_node(autograd::ctx().add_backward_node([]() {}, links_kv));
+    return {out_q, out_k, out_v};
 }
 
 autograd::TensorPtr heads_fusion(const autograd::TensorPtr& x) {
@@ -55,14 +59,9 @@ autograd::TensorPtr heads_fusion(const autograd::TensorPtr& x) {
     uint32_t sequence_length = x_shape[2];
     uint32_t embedding_dim = x_shape[3];
 
-    auto out = autograd::create_tensor();
-    // (B, H, S, E/H) -> (B, H, E/H, S)
-    auto result = ttnn::transpose(x->get_value(), -2, -1);
-    // (B, H, E/H, S) -> (B, 1, E, S)
-    result = ttnn::reshape(result, core::create_shape({batch_size, 1, embedding_dim * num_heads, sequence_length}));
-    // (B, 1, E, S) -> (B, 1, S, E)
-    result = ttnn::transpose(result, -2, -1);
-    out->set_value(result);
+    // (B, H, S, E/H) -> (B, 1, S, E)
+    auto fused_heads = ttnn::experimental::nlp_concat_heads(x->get_value());
+    auto out = autograd::create_tensor(fused_heads);
 
     autograd::GradFunction grad = [out, x, num_heads, batch_size, sequence_length, embedding_dim]() {
         auto grad_output = out->get_grad();

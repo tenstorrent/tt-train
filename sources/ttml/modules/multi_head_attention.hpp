@@ -15,9 +15,7 @@ class MultiHeadAttention : public ttml::autograd::ModuleBase {
 private:
     uint32_t m_embedding_dim{};
     uint32_t m_num_heads{};
-    std::shared_ptr<LinearLayer> m_query_linear;
-    std::shared_ptr<LinearLayer> m_key_linear;
-    std::shared_ptr<LinearLayer> m_value_linear;
+    std::shared_ptr<LinearLayer> m_qkv_linear;
     std::shared_ptr<LinearLayer> m_out_linear;
     std::shared_ptr<DropoutLayer> m_dropout;
 

@@ -64,6 +64,7 @@ autograd::TensorPtr scaled_dot_product_attention(
         if (mask.has_value()) {
             grad_scaled_dot = ttnn::multiply(grad_scaled_dot, mask.value()->get_value());
         }
+
         auto grad_q = matmul(
             grad_scaled_dot,
             key->get_value(),
