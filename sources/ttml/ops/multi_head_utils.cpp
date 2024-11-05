@@ -31,8 +31,10 @@ std::tuple<autograd::TensorPtr, autograd::TensorPtr, autograd::TensorPtr> heads_
         auto grad_q = out_q->get_grad();
         auto grad_k = out_k->get_grad();
         auto grad_v = out_v->get_grad();
+        grad_q = ttnn::experimental::nlp_concat_heads(grad_q);
+        grad_k = ttnn::experimental::nlp_concat_heads(grad_k);
+        grad_v = ttnn::experimental::nlp_concat_heads(grad_v);
         auto result = ttnn::concat(std::vector<ttnn::Tensor>({grad_q, grad_k, grad_v}), /* dim */ 3);
-        result = ttnn::experimental::nlp_concat_heads(result);
         qkv->add_grad(result);
     };
 
