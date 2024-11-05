@@ -60,11 +60,7 @@ message(STATUS "TT_METAL_HOME: $ENV{TT_METAL_HOME}")
 message($ENV{TT_METAL_HOME}/tt_metal/third_party/src/firmware/riscv/$ENV{ARCH_NAME})
 
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
-set(Python3_FIND_VERBOSE ON)
-set(Python3_FIND_STRATEGY LOCATION)
-find_package(Python3 COMPONENTS Interpreter Development NumPy)
-message("Python executable: ${Python3_EXECUTABLE}")
-message("Python include directory: ${Python3_INCLUDE_DIRS}")
+
 # 3rd party projects
 add_subdirectory(3rd_party/tokenizers-cpp)
 add_subdirectory(3rd_party/wandb-cpp)
