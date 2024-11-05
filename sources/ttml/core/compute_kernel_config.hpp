@@ -12,6 +12,7 @@ class ComputeKernelConfig {
 public:
     static ttnn::WormholeComputeKernelConfig precise();
     static ttnn::WormholeComputeKernelConfig softmax();
+    static ttnn::WormholeComputeKernelConfig matmul();
     static ttnn::WormholeComputeKernelConfig fast();
 };
 

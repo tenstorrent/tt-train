@@ -4,8 +4,10 @@
 
 #include <CLI/CLI.hpp>
 #include <chrono>
+#include <csignal>
 #include <cstdint>
 #include <ttnn/tensor/tensor.hpp>
+#include <wandbcpp.hpp>
 
 #include "autograd/tensor.hpp"
 #include "core/tt_tensor_utils.hpp"
@@ -20,6 +22,15 @@
 #include "optimizers/sgd.hpp"
 #include "ttnn_fixed/trivial_ttnn_ops.hpp"
 #include "utils.hpp"
+
+/* WANDB BLocks this signal.
+ Control+C didn't work.
+*/
+void signal_handler(int signum) {
+    std::cout << "\nInterrupt signal (" << signum << ") received.\n";
+    wandbcpp::finish();
+    exit(signum);
+}
 
 using ttml::autograd::TensorPtr;
 
@@ -138,6 +149,25 @@ void generate(
 }
 
 int main(int argc, char **argv) {
+    auto result = signal(SIGINT, signal_handler);
+    if (result == SIG_ERR) {
+        std::cerr << "Failed to set signal handler\n";
+        return -1;
+    }
+    wandbcpp::init({.project = "tt_train_nano_gpt"});
+    wandbcpp::update_config({
+        {"model", "transformer"},
+        {"num_heads", static_cast<int>(config.num_heads)},
+        {"embedding_dim", static_cast<int>(config.embedding_dim)},
+        {"num_blocks", static_cast<int>(config.num_blocks)},
+        {"dropout_prob", config.dropout_prob},
+        {"learning_rate", config.learning_rate},
+        {"weight_decay", config.weight_decay},
+        {"batch_size", static_cast<int>(config.batch_size)},
+        {"sequence_length", static_cast<int>(config.sequence_length)},
+        {"max_steps", static_cast<int>(config.max_steps)},
+    });
+
     auto start_timer = std::chrono::high_resolution_clock::now();
     CLI::App app{"NanoGPT Example"};
     argv = app.ensure_utf8(argv);
@@ -147,7 +177,7 @@ int main(int argc, char **argv) {
     uint32_t max_steps = config.max_steps;
     uint32_t batch_size = config.batch_size;
     uint32_t sequence_length = config.sequence_length;
-    std::string model_path = "/tmp/nano_gpt.msgpack";
+    std::string model_path;
     std::string data_path = std::string(DATA_FOLDER) + "/shakespeare.txt";
     bool is_eval = false;
 
@@ -266,7 +296,7 @@ int main(int argc, char **argv) {
     fmt::print("AdamW configuration:\n");
     fmt::print("    Learning rate: {}\n", adamw_params.lr);
     fmt::print("    Weight decay: {}\n", adamw_params.weight_decay);
-    auto optimizer = ttml::optimizers::MorehAdamW(model->parameters(), adamw_params);
+    auto optimizer = ttml::optimizers::AdamW(model->parameters(), adamw_params);
 
     if (!model_path.empty() && std::filesystem::exists(model_path)) {
         fmt::print("Loading model from {}\n", model_path);
@@ -298,6 +328,9 @@ int main(int argc, char **argv) {
             auto global_step = optimizer.get_steps();
             fmt::print("Step: {}, Loss: {}\n", global_step, loss_float);
 
+            if (global_step % 10 == 0) {
+                wandbcpp::log({{"Step", (int)global_step}, {"Loss", loss_float}});
+            }
             if (!model_path.empty() && global_step % model_save_interval == 0) {
                 save_model_and_optimizer(model_path, model, optimizer, "transformer", "adamw");
             }
@@ -328,5 +361,6 @@ int main(int argc, char **argv) {
         max_steps,
         (double)duration / 1000000.,
         device->num_program_cache_entries());
+    wandbcpp::finish();
     return 0;
 }

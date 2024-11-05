@@ -6,7 +6,6 @@
 
 #include "autograd/auto_context.hpp"
 #include "autograd/graph_utils.hpp"
-#include "core/compute_kernel_config.hpp"
 #include "core/tt_tensor_utils.hpp"
 #include "core/ttnn_all_includes.hpp"
 #include "ttnn_fixed/trivial_ttnn_ops.hpp"
@@ -14,7 +13,11 @@
 namespace {
 
 tt::tt_metal::Tensor matmul(
-    const tt::tt_metal::Tensor& a, const tt::tt_metal::Tensor& b, bool transpose_a, bool transpose_b, bool precise) {
+    const tt::tt_metal::Tensor& a,
+    const tt::tt_metal::Tensor& b,
+    bool transpose_a,
+    bool transpose_b,
+    const ttnn::WormholeComputeKernelConfig& config) {
     return ttnn::matmul(
         a,
         b,
@@ -25,7 +28,7 @@ tt::tt_metal::Tensor matmul(
         /* program_config */ std::nullopt,
         /* activation */ std::nullopt,
         /* compute_kernel_config */
-        precise ? ttml::core::ComputeKernelConfig::precise() : ttml::core::ComputeKernelConfig::fast(),
+        config,
         /* core_grid */ ttnn::CoreGrid{8, 8},
         /* output_tile */ std::nullopt);
 }
@@ -39,7 +42,7 @@ void ttnn_linear_backward(
     const autograd::TensorPtr& weight,
     const autograd::TensorPtr& bias,
     const autograd::TensorPtr& out,
-    bool precise) {
+    const ttnn::WormholeComputeKernelConfig& config) {
     const auto& tensor_value = tensor->get_value();
     auto volume_without_features = tensor_value.get_logical_volume() / tensor_value.get_shape()[-1];
     auto reshaped_tensor =
@@ -49,9 +52,9 @@ void ttnn_linear_backward(
         ttnn::reshape(out->get_grad(), ttnn::Shape({volume_without_features, out->get_grad().get_shape()[-1]}));
     auto reshaped_bias_grad = ttnn_fixed::sum_over_dim(reshaped_grad, /* axis */ 0);
     auto reshaped_weight_grad =
-        matmul(reshaped_grad, reshaped_tensor, /* transpose_a */ true, /* transpose_b */ false, precise);
+        matmul(reshaped_grad, reshaped_tensor, /* transpose_a */ true, /* transpose_b */ false, config);
     auto reshaped_tensor_grad =
-        matmul(reshaped_grad, weight->get_value(), /* transpose_a */ false, /* transpose_b */ false, precise);
+        matmul(reshaped_grad, weight->get_value(), /* transpose_a */ false, /* transpose_b */ false, config);
 
     auto bias_grad = ttnn::reshape(reshaped_bias_grad, bias->get_value().get_shape());
     auto weight_grad = ttnn::reshape(reshaped_weight_grad, weight->get_value().get_shape());
@@ -67,7 +70,7 @@ void moreh_linear_backward(
     const autograd::TensorPtr& weight,
     const autograd::TensorPtr& bias,
     const autograd::TensorPtr& out,
-    bool precise) {
+    const ttnn::WormholeComputeKernelConfig& config) {
     auto bias_grad = ttnn::empty_like(bias->get_value());
     auto tensor_grad = ttnn::empty_like(tensor->get_value());
     auto weight_grad = ttnn::empty_like(weight->get_value());
@@ -84,7 +87,7 @@ void moreh_linear_backward(
         /* input_grad_mem_config */ std::nullopt,
         /* weight_grad_mem_config */ std::nullopt,
         /* bias_grad_mem_config */ std::nullopt,
-        /* compute_kernel_config */ precise ? core::ComputeKernelConfig::precise() : core::ComputeKernelConfig::fast());
+        /* compute_kernel_config */ config);
 
     if (!res[0].has_value()) {
         throw std::runtime_error("Tensor gradient is not available");
@@ -116,7 +119,7 @@ autograd::TensorPtr linear_op(
         /* dtype */ std::nullopt,
         /* program_config */ std::nullopt,
         /* activation */ std::nullopt,
-        /* compute_kernel_config */ core::ComputeKernelConfig::fast(),
+        /* compute_kernel_config */ core::ComputeKernelConfig::matmul(),
         /* core_grid */ ttnn::CoreGrid{8, 8}));
 
     autograd::GradFunction grad = [weight, bias, tensor, out]() {
