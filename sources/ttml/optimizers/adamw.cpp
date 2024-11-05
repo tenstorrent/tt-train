@@ -57,8 +57,8 @@ void MorehAdamW::step() {
             continue;
         }
         auto& second_moment_ptr = m_second_moment.at(key);
-        auto& first_moment = first_moment_ptr->get_value(/* half_precision */ false);
-        auto& second_moment = second_moment_ptr->get_value(/* half_precision */ false);
+        auto& first_moment = first_moment_ptr->get_mutable_value(/* half_precision */ false);
+        auto& second_moment = second_moment_ptr->get_mutable_value(/* half_precision */ false);
 
         const auto& gradients = tensor_ptr->get_grad();
         ttnn::moreh_adamw(
@@ -153,8 +153,8 @@ void AdamW::step() {
             continue;
         }
         auto& second_moment_ptr = m_second_moment.at(key);
-        auto& first_moment = first_moment_ptr->get_value(/* half_precision */ false);
-        auto& second_moment = second_moment_ptr->get_value(/* half_precision */ false);
+        auto& first_moment = first_moment_ptr->get_mutable_value(/* half_precision */ false);
+        auto& second_moment = second_moment_ptr->get_mutable_value(/* half_precision */ false);
 
         const auto& gradients = tensor_ptr->get_grad();
         if (m_config.weight_decay != 0.0F) {

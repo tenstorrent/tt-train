@@ -115,8 +115,8 @@ const tt::tt_metal::Tensor& Tensor::get_value(bool half_precision) const {
     return m_value.get_tensor(half_precision);
 }
 
-tt::tt_metal::Tensor& Tensor::get_value(bool half_precision) {
-    return m_value.get_tensor(half_precision);
+tt::tt_metal::Tensor& Tensor::get_mutable_value(bool half_precision) {
+    return m_value.get_mutable_tensor(half_precision);
 }
 
 const tt::tt_metal::Tensor& Tensor::get_grad() const {

@@ -23,7 +23,7 @@ public:
     [[nodiscard]] ttnn::Shape get_shape() const;
     void set_tensor(const tt::tt_metal::Tensor &tensor);
     const tt::tt_metal::Tensor &get_tensor(bool half_precision = true) const;
-    tt::tt_metal::Tensor &get_tensor(bool half_precision = true);
+    tt::tt_metal::Tensor &get_mutable_tensor(bool half_precision = true);
 };
 
 }  // namespace ttml::autograd

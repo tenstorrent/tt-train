@@ -37,7 +37,7 @@ public:
     void set_requires_grad(bool requires_grad);
 
     const tt::tt_metal::Tensor &get_value(bool half_precision = true) const;
-    tt::tt_metal::Tensor &get_value(bool half_precision = true);
+    tt::tt_metal::Tensor &get_mutable_value(bool half_precision = true);
     const tt::tt_metal::Tensor &get_grad() const;
     tt::tt_metal::Tensor &get_grad();
     bool get_requires_grad() const;

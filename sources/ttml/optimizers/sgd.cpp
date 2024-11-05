@@ -37,7 +37,7 @@ void SGD::step() {
     }
 
     for (auto& [name, theta_ptr] : m_theta) {
-        auto& theta = theta_ptr->get_value(/* half_precision */ false);
+        auto& theta = theta_ptr->get_mutable_value(/* half_precision */ false);
         const auto& tensor_ptr = m_parameters.at(name);
         if (!tensor_ptr->is_grad_initialized()) {
             continue;
