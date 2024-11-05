@@ -4,8 +4,6 @@
 
 #include "multi_head_utils.hpp"
 
-#include <ttnn/operations/experimental/transformer/nlp_concat_heads/nlp_concat_heads.hpp>
-
 #include "autograd/auto_context.hpp"
 #include "autograd/graph.hpp"
 #include "autograd/graph_utils.hpp"
