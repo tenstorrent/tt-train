@@ -60,7 +60,7 @@ message(STATUS "TT_METAL_HOME: $ENV{TT_METAL_HOME}")
 message($ENV{TT_METAL_HOME}/tt_metal/third_party/src/firmware/riscv/$ENV{ARCH_NAME})
 
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
-
+set(Python3_FIND_REGISTRY LAST)
 set(Python3_FIND_VERBOSE ON)
 find_package(Python3 COMPONENTS Interpreter Development NumPy)
 message("Python executable: ${Python_EXECUTABLE}")
