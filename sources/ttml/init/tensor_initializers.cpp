@@ -32,7 +32,7 @@ void normal_init(ttml::autograd::TensorPtr& t, const ttnn::Shape& shape, NormalP
 
 void constant_init(ttml::autograd::TensorPtr& t, const ttnn::Shape& shape, float value) {
     auto* device = &autograd::ctx().get_device();
-    t->set_value(core::full(shape, value, device, DataType::FLOAT32));
+    t->set_value(core::full(shape, value, device));
 }
 
 void xavier_uniform_init(ttml::autograd::TensorPtr& t, const ttnn::Shape& shape, FanParams params) {
