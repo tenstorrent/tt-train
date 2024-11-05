@@ -38,13 +38,10 @@ std::tuple<autograd::TensorPtr, autograd::TensorPtr, autograd::TensorPtr> heads_
     autograd::GradFunction grad_kv = [out_k, out_v, key_value]() {
         auto grad_k = out_k->get_grad();
         auto grad_v = out_v->get_grad();
-        auto result_k = ttnn::experimental::nlp_concat_heads(grad_k);
-        auto result_v = ttnn::experimental::nlp_concat_heads(grad_v);
-        auto result = ttnn::concat(std::vector<ttnn::Tensor>({result_k, result_v}), /* dim */ 3);
+        auto result = ttnn::concat(std::vector<ttnn::Tensor>({grad_k, grad_v}), /* dim */ 3);
+        result = ttnn::experimental::nlp_concat_heads(result);
         key_value->add_grad(result);
     };
-
-    autograd::GradFunction empty_grad = []() {};
 
     auto links_q = autograd::get_links(query);
     out_q->set_node(autograd::ctx().add_backward_node(std::move(grad_q), links_q));
@@ -52,7 +49,7 @@ std::tuple<autograd::TensorPtr, autograd::TensorPtr, autograd::TensorPtr> heads_
     auto links_k = autograd::get_links(key_value);
     auto links_v = autograd::get_links(key_value, out_k);
     out_k->set_node(autograd::ctx().add_backward_node(std::move(grad_kv), links_k));
-    out_v->set_node(autograd::ctx().add_backward_node(std::move(empty_grad), links_v));
+    out_v->set_node(autograd::ctx().add_backward_node([]() {}, links_v));
     return {out_q, out_k, out_v};
 }
 
