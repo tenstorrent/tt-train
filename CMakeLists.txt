@@ -61,9 +61,9 @@ message($ENV{TT_METAL_HOME}/tt_metal/third_party/src/firmware/riscv/$ENV{ARCH_NA
 
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 set(Python3_FIND_VERBOSE ON)
-find_package(Python3 3.8 COMPONENTS Interpreter Development NumPy HINTS /usr/local/bin /usr/bin)
-message("Python executable: ${Python_EXECUTABLE}")
-message("Python include directory: ${Python_INCLUDE_DIRS}")
+find_package(Python3 COMPONENTS Interpreter Development NumPy)
+message("Python executable: ${Python3_EXECUTABLE}")
+message("Python include directory: ${Python3_INCLUDE_DIRS}")
 # 3rd party projects
 add_subdirectory(3rd_party/tokenizers-cpp)
 add_subdirectory(3rd_party/wandb-cpp)
