@@ -61,6 +61,7 @@ message($ENV{TT_METAL_HOME}/tt_metal/third_party/src/firmware/riscv/$ENV{ARCH_NA
 
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 set(Python3_FIND_VERBOSE ON)
+set(Python3_FIND_STRATEGY LOCATION)
 find_package(Python3 COMPONENTS Interpreter Development NumPy)
 message("Python executable: ${Python3_EXECUTABLE}")
 message("Python include directory: ${Python3_INCLUDE_DIRS}")
