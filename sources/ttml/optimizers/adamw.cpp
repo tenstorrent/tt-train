@@ -25,9 +25,13 @@ MorehAdamW::MorehAdamW(autograd::NamedParameters parameters, const AdamWConfig& 
     for (const auto& [key, tensor_ptr] : m_parameters) {
         if (tensor_ptr->get_requires_grad()) {
             m_first_moment.emplace(
-                key, autograd::create_tensor(core::zeros_like(tensor_ptr->get_value()), /* requires_grad */ false));
+                key,
+                autograd::create_tensor(
+                    core::zeros_like(tensor_ptr->get_value(/* half_precision */ false)), /* requires_grad */ false));
             m_second_moment.emplace(
-                key, autograd::create_tensor(core::zeros_like(tensor_ptr->get_value()), /* requires_grad */ false));
+                key,
+                autograd::create_tensor(
+                    core::zeros_like(tensor_ptr->get_value(/* half_precision */ false)), /* requires_grad */ false));
         }
     }
 }
@@ -53,12 +57,12 @@ void MorehAdamW::step() {
             continue;
         }
         auto& second_moment_ptr = m_second_moment.at(key);
-        auto& first_moment = first_moment_ptr->get_value();
-        auto& second_moment = second_moment_ptr->get_value();
+        auto& first_moment = first_moment_ptr->get_value(/* half_precision */ false);
+        auto& second_moment = second_moment_ptr->get_value(/* half_precision */ false);
 
         const auto& gradients = tensor_ptr->get_grad();
         ttnn::moreh_adamw(
-            tensor_ptr->get_value(),
+            tensor_ptr->get_value(/* half_precision */ false),
             gradients,
             first_moment,
             second_moment,
@@ -117,9 +121,13 @@ AdamW::AdamW(autograd::NamedParameters parameters, const AdamWConfig& config) :
     for (const auto& [key, tensor_ptr] : m_parameters) {
         if (tensor_ptr->get_requires_grad()) {
             m_first_moment.emplace(
-                key, autograd::create_tensor(core::zeros_like(tensor_ptr->get_value()), /* requires_grad */ false));
+                key,
+                autograd::create_tensor(
+                    core::zeros_like(tensor_ptr->get_value(/* half_precision */ false)), /* requires_grad */ false));
             m_second_moment.emplace(
-                key, autograd::create_tensor(core::zeros_like(tensor_ptr->get_value()), /* requires_grad */ false));
+                key,
+                autograd::create_tensor(
+                    core::zeros_like(tensor_ptr->get_value(/* half_precision */ false)), /* requires_grad */ false));
         }
     }
 }
@@ -145,14 +153,16 @@ void AdamW::step() {
             continue;
         }
         auto& second_moment_ptr = m_second_moment.at(key);
-        auto& first_moment = first_moment_ptr->get_value();
-        auto& second_moment = second_moment_ptr->get_value();
+        auto& first_moment = first_moment_ptr->get_value(/* half_precision */ false);
+        auto& second_moment = second_moment_ptr->get_value(/* half_precision */ false);
 
         const auto& gradients = tensor_ptr->get_grad();
         if (m_config.weight_decay != 0.0F) {
-            auto weight_decay_update = ttnn::multiply(tensor_ptr->get_value(), m_config.weight_decay * m_config.lr);
+            auto weight_decay_update =
+                ttnn::multiply(tensor_ptr->get_value(/* half_precision */ false), m_config.weight_decay * m_config.lr);
             // weights -= weight_decay * lr * weights
-            tensor_ptr->set_value(ttnn::subtract(tensor_ptr->get_value(), weight_decay_update));
+            tensor_ptr->set_value(
+                ttnn::subtract(tensor_ptr->get_value(/* half_precision */ false), weight_decay_update));
         }
 
         // first moment = beta1 * first moment + (1 - beta1) * gradients
@@ -168,7 +178,7 @@ void AdamW::step() {
         auto second_moment_hat = ttnn::multiply(second_moment, 1.F / (1.F - std::pow(m_config.beta2, m_steps)));
         // weights -= lr * first_moment_hat / (sqrt(second_moment_hat) + epsilon)
         tensor_ptr->set_value(ttnn::subtract(
-            tensor_ptr->get_value(),
+            tensor_ptr->get_value(/* half_precision */ false),
             ttnn_fixed::divide(
                 ttnn::multiply(first_moment_hat, m_config.lr),
                 ttnn::add(ttnn::sqrt(second_moment_hat), m_config.epsilon))));
