@@ -52,8 +52,7 @@ jobs:
       run: |
         sudo apt-get update
         sudo DEBIAN_FRONTEND=noninteractive apt-get install -y clang-tidy-17 libc++-17-dev libc++abi-17-dev
-        sudo DEBIAN_FRONTEND=noninteractive apt-get uninstall -y python3-dev
-        sudo DEBIAN_FRONTEND=noninteractive apt-get install python3-dev==3.8.2
+        sudo DEBIAN_FRONTEND=noninteractive apt-get install -y python3-dev=3.8.2 --allow-downgrades
         source ~/.bashrc
         # sudo ln -s $(which clang-tidy-17) /usr/local/bin/clang-tidy
 
