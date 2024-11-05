@@ -43,10 +43,9 @@ std::tuple<autograd::TensorPtr, autograd::TensorPtr, autograd::TensorPtr> heads_
 
     auto links_q = autograd::get_links(query);
     out_q->set_node(autograd::ctx().add_backward_node(std::move(grad_q), links_q));
-
     auto links_k = autograd::get_links(key_value);
-    auto links_v = autograd::get_links(key_value, out_k);
     out_k->set_node(autograd::ctx().add_backward_node(std::move(grad_kv), links_k));
+    auto links_v = autograd::get_links(key_value, out_k);
     out_v->set_node(autograd::ctx().add_backward_node([]() {}, links_v));
     return {out_q, out_k, out_v};
 }
