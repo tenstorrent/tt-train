@@ -14,6 +14,8 @@ namespace ttml::ops {
 
 std::tuple<autograd::TensorPtr, autograd::TensorPtr, autograd::TensorPtr> heads_creation(
     const autograd::TensorPtr& qkv, uint32_t num_heads) {
+    // qkv shape is (B, 1, S, E * 3)
+    // q, k, v shapes are (B, num_heads, S, E / num_heads)
     auto [q, k, v] = ttnn::experimental::nlp_create_qkv_heads(
         qkv->get_value(),
         std::nullopt,
@@ -31,6 +33,7 @@ std::tuple<autograd::TensorPtr, autograd::TensorPtr, autograd::TensorPtr> heads_
         auto grad_q = out_q->get_grad();
         auto grad_k = out_k->get_grad();
         auto grad_v = out_v->get_grad();
+        // (B, num_heads, S, E / num_heads) -> (B, 1, S, E)
         grad_q = ttnn::experimental::nlp_concat_heads(grad_q);
         grad_k = ttnn::experimental::nlp_concat_heads(grad_k);
         grad_v = ttnn::experimental::nlp_concat_heads(grad_v);
@@ -39,11 +42,12 @@ std::tuple<autograd::TensorPtr, autograd::TensorPtr, autograd::TensorPtr> heads_
     };
 
     auto links_q = autograd::get_links(qkv);
+    // grad_q function depends on gradients of q, k and v
     out_q->set_node(autograd::ctx().add_backward_node(std::move(grad_q), links_q));
-    auto links_k = autograd::get_links(qkv, out_q);
-    out_k->set_node(autograd::ctx().add_backward_node([]() {}, links_k));
-    auto links_v = autograd::get_links(qkv, out_q);
-    out_v->set_node(autograd::ctx().add_backward_node([]() {}, links_v));
+    // this needs to be added to make sure that gradients for k and v are computed before we run backward for q
+    auto links_kv = autograd::get_links(qkv, out_q);
+    out_k->set_node(autograd::ctx().add_backward_node([]() {}, links_kv));
+    out_v->set_node(autograd::ctx().add_backward_node([]() {}, links_kv));
     return {out_q, out_k, out_v};
 }
 
@@ -55,6 +59,7 @@ autograd::TensorPtr heads_fusion(const autograd::TensorPtr& x) {
     uint32_t sequence_length = x_shape[2];
     uint32_t embedding_dim = x_shape[3];
 
+    // (B, H, S, E/H) -> (B, 1, S, E)
     auto fused_heads = ttnn::experimental::nlp_concat_heads(x->get_value());
     auto out = autograd::create_tensor(fused_heads);
 
