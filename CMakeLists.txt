@@ -60,9 +60,8 @@ message(STATUS "TT_METAL_HOME: $ENV{TT_METAL_HOME}")
 message($ENV{TT_METAL_HOME}/tt_metal/third_party/src/firmware/riscv/$ENV{ARCH_NAME})
 
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
-set(Python3_FIND_REGISTRY FIRST)
 set(Python3_FIND_VERBOSE ON)
-find_package(Python3 COMPONENTS Interpreter Development NumPy)
+find_package(Python3 3.8 COMPONENTS Interpreter Development NumPy HINTS /usr/local/bin /usr/bin)
 message("Python executable: ${Python_EXECUTABLE}")
 message("Python include directory: ${Python_INCLUDE_DIRS}")
 # 3rd party projects
