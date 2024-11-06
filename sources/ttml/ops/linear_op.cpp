@@ -29,7 +29,7 @@ tt::tt_metal::Tensor matmul(
         /* activation */ std::nullopt,
         /* compute_kernel_config */
         config,
-        /* core_grid */ ttnn::CoreGrid{8, 8},
+        /* core_grid */ ttnn::CoreGrid{7, 8},
         /* output_tile */ std::nullopt);
 }
 
@@ -120,7 +120,7 @@ autograd::TensorPtr linear_op(
         /* program_config */ std::nullopt,
         /* activation */ std::nullopt,
         /* compute_kernel_config */ core::ComputeKernelConfig::matmul(),
-        /* core_grid */ ttnn::CoreGrid{8, 8}));
+        /* core_grid */ ttnn::CoreGrid{7, 8}));
 
     autograd::GradFunction grad = [weight, bias, tensor, out]() {
         auto tensor_shape = tensor->get_value().get_shape();

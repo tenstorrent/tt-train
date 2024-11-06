@@ -24,7 +24,7 @@ tt::tt_metal::Tensor matmul(
         /* program_config */ std::nullopt,
         /* activation */ std::nullopt,
         /* compute_kernel_config */ core::ComputeKernelConfig::matmul(),
-        /* core_grid */ ttnn::CoreGrid{8, 8},
+        /* core_grid */ ttnn::CoreGrid{7, 8},
         /* output_tile */ std::nullopt);
 }
 
