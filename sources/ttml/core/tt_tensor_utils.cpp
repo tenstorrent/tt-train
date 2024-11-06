@@ -321,7 +321,7 @@ ttnn::Shape create_shape(const std::array<uint32_t, 4>& args) {
 }
 
 void print_tensor_stats(const tt::tt_metal::Tensor& tensor, const std::string& name) {
-    if (tensor.get_dtype() == DataType::BFLOAT16) {
+    if (tensor.get_dtype() == DataType::BFLOAT16 || tensor.get_dtype() == DataType::FLOAT32) {
         print_tensor_stats_<float>(tensor, name);
     } else {
         print_tensor_stats_<uint32_t>(tensor, name);
