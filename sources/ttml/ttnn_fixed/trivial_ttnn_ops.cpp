@@ -4,11 +4,11 @@
 
 #include "trivial_ttnn_ops.hpp"
 
+#include <core/ttnn_all_includes.hpp>
 #include <ttnn/operations/moreh/moreh_sum/moreh_sum.hpp>
 
 #include "core/compute_kernel_config.hpp"
 #include "core/tt_tensor_utils.hpp"
-#include "core/ttnn_all_includes.hpp"
 
 namespace ttml::ttnn_fixed {
 

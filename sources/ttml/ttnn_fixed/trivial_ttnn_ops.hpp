@@ -3,9 +3,8 @@
 // SPDX-License-Identifier: Apache-2.0
 
 #pragma once
+#include <core/ttnn_all_includes.hpp>
 #include <ttnn/tensor/tensor.hpp>
-
-#include "core/ttnn_all_includes.hpp"
 
 namespace ttml::ttnn_fixed {
 

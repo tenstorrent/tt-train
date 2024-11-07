@@ -3,11 +3,11 @@
 // SPDX-License-Identifier: Apache-2.0
 
 #pragma once
+#include <core/ttnn_all_includes.hpp>
 #include <memory>
 #include <optional>
 
 #include "autograd/graph.hpp"
-#include "core/ttnn_all_includes.hpp"
 #include "graph.hpp"
 
 namespace ttml::autograd {

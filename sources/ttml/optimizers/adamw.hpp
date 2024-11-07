@@ -2,8 +2,9 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
+#include <core/ttnn_all_includes.hpp>
+
 #include "autograd/module_base.hpp"
-#include "core/ttnn_all_includes.hpp"
 #include "optimizer_base.hpp"
 
 namespace ttml::optimizers {

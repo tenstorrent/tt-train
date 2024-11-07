@@ -6,6 +6,7 @@
 
 #include <gtest/gtest.h>
 
+#include <core/ttnn_all_includes.hpp>
 #include <memory>
 #include <ttnn/operations/core/compute_kernel/compute_kernel_config.hpp>
 #include <vector>
@@ -14,7 +15,6 @@
 #include "core/compute_kernel_config.hpp"
 #include "core/device.hpp"
 #include "core/tt_tensor_utils.hpp"
-#include "core/ttnn_all_includes.hpp"
 #include "ttnn_fixed/trivial_ttnn_ops.hpp"
 
 TEST(TrivialTnnFixedTest, TestMaxNegativeOne_BROKEN) {

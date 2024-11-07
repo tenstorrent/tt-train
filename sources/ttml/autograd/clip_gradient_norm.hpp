@@ -2,8 +2,9 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
+#include <core/ttnn_all_includes.hpp>
+
 #include "core/tt_tensor_utils.hpp"
-#include "core/ttnn_all_includes.hpp"
 
 namespace ttml::autograd {
 

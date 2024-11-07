@@ -10,7 +10,6 @@
 #include "autograd/auto_context.hpp"
 #include "dataset_subset.hpp"
 #include "in_memory_token_dataset.hpp"
-#include "tokenizers/char_tokenizer.hpp"
 
 namespace ttml::datasets {
 

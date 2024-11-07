@@ -6,7 +6,6 @@
 
 #include "autograd/module_base.hpp"
 #include "ops/dropout_op.hpp"
-
 namespace ttml::modules {
 
 DropoutLayer::DropoutLayer(float probability) : m_prob(probability) {

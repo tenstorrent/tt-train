@@ -4,10 +4,11 @@
 
 #include "linear_op.hpp"
 
+#include <core/ttnn_all_includes.hpp>
+
 #include "autograd/auto_context.hpp"
 #include "autograd/graph_utils.hpp"
 #include "core/tt_tensor_utils.hpp"
-#include "core/ttnn_all_includes.hpp"
 #include "ttnn_fixed/trivial_ttnn_ops.hpp"
 
 namespace {

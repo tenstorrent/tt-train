@@ -4,12 +4,12 @@
 
 #include <gtest/gtest.h>
 
+#include <core/ttnn_all_includes.hpp>
 #include <random>
 
 #include "autograd/auto_context.hpp"
 #include "autograd/tensor.hpp"
 #include "core/tt_tensor_utils.hpp"
-#include "core/ttnn_all_includes.hpp"
 #include "ops/layernorm_op.hpp"
 #include "ops/losses.hpp"
 

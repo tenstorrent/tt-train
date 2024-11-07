@@ -4,6 +4,7 @@
 
 #include "serialization.hpp"
 
+#include <core/ttnn_all_includes.hpp>
 #include <cstdint>
 #include <ttnn/tensor/types.hpp>
 
@@ -11,7 +12,6 @@
 #include "autograd/module_base.hpp"
 #include "core/system_utils.hpp"
 #include "core/tt_tensor_utils.hpp"
-#include "core/ttnn_all_includes.hpp"
 #include "msgpack_file.hpp"
 #include "optimizers/optimizer_base.hpp"
 #include "optimizers/sgd.hpp"

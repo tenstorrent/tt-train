@@ -10,7 +10,7 @@ namespace ttml::core {
 std::string demangle(const char* name) {
     int status = -4;
 
-    std::unique_ptr<char, decltype(&free)> res(abi::__cxa_demangle(name, NULL, NULL, &status), &free);
+    std::unique_ptr<char, decltype(&free)> res(abi::__cxa_demangle(name, nullptr, nullptr, &status), &free);
 
     const char* const demangled_name = (status == 0) ? res.get() : name;
 

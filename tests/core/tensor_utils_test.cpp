@@ -4,6 +4,7 @@
 
 #include <gtest/gtest.h>
 
+#include <core/ttnn_all_includes.hpp>
 #include <cstdint>
 #include <memory>
 #include <vector>
@@ -11,7 +12,6 @@
 #include "autograd/auto_context.hpp"
 #include "core/device.hpp"
 #include "core/tt_tensor_utils.hpp"
-#include "core/ttnn_all_includes.hpp"
 
 TEST(TensorUtilsTest, TestFloatToFromTensorEven) {
     auto* device = &ttml::autograd::ctx().get_device();

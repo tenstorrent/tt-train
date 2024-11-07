@@ -4,8 +4,9 @@
 
 #include "linear_module.hpp"
 
+#include <core/ttnn_all_includes.hpp>
+
 #include "core/tt_tensor_utils.hpp"
-#include "core/ttnn_all_includes.hpp"
 #include "init/cpu_initializers.hpp"
 #include "init/tensor_initializers.hpp"
 
