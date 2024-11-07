@@ -12,10 +12,6 @@ inline bool is_castable_tensor(const tt::tt_metal::Tensor &tensor) {
 
 namespace ttml::autograd {
 
-ttnn::Shape AutocastTensor::get_shape() const {
-    return m_full_precision_tensor.get_shape();
-}
-
 void AutocastTensor::set_tensor(const tt::tt_metal::Tensor &tensor) {
     if (tensor.get_dtype() == DataType::FLOAT32) {
         m_full_precision_tensor = tensor;
@@ -27,15 +23,11 @@ void AutocastTensor::set_tensor(const tt::tt_metal::Tensor &tensor) {
     m_half_precision_tensor = ttnn::Tensor();  // Reset the half precision tensor
 }
 
-const tt::tt_metal::Tensor &AutocastTensor::get_tensor(Precision precision) const {
-    if (precision == Precision::HALF && is_castable_tensor(m_full_precision_tensor)) {
+const tt::tt_metal::Tensor &AutocastTensor::get_tensor(PreferredPrecision preferred_precision) const {
+    if (preferred_precision == PreferredPrecision::HALF && is_castable_tensor(m_full_precision_tensor)) {
         return m_half_precision_tensor;
     }
 
-    return m_full_precision_tensor;
-}
-
-tt::tt_metal::Tensor &AutocastTensor::get_mutable_tensor() {
     return m_full_precision_tensor;
 }
 

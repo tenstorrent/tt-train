@@ -34,9 +34,10 @@ Tensor::Tensor(const tt::tt_metal::Tensor& value, bool requires_grad) : m_value(
 
 void Tensor::add_grad(const tt::tt_metal::Tensor& grad) {
     if (!is_grad_initialized()) {
-        if (grad.get_shape() != m_value.get_shape()) {
-            throw std::logic_error(fmt::format(
-                "Shapes of gradients are not equal. Expected: {}, got: {}", m_value.get_shape(), grad.get_shape()));
+        auto value_shape = m_value.get_tensor().get_shape();
+        if (grad.get_shape() != value_shape) {
+            throw std::logic_error(
+                fmt::format("Shapes of gradients are not equal. Expected: {}, got: {}", value_shape, grad.get_shape()));
         }
 
         m_grad = grad;
@@ -111,12 +112,8 @@ void Tensor::set_requires_grad(bool requires_grad) {
     m_requires_grad = requires_grad;
 }
 
-const tt::tt_metal::Tensor& Tensor::get_value(Precision precision) const {
-    return m_value.get_tensor(precision);
-}
-
-tt::tt_metal::Tensor& Tensor::get_mutable_value() {
-    return m_value.get_mutable_tensor();
+const tt::tt_metal::Tensor& Tensor::get_value(PreferredPrecision preferred_precision) const {
+    return m_value.get_tensor(preferred_precision);
 }
 
 const tt::tt_metal::Tensor& Tensor::get_grad() const {
