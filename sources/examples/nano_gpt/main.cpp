@@ -95,7 +95,7 @@ void generate(
 
     auto positions_vector = std::vector<uint32_t>(max_sequence_length);
     std::iota(positions_vector.begin(), positions_vector.end(), 0);
-    auto positions_tensor = ttml::autograd::create_tensor(ttml::core::from_vector<uint32_t>(
+    auto positions_tensor = ttml::autograd::create_tensor(ttml::core::from_vector<uint32_t, DataType::UINT32>(
         positions_vector, ttml::core::create_shape({1, 1, 1, max_sequence_length}), device, Layout::ROW_MAJOR));
 
     std::vector<float> mask;
@@ -124,7 +124,7 @@ void generate(
         }
 
         auto prompt_tokens_padded_size = static_cast<uint32_t>(prompt_tokens_padded.size());
-        auto prompt_tensor = ttml::autograd::create_tensor(ttml::core::from_vector<uint32_t>(
+        auto prompt_tensor = ttml::autograd::create_tensor(ttml::core::from_vector<uint32_t, DataType::UINT32>(
             prompt_tokens_padded,
             ttml::core::create_shape({1, 1, 1, prompt_tokens_padded_size}),
             device,
@@ -245,7 +245,7 @@ int main(int argc, char **argv) {
     }
     cached_data.masks_tensor = ttml::autograd::create_tensor(ttml::core::from_vector(
         mask, ttml::core::create_shape({batch_size, config.num_heads, sequence_length, sequence_length}), device));
-    cached_data.positions_tensor = ttml::autograd::create_tensor(ttml::core::from_vector<uint32_t>(
+    cached_data.positions_tensor = ttml::autograd::create_tensor(ttml::core::from_vector<uint32_t, DataType::UINT32>(
         positions, ttml::core::create_shape({batch_size, 1, 1, sequence_length}), device, Layout::ROW_MAJOR));
 
     std::function<BatchType(std::vector<DatasetSample> && samples)> collate_fn =
@@ -268,10 +268,10 @@ int main(int argc, char **argv) {
             auto end_timer = std::chrono::high_resolution_clock::now();
             auto duration = std::chrono::duration_cast<std::chrono::microseconds>(end_timer - start_timer).count();
             fmt::print("dataloader host only step time {} ms\n", (double)duration / 1000.);
-            auto data_tensor = ttml::autograd::create_tensor(ttml::core::from_vector<uint32_t>(
+            auto data_tensor = ttml::autograd::create_tensor(ttml::core::from_vector<uint32_t, DataType::UINT32>(
                 data, ttml::core::create_shape({batch_size, 1, 1, sequence_length}), device, Layout::ROW_MAJOR));
             auto targets_tensor = ttml::autograd::create_tensor(
-                ttml::core::from_vector<int32_t>(targets, {batch_size * sequence_length}, device));
+                ttml::core::from_vector<int32_t, DataType::INT32>(targets, {batch_size * sequence_length}, device));
             end_timer = std::chrono::high_resolution_clock::now();
             duration = std::chrono::duration_cast<std::chrono::microseconds>(end_timer - start_timer).count();
             fmt::print("dataloader step time {} ms\n", (double)duration / 1000.);

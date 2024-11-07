@@ -17,6 +17,7 @@
 #include <tt_metal/hostdevcommon/common_values.hpp>                                                // NOLINT
 #include <tt_metal/impl/device/device.hpp>                                                         // NOLINT
 #include <ttnn/core.hpp>                                                                           // NOLINT
+#include <ttnn/cpp/ttnn/operations/copy.hpp>                                                       // NOLINT
 #include <ttnn/cpp/ttnn/operations/core/core.hpp>                                                  // NOLINT
 #include <ttnn/device.hpp>                                                                         // NOLINT
 #include <ttnn/operations/core/to_dtype/to_dtype_op.hpp>                                           // NOLINT

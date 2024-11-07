@@ -26,7 +26,7 @@ TEST(EmbeddingOpTest, EmbeddingForwardBackward) {
     uint32_t sentence_size = 32;
     std::vector<uint32_t> input_data((size_t)batch_size * sentence_size);
     std::iota(input_data.begin(), input_data.end(), 0U);
-    auto input_tensor = core::from_vector<uint32_t>(
+    auto input_tensor = core::from_vector<uint32_t, DataType::UINT32>(
         input_data, core::create_shape({batch_size, 1, 1, sentence_size}), device, Layout::ROW_MAJOR);
     autograd::TensorPtr input = autograd::create_tensor(input_tensor);
 
@@ -68,7 +68,7 @@ TEST(EmbeddingOpTest, EmbeddingNumEmbeddingsEmbeddingDimNotDivisibleBy32) {
     uint32_t sentence_size = 32;
     std::vector<uint32_t> input_data((size_t)batch_size * sentence_size);
     std::iota(input_data.begin(), input_data.end(), 0U);
-    auto input_tensor = core::from_vector<uint32_t>(
+    auto input_tensor = core::from_vector<uint32_t, DataType::UINT32>(
         input_data, core::create_shape({batch_size, 1, 1, sentence_size}), device, Layout::ROW_MAJOR);
     autograd::TensorPtr input = autograd::create_tensor(input_tensor);
 
@@ -88,7 +88,7 @@ TEST(EmbeddingOpTest, EmbeddingBadShapes1_BROKEN) {
     uint32_t sentence_size = 13;
     std::vector<uint32_t> input_data((size_t)batch_size * sentence_size);
     std::iota(input_data.begin(), input_data.end(), 0U);
-    auto input_tensor = core::from_vector<uint32_t>(
+    auto input_tensor = core::from_vector<uint32_t, DataType::UINT32>(
         input_data, core::create_shape({batch_size, 1, 1, sentence_size}), device, Layout::ROW_MAJOR);
     autograd::TensorPtr input = autograd::create_tensor(input_tensor);
 

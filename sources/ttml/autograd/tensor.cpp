@@ -29,15 +29,15 @@ void topological_sort(
 
 namespace ttml::autograd {
 
-Tensor::Tensor(tt::tt_metal::Tensor m_value, bool requires_grad) :
-    m_value(std::move(m_value)), m_requires_grad(requires_grad) {
+Tensor::Tensor(const tt::tt_metal::Tensor& value, bool requires_grad) : m_value(value), m_requires_grad(requires_grad) {
 }
 
 void Tensor::add_grad(const tt::tt_metal::Tensor& grad) {
     if (!is_grad_initialized()) {
-        if (grad.get_shape() != m_value.get_shape()) {
-            throw std::logic_error(fmt::format(
-                "Shapes of gradients are not equal. Expected: {}, got: {}", m_value.get_shape(), grad.get_shape()));
+        auto value_shape = m_value.get_tensor().get_shape();
+        if (grad.get_shape() != value_shape) {
+            throw std::logic_error(
+                fmt::format("Shapes of gradients are not equal. Expected: {}, got: {}", value_shape, grad.get_shape()));
         }
 
         m_grad = grad;
@@ -81,7 +81,9 @@ void Tensor::try_init_grad(bool init_ones) {
     if (is_grad_initialized()) {
         return;
     }
-    this->set_grad(init_ones ? ttml::core::ones_like(m_value) : ttml::core::zeros_like(m_value));
+
+    const auto& value = get_value();
+    this->set_grad(init_ones ? ttml::core::ones_like(value) : ttml::core::zeros_like(value));
 }
 void Tensor::set_node(const std::optional<NodeId>& node) {
     if (m_node_id.has_value()) {
@@ -95,7 +97,7 @@ void print_tensor_stats(const autograd::TensorPtr& tensor, const std::string& na
 }
 
 void Tensor::set_value(const tt::tt_metal::Tensor& value) {
-    m_value = value;
+    m_value.set_tensor(value);
 }
 
 void Tensor::set_grad(const tt::tt_metal::Tensor& grad) {
@@ -110,12 +112,8 @@ void Tensor::set_requires_grad(bool requires_grad) {
     m_requires_grad = requires_grad;
 }
 
-const tt::tt_metal::Tensor& Tensor::get_value() const {
-    return m_value;
-}
-
-tt::tt_metal::Tensor& Tensor::get_value() {
-    return m_value;
+const tt::tt_metal::Tensor& Tensor::get_value(PreferredPrecision preferred_precision) const {
+    return m_value.get_tensor(preferred_precision);
 }
 
 const tt::tt_metal::Tensor& Tensor::get_grad() const {
