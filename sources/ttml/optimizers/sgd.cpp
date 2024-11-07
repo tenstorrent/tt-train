@@ -18,7 +18,7 @@ SGD::SGD(ttml::autograd::NamedParameters parameters, const SGDConfig& config) :
             m_theta.emplace(
                 name,
                 autograd::create_tensor(
-                    core::zeros_like(tensor_ptr->get_value(/* half_precision */ false)), /* requires_grad */ false));
+                    core::zeros_like(tensor_ptr->get_value(autograd::Precision::FULL)), /* requires_grad */ false));
         }
     }
 }
@@ -26,7 +26,7 @@ SGD::SGD(ttml::autograd::NamedParameters parameters, const SGDConfig& config) :
 void SGD::zero_grad() {
     for (auto& [name, tensor_ptr] : m_parameters) {
         if (tensor_ptr->get_requires_grad() && tensor_ptr->is_grad_initialized()) {
-            tensor_ptr->set_grad(core::zeros_like(tensor_ptr->get_value(/* half_precision */ false)));
+            tensor_ptr->set_grad(core::zeros_like(tensor_ptr->get_value()));
         }
     }
 }
@@ -37,7 +37,7 @@ void SGD::step() {
     }
 
     for (auto& [name, theta_ptr] : m_theta) {
-        auto& theta = theta_ptr->get_mutable_value(/* half_precision */ false);
+        auto& theta = theta_ptr->get_mutable_value();
         const auto& tensor_ptr = m_parameters.at(name);
         if (!tensor_ptr->is_grad_initialized()) {
             continue;
@@ -46,7 +46,7 @@ void SGD::step() {
         auto gradients = tensor_ptr->get_grad();
         if (m_config.weight_decay != 0.0F) {
             gradients = ttnn::add(
-                ttnn::multiply(tensor_ptr->get_value(/* half_precision */ false), m_config.weight_decay), gradients);
+                ttnn::multiply(tensor_ptr->get_value(autograd::Precision::FULL), m_config.weight_decay), gradients);
         }
 
         if (m_config.momentum != 0.0F) {
@@ -70,7 +70,7 @@ void SGD::step() {
             }
         }
         tensor_ptr->set_value(
-            ttnn::subtract(tensor_ptr->get_value(/* half_precision */ false), ttnn::multiply(gradients, m_config.lr)));
+            ttnn::subtract(tensor_ptr->get_value(autograd::Precision::FULL), ttnn::multiply(gradients, m_config.lr)));
     }
     steps++;
 }

@@ -9,10 +9,10 @@
 namespace ttml::modules {
 
 void LayerNormLayer::initialize_tensors(uint32_t features) {
-    m_gamma = autograd::create_tensor(
-        core::ones(core::create_shape({1, 1, 1, features}), &autograd::ctx().get_device(), DataType::FLOAT32));
-    m_beta = autograd::create_tensor(
-        core::zeros(core::create_shape({1, 1, 1, features}), &autograd::ctx().get_device(), DataType::FLOAT32));
+    m_gamma =
+        autograd::create_tensor(core::ones(core::create_shape({1, 1, 1, features}), &autograd::ctx().get_device()));
+    m_beta =
+        autograd::create_tensor(core::zeros(core::create_shape({1, 1, 1, features}), &autograd::ctx().get_device()));
 }
 
 LayerNormLayer::LayerNormLayer(uint32_t features) {

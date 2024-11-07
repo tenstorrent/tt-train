@@ -8,7 +8,6 @@
 #include <core/ttnn_all_includes.hpp>
 #include <cstdint>
 #include <memory>
-#include <ttnn/tensor/types.hpp>
 #include <vector>
 
 #include "autograd/auto_context.hpp"
