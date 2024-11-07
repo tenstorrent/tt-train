@@ -55,7 +55,8 @@ cmake --build build --config Release --clean-first
 # Navigate to the root directory of the repository
 TT_METAL_LOGGER_LEVEL=FATAL ./build/sources/examples/nano_gpt/nano_gpt --model_path nano_gpt.msgpack --data_path sources/examples/nano_gpt/data/shakespeare.txt
 ```
-Training loss example:
+
+Training loss example from [wandb project](https://wandb.ai/tenstorrent-ml/tt_train_nano_gpt):
 ![NanoGPT training wandb chart](./images/nano-gpt-training-example.png)
 
 
