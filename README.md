@@ -1,13 +1,3 @@
-<div align="center">
-
-<h1>
-
-[Buy hardware](https://tenstorrent.com/cards/) | [Discord](https://discord.gg/tvhGzHQwaj) | [Join Us](https://boards.greenhouse.io/tenstorrent/jobs/4155609007)
-
-</h1>
-
-</div>
-
 # tt-train: CPP ML training framework
 
 ## Overview
