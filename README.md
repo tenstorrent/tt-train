@@ -1,5 +1,7 @@
 # tt-train: CPP ML training framework
 
+## Overview
+This repository contains a high-performance training framework developed in C++ designed to efficiently leverage the computational capabilities of Tenstorrent hardware. The framework is optimized to accelerate model training tasks, providing a seamless interface for training deep learning models on Tenstorrent's advanced hardware architecture.
 
 # Install
 1. Initialize and update submodules
@@ -53,6 +55,11 @@ cmake --build build --config Release --clean-first
 # Navigate to the root directory of the repository
 TT_METAL_LOGGER_LEVEL=FATAL ./build/sources/examples/nano_gpt/nano_gpt --model_path nano_gpt.msgpack --data_path sources/examples/nano_gpt/data/shakespeare.txt
 ```
+
+Training loss example from [wandb project](https://wandb.ai/tenstorrent-ml/tt_train_nano_gpt):
+![NanoGPT training wandb chart](./images/nano-gpt-training-example.png)
+
+
 ### Evaluation
 ```
 # Navigate to the root directory of the repository
