@@ -2,9 +2,9 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
+#include <core/ttnn_all_includes.hpp>
 #include <iostream>
 
-#include "core/ttnn_all_includes.hpp"
 #include "ttml.hpp"
 
 ttnn::device::Device* device = nullptr;

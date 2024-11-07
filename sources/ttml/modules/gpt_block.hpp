@@ -2,6 +2,8 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
+#pragma once
+
 #include "autograd/tensor.hpp"
 #include "modules/dropout_module.hpp"
 #include "modules/layer_norm_module.hpp"

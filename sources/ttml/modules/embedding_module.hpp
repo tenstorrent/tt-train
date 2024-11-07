@@ -2,12 +2,8 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-#include "autograd/auto_context.hpp"
 #include "autograd/module_base.hpp"
 #include "autograd/tensor.hpp"
-#include "core/tt_tensor_utils.hpp"
-#include "core/ttnn_all_includes.hpp"
-#include "init/cpu_initializers.hpp"
 
 namespace ttml::modules {
 

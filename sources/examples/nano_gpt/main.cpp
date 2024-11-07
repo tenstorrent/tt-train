@@ -4,6 +4,7 @@
 
 #include <CLI/CLI.hpp>
 #include <chrono>
+#include <core/ttnn_all_includes.hpp>
 #include <csignal>
 #include <cstdint>
 #include <ttnn/tensor/tensor.hpp>
@@ -11,7 +12,6 @@
 
 #include "autograd/tensor.hpp"
 #include "core/tt_tensor_utils.hpp"
-#include "core/ttnn_all_includes.hpp"
 #include "datasets/dataloader.hpp"
 #include "datasets/in_memory_token_dataset.hpp"
 #include "datasets/utils.hpp"
@@ -20,9 +20,9 @@
 #include "ops/losses.hpp"
 #include "optimizers/adamw.hpp"
 #include "optimizers/sgd.hpp"
+#include "tokenizers/char_tokenizer.hpp"
 #include "ttnn_fixed/trivial_ttnn_ops.hpp"
 #include "utils.hpp"
-
 /* WANDB BLocks this signal.
  Control+C didn't work.
 */

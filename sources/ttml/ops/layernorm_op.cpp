@@ -4,6 +4,7 @@
 
 #include "layernorm_op.hpp"
 
+#include <core/ttnn_all_includes.hpp>
 #include <cstddef>
 #include <cstdint>
 #include <optional>
@@ -13,7 +14,6 @@
 #include "autograd/graph_utils.hpp"
 #include "core/compute_kernel_config.hpp"
 #include "core/tt_tensor_utils.hpp"
-#include "core/ttnn_all_includes.hpp"
 
 namespace ttml::ops {
 

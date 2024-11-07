@@ -5,6 +5,7 @@
 #include <gtest/gtest.h>
 
 #include <array>
+#include <core/ttnn_all_includes.hpp>
 #include <cstdint>
 #include <memory>
 #include <ttnn/tensor/types.hpp>
@@ -14,7 +15,6 @@
 #include "autograd/tensor.hpp"
 #include "core/device.hpp"
 #include "core/tt_tensor_utils.hpp"
-#include "core/ttnn_all_includes.hpp"
 #include "ops/binary_ops.hpp"
 #include "ops/unary_ops.hpp"
 

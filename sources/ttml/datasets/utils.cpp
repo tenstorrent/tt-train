@@ -8,6 +8,9 @@
 #include "tokenizers/bpe_tokenizer.hpp"
 #include "tokenizers/char_tokenizer_trainer.hpp"
 
+namespace {
+constexpr auto gpt2_tokenizer_file_name = "/gpt2-tokenizer.json";
+}
 namespace ttml::datasets {
 
 template <>
@@ -23,7 +26,7 @@ std::tuple<InMemoryTokenDataset, tokenizers::CharTokenizer> create_in_memory_tok
 template <>
 std::tuple<InMemoryTokenDataset, tokenizers::BPETokenizer> create_in_memory_token_dataset<tokenizers::BPETokenizer>(
     const std::string &text, uint32_t seq_length) {
-    auto json_file_path = std::string(TOKENIZERS_DATA_PATH) + "/gpt2-tokenizer.json";
+    auto json_file_path = std::string(TOKENIZERS_DATA_PATH) + gpt2_tokenizer_file_name;
     auto tokenizer = tokenizers::BPETokenizer(json_file_path);
 
     const std::vector<uint32_t> tokenized_text = tokenizer.encode(text);

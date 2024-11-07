@@ -10,9 +10,9 @@
 
 namespace ttml::tokenizers {
 
-const std::string PAD_TOKEN = "<PAD>";
-const std::string END_TOKEN = "<END>";
-const std::string BEGIN_TOKEN = "<BEG>";
+constexpr auto PAD_TOKEN = "<PAD>";
+constexpr auto END_TOKEN = "<END>";
+constexpr auto BEGIN_TOKEN = "<BEG>";
 
 class CharTokenizer : public TokenizerBase {
 public:

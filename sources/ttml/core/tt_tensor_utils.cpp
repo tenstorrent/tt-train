@@ -98,10 +98,7 @@ std::vector<T> untile_tensor_to_vec(const tt::tt_metal::Tensor& cpu_tensor) {
     auto tiled_shape = cpu_tensor.get_padded_shape();
 
     // Calculate total size of the untiled tensor
-    size_t total_size = 1;
-    for (uint32_t i = 0; i < untiled_shape.rank(); ++i) {
-        total_size *= untiled_shape[i];
-    }
+    size_t total_size = untiled_shape.volume();
 
     std::vector<T> untiled_data(total_size);
 

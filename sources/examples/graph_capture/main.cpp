@@ -2,18 +2,13 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
-#include <iostream>
+#include <core/ttnn_all_includes.hpp>
 
 #include "autograd/auto_context.hpp"
 #include "autograd/tensor.hpp"
 #include "core/tt_tensor_utils.hpp"
-#include "core/ttnn_all_includes.hpp"
-#include "datasets/dataloader.hpp"
-#include "datasets/in_memory_dataset.hpp"
-#include "modules/linear_module.hpp"
 #include "modules/multi_layer_perceptron.hpp"
 #include "ops/losses.hpp"
-#include "optimizers/sgd.hpp"
 #include "ttnn/graph/graph_consts.hpp"
 #include "ttnn/graph/graph_operation_queries.hpp"
 #include "ttnn/graph/graph_processor.hpp"

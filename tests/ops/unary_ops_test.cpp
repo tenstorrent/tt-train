@@ -6,10 +6,11 @@
 
 #include <gtest/gtest.h>
 
+#include <core/ttnn_all_includes.hpp>
+
 #include "autograd/auto_context.hpp"
 #include "autograd/tensor.hpp"
 #include "core/tt_tensor_utils.hpp"
-#include "core/ttnn_all_includes.hpp"
 
 TEST(UnaryOpsTest, GlobalMean) {
     std::vector<float> test_data = {1.F, 2.F, 3.F, 4.F, 1.F, 2.F, 3.F, 4.F};

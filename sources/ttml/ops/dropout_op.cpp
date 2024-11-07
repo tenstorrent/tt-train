@@ -4,6 +4,7 @@
 
 #include "dropout_op.hpp"
 
+#include <core/ttnn_all_includes.hpp>
 #include <ttnn/operations/eltwise/binary/binary.hpp>
 #include <ttnn/operations/eltwise/unary/unary.hpp>
 
@@ -11,7 +12,6 @@
 #include "autograd/graph.hpp"
 #include "autograd/graph_utils.hpp"
 #include "core/tt_tensor_utils.hpp"
-#include "core/ttnn_all_includes.hpp"
 
 namespace ttml::ops {
 

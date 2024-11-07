@@ -3,6 +3,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 #include <CLI/CLI.hpp>
+#include <core/ttnn_all_includes.hpp>
 #include <mnist/mnist_reader.hpp>
 #include <ttnn/operations/eltwise/ternary/where.hpp>
 #include <ttnn/tensor/tensor_utils.hpp>
@@ -11,7 +12,6 @@
 #include "autograd/auto_context.hpp"
 #include "autograd/tensor.hpp"
 #include "core/tt_tensor_utils.hpp"
-#include "core/ttnn_all_includes.hpp"
 #include "datasets/dataloader.hpp"
 #include "datasets/in_memory_dataset.hpp"
 #include "models.hpp"

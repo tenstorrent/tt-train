@@ -4,13 +4,12 @@
 
 #include <fmt/format.h>
 
-#include <iostream>
+#include <core/ttnn_all_includes.hpp>
 #include <ttnn/tensor/tensor.hpp>
 
 #include "autograd/auto_context.hpp"
 #include "autograd/tensor.hpp"
 #include "core/tt_tensor_utils.hpp"
-#include "core/ttnn_all_includes.hpp"
 #include "datasets/dataloader.hpp"
 #include "datasets/generators.hpp"
 #include "modules/linear_module.hpp"

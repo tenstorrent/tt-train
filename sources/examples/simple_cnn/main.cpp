@@ -2,9 +2,8 @@
 //
 // SPDX-License-Identifier: Apache-2.0
 
+#include <core/ttnn_all_includes.hpp>
 #include <iostream>
-
-#include "core/ttnn_all_includes.hpp"
 
 int main() {
     const size_t tensor_width = 32;

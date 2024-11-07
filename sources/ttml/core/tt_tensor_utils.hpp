@@ -4,10 +4,10 @@
 
 #pragma once
 
+#include <core/ttnn_all_includes.hpp>
 #include <initializer_list>
 #include <vector>
 
-#include "core/ttnn_all_includes.hpp"
 #include "core/ttnn_fwd.hpp"
 
 namespace ttml::core {
