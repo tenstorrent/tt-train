@@ -1,3 +1,13 @@
+# Repository is archived
+
+This repository is archived and no longer maintained.
+
+Development has shifted to being done in https://github.com/tenstorrent/tt-metal/tree/main/tt-train
+
+---
+
+## *** What follows is for archival purposes ***
+
 # tt-train: CPP ML training framework
 
 ## Overview
